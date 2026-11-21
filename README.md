@@ -1,11 +1,11 @@
 # Nizam (Rebuilt) — v1.19.0
 
-[![Download Nizam for Windows](docs/download-button.png)](https://github.com/nizam1-11/nizam-clipper/releases/latest/download/Nizam-v1.19.0-win-x64.zip)
+[![Download Nizam for Windows](docs/download-button.png)](https://github.com/nizam1-11/nizam-clipper/releases/latest/download/Nizam-Setup-v1.19.0.exe)
 
-[![Download v1.19.0](https://img.shields.io/badge/Download-Nizam%20v1.19.0-E5B94C?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/nizam1-11/nizam-clipper/releases/latest/download/Nizam-v1.19.0-win-x64.zip)
+[![Download Setup EXE](https://img.shields.io/badge/Download-Nizam%20Setup%20v1.19.0-E5B94C?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/nizam1-11/nizam-clipper/releases/latest/download/Nizam-Setup-v1.19.0.exe)
 [![Windows](https://img.shields.io/badge/Platform-Windows%20x64-0078D6?style=for-the-badge)](https://github.com/nizam1-11/nizam-clipper/releases)
 
-**Click the banner or badge above to download the ready-to-run ZIP from GitHub Releases** — extract it and double-click `Nizam.exe`. No install required.
+**Click the banner or badge above — it downloads `Nizam-Setup-v1.19.0.exe` directly (no ZIP).** Run it, confirm the prompt, and it extracts the app into a `Nizam` folder and launches it automatically. A portable ZIP is also available on the [Releases page](https://github.com/nizam1-11/nizam-clipper/releases) as a fallback.
 
 > यह Nizam v1.19.0 का rebuild hai — neeche setup, commands aur "naya feature kaise add karein" ke steps diye gaye hain.
 
