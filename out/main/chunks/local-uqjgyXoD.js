@@ -2277,6 +2277,11 @@ function run(bin, args, opts = {}) {
     let stderrBuf = "";
     let stalled = false;
     let watchdog;
+    let hardTimer;
+    if (opts.hardMs) {
+      hardTimer = setTimeout(() => { stalled = true; child.kill("SIGKILL"); }, opts.hardMs);
+      if (hardTimer.unref) hardTimer.unref();
+    }
     const arm = () => {
       if (!opts.stallMs) return;
       clearTimeout(watchdog);
@@ -2306,11 +2311,13 @@ function run(bin, args, opts = {}) {
     if (opts.signal?.aborted) onAbort();
     child.on("error", (err) => {
       clearTimeout(watchdog);
+      clearTimeout(hardTimer);
       opts.signal?.removeEventListener("abort", onAbort);
       reject(err);
     });
     child.on("close", (code) => {
       clearTimeout(watchdog);
+      clearTimeout(hardTimer);
       opts.signal?.removeEventListener("abort", onAbort);
       if (opts.signal?.aborted) return reject(new Error("Cancelled"));
       resolve({ code: code ?? -1, stdout, stderr, ...stalled ? { stalled } : {} });
@@ -2434,7 +2441,8 @@ async function thumbnail(bins, input, at, out, width) {
   ]);
   if (res.code !== 0) throw new Error(`Thumbnail failed: ${lastLines(res.stderr)}`);
 }
-const LIBX264 = { name: "libx264", videoArgs: ["-c:v", "libx264", "-preset", "veryfast", "-crf", "18"] };
+const SNU_WEAK = process.env.SNU_FAST === "1" || (process.env.SNU_FAST !== "0" && ((os.cpus()?.length ?? 4) <= 4 || os.totalmem() < 8 * 1024 ** 3));
+const LIBX264 = { name: "libx264", videoArgs: ["-c:v", "libx264", "-preset", SNU_WEAK ? "ultrafast" : "veryfast", "-crf", SNU_WEAK ? "22" : "18"] };
 function sizedEncoderArgs(args, w, h, aspect) {
   const i = args.indexOf("-b:v");
   if (i < 0 || i + 1 >= args.length) return args;

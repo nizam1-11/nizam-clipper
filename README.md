@@ -135,6 +135,30 @@ Verify the live repo any time with `git ls-remote origin refs/heads/main` (shoul
 
 ---
 
+## Performance on weak PCs
+
+Clip generation automatically uses a lighter pipeline on machines with **4 or fewer CPU cores**
+or **less than 8 GB RAM**:
+
+- FFmpeg uses `-preset ultrafast -crf 22` instead of `veryfast -crf 18`.
+- The blurred-background layout uses cheaper blur radii and a single blur pass.
+- Audio loudness normalisation (`loudnorm`) is skipped.
+- The tiny Whisper model is selected by default, and auto-selection never picks a model
+  that is too large for available RAM.
+- Each render has a hard 15-minute deadline, so a crawling encode cannot hang forever.
+
+Override with an environment variable when launching the app:
+
+| Variable | Effect |
+|---|---|
+| `SNU_FAST=1` | Force the lightweight pipeline on any machine. |
+| `SNU_FAST=0` | Restore full quality (slower) even on a weak machine. |
+
+Quality is slightly lower in lightweight mode (softer blur, no loudness normalisation,
+higher CRF), but clips are produced much faster and more predictably on modest hardware.
+
+---
+
 ## Architecture map
 
 - **Electron main process — `out/main/index.js`**

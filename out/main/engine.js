@@ -9848,8 +9848,11 @@ function goodEnough(lang) {
   return "large";
 }
 function pickSpeechModel(lang, downloaded) {
-  const wanted = goodEnough(lang);
-  const have = SIZE_ORDER.filter((m) => downloaded.includes(m));
+  const ramGb = os.totalmem() / 1024 ** 3;
+  const cap = ramGb < 8 ? "base" : ramGb < 12 ? "small" : "large";
+  const wanted0 = goodEnough(lang);
+  const wanted = SIZE_ORDER.indexOf(wanted0) > SIZE_ORDER.indexOf(cap) ? cap : wanted0;
+  const have = SIZE_ORDER.filter((m) => downloaded.includes(m) && SIZE_ORDER.indexOf(m) <= SIZE_ORDER.indexOf(cap));
   const atLeast = have.find((m) => SIZE_ORDER.indexOf(m) >= SIZE_ORDER.indexOf(wanted));
   if (atLeast) return { model: atLeast, wanted, good: true };
   return { model: have[have.length - 1] ?? wanted, wanted, good: false };
@@ -12520,6 +12523,9 @@ function computeKeepIntervals(start, end, words2, tighten, maxGap = 1, padding =
 }
 const SEEK_LEAD = 2;
 const RENDER_STALL_MS = 18e4;
+// Weak PCs (<=4 cores or <8 GB RAM) get a lighter pipeline by default.
+// SNU_FAST=1 forces it on any machine; SNU_FAST=0 restores full quality.
+const SNU_WEAK = process.env.SNU_FAST === "1" || (process.env.SNU_FAST !== "0" && ((os.cpus()?.length ?? 4) <= 4 || os.totalmem() < 8 * 1024 ** 3));
 function seekPoint(keep) {
   return Math.max(0, Math.floor(((keep[0]?.start ?? 0) - SEEK_LEAD) * 1e3));
 }
@@ -12607,7 +12613,7 @@ function buildVideoFilter(aspect, layout, assPath, srcW, srcH, fontsDir, crop, f
   } else if (layout === "crop" || layout === "follow") {
     chain = `scale=${w}:${h}:force_original_aspect_ratio=increase,crop=${w}:${h}`;
   } else {
-    chain = `split=2[bg][fg];[bg]scale=${w}:${h}:force_original_aspect_ratio=increase,crop=${w}:${h},boxblur=luma_radius=${blurR(30)}:luma_power=2:chroma_radius=${blurR(15)}:chroma_power=2,eq=brightness=-0.08[bgb];[fg]scale=${w}:${h}:force_original_aspect_ratio=decrease[fgs];[bgb][fgs]overlay=(W-w)/2:(H-h)/2`;
+    chain = `split=2[bg][fg];[bg]scale=${w}:${h}:force_original_aspect_ratio=increase,crop=${w}:${h},boxblur=luma_radius=${blurR(SNU_WEAK ? 12 : 30)}:luma_power=${SNU_WEAK ? 1 : 2}:chroma_radius=${blurR(SNU_WEAK ? 6 : 15)}:chroma_power=${SNU_WEAK ? 1 : 2},eq=brightness=-0.08[bgb];[fg]scale=${w}:${h}:force_original_aspect_ratio=decrease[fgs];[bgb][fgs]overlay=(W-w)/2:(H-h)/2`;
   }
   chain += `,setsar=1,format=yuv420p`;
   if (assPath) chain += `,${assFilter(assPath, fontsDir)}`;
@@ -12764,7 +12770,7 @@ async function renderClip(o) {
   } else {
     parts.push(`[vc]${vf.filter}[vout]`);
   }
-  if (o.hasAudio) parts.push(`[ac]aresample=48000,loudnorm=I=-16:TP=-1.5:LRA=11[aout]`);
+  if (o.hasAudio) parts.push(SNU_WEAK ? `[ac]aresample=48000[aout]` : `[ac]aresample=48000,loudnorm=I=-16:TP=-1.5:LRA=11[aout]`);
   const filterComplex = parts.join(";");
   let filterArgs = ["-filter_complex", filterComplex];
   if (filterComplex.length > 8e3) {
@@ -12810,6 +12816,7 @@ async function renderClip(o) {
   const encode2 = (encoderArgs2) => local.run(o.bins.ffmpeg, argsFor(local.sizedEncoderArgs(encoderArgs2, vf.w, vf.h, settings.aspect)), {
     signal: o.signal,
     stallMs: RENDER_STALL_MS,
+    hardMs: 9e5,
     onStderr: (line) => {
       const p = local.parseProgress(line, editedDuration);
       if (p >= 0) o.onProgress(p);
