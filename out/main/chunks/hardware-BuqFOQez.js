@@ -662,7 +662,7 @@ function eventThrottle(send, keyOf, ms = 100, clock = realClock) {
     }
   };
 }
-const RELEASES_REPO = { owner: "Inshal-Amir", repo: "Clipie-releases" };
+const RELEASES_REPO = { owner: "nizam1-11", repo: "snu-clipper" };
 const NETWORK_TROUBLE = new RegExp(
   `${OFFLINE.source}|net::ERR_(INTERNET_DISCONNECTED|NETWORK_CHANGED|CONNECTION_\\w+|TIMED_OUT|NAME_NOT_RESOLVED|ADDRESS_UNREACHABLE|INCOMPLETE_CHUNKED_ENCODING|CONTENT_LENGTH_MISMATCH|HTTP2_\\w+|SSL_PROTOCOL_ERROR|EMPTY_RESPONSE|NETWORK_IO_SUSPENDED|PROXY_CONNECTION_FAILED)|\\bterminated\\b|other side closed|premature close|ECONNABORTED|EPIPE|The operation was aborted|download stalled|download stopped early`,
   "i"

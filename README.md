@@ -224,7 +224,7 @@ Edit files under `out/`, then run `npm run build` and restart the app.
 - The ~310 MB of FFmpeg / FFprobe / ONNX Runtime binaries under `resources/app.asar.unpacked/` are included on purpose for full offline functionality Ã¢â‚¬â€ do not delete them.
 - Bundled assets: 26 caption fonts, 5 Inter UI fonts, a 143-entry meme library and a YuNet face-detection ONNX model. The laughter model and meme media are fetched at runtime.
 - Original app by **Syed Nizam Uddin**, v1.19.1. The original MIT license and Electron/third-party license notices are present in the folder. This rebuild is for studying and extending software you are permitted to modify.
-- **Auto-update caution:** `resources/app-update.yml` still points at the original `Inshal-Amir` GitHub release feed. Before shipping your customized build, change that feed (or disable the updater in `out/main/index.js`) so an automatic update cannot replace your features with the stock app.
+- **Auto-update:** `resources/app-update.yml` points at this repo (`nizam1-11/snu-clipper`, `releaseType: release`) and the fallback in `out/main/chunks/hardware-BuqFOQez.js` matches it. Published GitHub releases are picked up by the updater. If you fork the app, change both places so an update cannot replace your features with someone else's build.
 - **Caution:** only add features you have the rights to add. Respect the original licenses and third-party terms, and keep secrets (API keys, tokens, credentials) out of the code and out of `out/`.
 
 ---

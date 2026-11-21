@@ -1,5 +1,5 @@
-owner: Inshal-Amir
-repo: Clipie-releases
+owner: nizam1-11
+repo: snu-clipper
 provider: github
-releaseType: draft
-updaterCacheDirName: nizam-updater
+releaseType: release
+updaterCacheDirName: snu-clipper-updater
