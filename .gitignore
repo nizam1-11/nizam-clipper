@@ -11,6 +11,7 @@
 *.node
 *.icns
 *.ico
+!docs/snu.ico
 
 # Native unpacked payload (ffmpeg / ffprobe / onnxruntime, ~200 MB)
 resources/app.asar.unpacked/
