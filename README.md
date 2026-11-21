@@ -96,6 +96,24 @@ For future features you can call `window.nizamToast("Your message", "success" | 
 
 ---
 
+## Future updates → GitHub (3 commands)
+
+After changing files under `out/` (or anywhere in this folder):
+
+```powershell
+cd "C:\Users\Laptop Valley\Downloads\New folder (6)"
+npm run build                      # repack resources/app.asar from out/ + node_modules
+git add -A
+git commit -m "feat: your change here"
+git push origin main
+```
+
+Check what will be pushed first with `git status --short` and `git diff --stat`.
+Anything matched by `.gitignore` (exe, native binaries, `*-backup/` folders) is never pushed.
+Verify the live repo any time with `git ls-remote origin refs/heads/main` (should match `git log -1`).
+
+---
+
 ## Architecture map
 
 - **Electron main process — `out/main/index.js`**
