@@ -37,6 +37,54 @@ $setup = Join-Path $temp $setupName
 $zip = Join-Path $temp $zipName
 $sevenZip = 'C:\Program Files\7-Zip\7z.exe'
 $sfx = 'C:\Program Files\7-Zip\7z.sfx'
+$brandIco = Join-Path $root 'docs\snu.ico'
+
+# IMPORTANT: apply the icon to a COPY of the SFX module BEFORE concatenating the
+# payload. Updating resources on the finished setup.exe drops the appended 7z
+# overlay (the actual app) and leaves a broken ~300 KB file.
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public class NzRes {
+  [DllImport("kernel32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+  public static extern IntPtr BeginUpdateResource(string p, bool del);
+  [DllImport("kernel32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+  public static extern bool UpdateResource(IntPtr h, IntPtr type, IntPtr name, ushort lang, byte[] data, uint cb);
+  [DllImport("kernel32.dll", SetLastError=true)]
+  public static extern bool EndUpdateResource(IntPtr h, bool discard);
+}
+"@
+function Set-ExeIcon($ExePath, $IcoPath) {
+  $raw = [IO.File]::ReadAllBytes($IcoPath)
+  $count = [BitConverter]::ToUInt16($raw, 4)
+  $images = New-Object 'System.Collections.Generic.List[byte[]]'
+  $group = New-Object byte[] (6 + $count * 14)
+  $group[2] = 1; $group[3] = 0
+  [Array]::Copy([BitConverter]::GetBytes([uint16]$count), 0, $group, 4, 2)
+  for ($i = 0; $i -lt $count; $i++) {
+    $o = 6 + $i * 16
+    $sz = [BitConverter]::ToUInt32($raw, $o + 8)
+    $off = [BitConverter]::ToUInt32($raw, $o + 12)
+    $img = New-Object byte[] $sz
+    [Array]::Copy($raw, $off, $img, 0, $sz)
+    $images.Add($img)
+    $go = 6 + $i * 14
+    [Array]::Copy($raw, $o, $group, $go, 4)
+    [Array]::Copy([BitConverter]::GetBytes([uint16]1), 0, $group, $go + 4, 2)
+    [Array]::Copy([BitConverter]::GetBytes([uint16]32), 0, $group, $go + 6, 2)
+    [Array]::Copy([BitConverter]::GetBytes([uint32]$sz), 0, $group, $go + 8, 4)
+    [Array]::Copy([BitConverter]::GetBytes([uint16]($i + 1)), 0, $group, $go + 12, 2)
+  }
+  $h = [NzRes]::BeginUpdateResource($ExePath, $false)
+  if ($h -eq [IntPtr]::Zero) { throw "BeginUpdateResource failed for $ExePath" }
+  $ok = $true
+  for ($i = 0; $i -lt $count; $i++) {
+    if (-not [NzRes]::UpdateResource($h, [IntPtr]3, [IntPtr]($i + 1), 0, $images[$i], [uint32]$images[$i].Length)) { $ok = $false; break }
+  }
+  if ($ok) { $ok = [NzRes]::UpdateResource($h, [IntPtr]14, [IntPtr]1, 0, $group, [uint32]$group.Length) }
+  if (-not [NzRes]::EndUpdateResource($h, $false)) { throw "EndUpdateResource failed for $ExePath" }
+  if (-not $ok) { throw "Icon update failed for $ExePath" }
+}
 
 Write-Host "=== Nizam release v$Version (repo: $repo) ===" -ForegroundColor Cyan
 Write-Host "root   : $root"
@@ -116,8 +164,23 @@ RunProgram="Nizam.exe"
 ;!@InstallEnd@!
 "@
 [IO.File]::WriteAllText($config, $cfg, (New-Object Text.UTF8Encoding($false)))
-cmd /c "copy /b `"$sfx`" + `"$config`" + `"$payload`" `"$setup`" >nul"
+# Icon goes on a COPY of the SFX module first — never on the finished exe.
+$sfxIconed = Join-Path $temp "7z_sfx_iconed_$Version.exe"
+if (Test-Path $sfxIconed) { Remove-Item $sfxIconed -Force }
+Copy-Item -LiteralPath $sfx -Destination $sfxIconed -Force
+if (Test-Path $brandIco) {
+  Set-ExeIcon -ExePath $sfxIconed -IcoPath $brandIco
+  Write-Host '[5/8] SNU icon applied to SFX module'
+} else {
+  Write-Host '[5/8] WARNING: docs\snu.ico missing - setup will use default icon' -ForegroundColor Yellow
+}
+cmd /c "copy /b `"$sfxIconed`" + `"$config`" + `"$payload`" `"$setup`" >nul"
 if (-not (Test-Path $setup)) { throw 'SFX setup creation failed' }
+if ((Get-Item $setup).Length -lt ($payload.Length + 100000)) {
+  throw 'Setup looks truncated - payload lost during icon update'
+}
+& $sevenZip t -bso0 $setup 2>&1 | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'Setup integrity test failed' }
 Write-Host ("[5/8] setup ready: {0} MB" -f [math]::Round((Get-Item $setup).Length / 1MB, 1))
 
 # --- 6. portable ZIP fallback ---------------------------------------------
