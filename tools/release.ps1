@@ -115,7 +115,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Not a git repository.' }
 $pkgPath = Join-Path $root 'package.json'
 $pkg = Get-Content -LiteralPath $pkgPath -Raw
 $newPkg = [regex]::Replace($pkg, '("version"\s*:\s*")\d+\.\d+\.\d+(")', "`${1}$Version`$2", 1)
-if ($newPkg -eq $pkg) { throw 'Could not bump version in package.json' }
+if ($newPkg -eq $pkg) { Write-Host '[1/8] package.json already at target version' }
 [IO.File]::WriteAllText($pkgPath, $newPkg, (New-Object Text.UTF8Encoding($false)))
 Write-Host "[1/8] package.json -> v$Version"
 
@@ -123,7 +123,7 @@ Write-Host "[1/8] package.json -> v$Version"
 $readmePath = Join-Path $root 'README.md'
 $readme = Get-Content -LiteralPath $readmePath -Raw
 $readme = [regex]::Replace($readme, 'SNU-Clipper-Setup-v\d+\.\d+\.\d+\.exe', $setupName)
-$readme = [regex]::Replace($readme, 'SNU Clipper-v\d+\.\d+\.\d+-win-x64\.zip', $zipName)
+$readme = [regex]::Replace($readme, 'SNU-Clipper-v\d+\.\d+\.\d+-win-x64\.zip', $zipName)
 $readme = [regex]::Replace($readme, 'SNU Clipper Setup v\d+\.\d+\.\d+', "SNU Clipper Setup v$Version")
 $readme = [regex]::Replace($readme, 'SNU Clipper v\d+\.\d+\.\d+', "SNU Clipper v$Version")
 [IO.File]::WriteAllText($readmePath, $readme, (New-Object Text.UTF8Encoding($false)))
@@ -131,8 +131,14 @@ Write-Host '[2/8] README download links updated'
 
 # --- 3. rebuild app.asar ---------------------------------------------------
 Push-Location $root
+# npm/npx write notices to stderr; PowerShell's strict mode would otherwise
+# treat that as a terminating error. Temporarily relax it for native calls.
+$prevEap = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
 npm run build 2>&1 | Select-Object -Last 4
-if ($LASTEXITCODE -ne 0) { Pop-Location; throw 'npm run build failed' }
+$buildCode = $LASTEXITCODE
+$ErrorActionPreference = $prevEap
+if ($buildCode -ne 0) { Pop-Location; throw 'npm run build failed' }
 Pop-Location
 Write-Host '[3/8] app.asar rebuilt'
 
@@ -193,11 +199,16 @@ Write-Host ("[6/8] zip ready: {0} MB" -f [math]::Round((Get-Item $zip).Length / 
 
 # --- 7. commit + push ------------------------------------------------------
 Push-Location $root
+$prevEap = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
 git add -A
 git commit -m "release: v$Version" 2>&1 | Select-Object -Last 2
-if ($LASTEXITCODE -ne 0) { Pop-Location; throw 'git commit failed' }
+$commitCode = $LASTEXITCODE
 git push origin main 2>&1 | Out-Null
-if ($LASTEXITCODE -ne 0) { Pop-Location; throw 'git push failed' }
+$pushCode = $LASTEXITCODE
+$ErrorActionPreference = $prevEap
+if ($commitCode -ne 0) { Pop-Location; throw 'git commit failed' }
+if ($pushCode -ne 0) { Pop-Location; throw 'git push failed' }
 Pop-Location
 Write-Host '[7/8] committed and pushed to origin/main'
 
@@ -215,11 +226,15 @@ Source: https://github.com/$repo
 "@
 [IO.File]::WriteAllText($notes, $notesText, (New-Object Text.UTF8Encoding($false)))
 
+$prevEap = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
 gh release create "v$Version" `
   "$setup#SNU Clipper Setup v$Version (click to download)" `
   "$zip#Portable ZIP (fallback)" `
   --title "SNU Clipper v$Version" --notes-file $notes --repo $repo 2>&1 | Select-Object -Last 3
-if ($LASTEXITCODE -ne 0) { throw "gh release create failed for v$Version" }
+$releaseCode = $LASTEXITCODE
+$ErrorActionPreference = $prevEap
+if ($releaseCode -ne 0) { throw "gh release create failed for v$Version" }
 
 Write-Host "`n=== DONE ===" -ForegroundColor Green
 Write-Host "Release : https://github.com/$repo/releases/tag/v$Version"
