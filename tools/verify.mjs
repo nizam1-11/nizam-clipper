@@ -1,4 +1,4 @@
-// tools/verify.mjs — integrity check for the rebuilt Nizam layout.
+// tools/verify.mjs — integrity check for the rebuilt SNU Clipper layout.
 // Prints PASS/FAIL for every required file and the total size of what is present.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -8,7 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
 
 const targets = [
-  'Nizam.exe',
+  'SNU-Clipper.exe',
   'resources/app.asar',
   'resources/app.asar.unpacked/node_modules/ffmpeg-static/ffmpeg.exe',
   'resources/app.asar.unpacked/node_modules/ffprobe-static/bin/win32/x64/ffprobe.exe',
@@ -37,7 +37,7 @@ function sizeOf(p) {
   return total;
 }
 
-console.log('Nizam rebuild - verification');
+console.log('SNU Clipper rebuild - verification');
 console.log('='.repeat(48));
 
 let failed = 0;

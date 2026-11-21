@@ -12579,11 +12579,11 @@ function friendlyError(raw) {
   if (/\b402\b|insufficient.{0,20}(credit|quota|balance)|credits?|quota/i.test(text)) return pick(MESSAGES.keyEmpty);
   if (/\b429\b|rate.?limit|too many requests/i.test(text)) return pick(MESSAGES.busy);
   if (/\b5\d\d\b|service unavailable|bad gateway|overloaded/i.test(text)) return pick(MESSAGES.busy);
-  if (/private video/i.test(text)) return pick("That video is private, so Nizam cannot open it.");
-  if (/confirm your age|age.restricted/i.test(text)) return pick("That video is age-restricted and needs a signed-in account. Nizam cannot open it.");
+  if (/private video/i.test(text)) return pick("That video is private, so SNU Clipper cannot open it.");
+  if (/confirm your age|age.restricted/i.test(text)) return pick("That video is age-restricted and needs a signed-in account. SNU Clipper cannot open it.");
   if (/video (is )?unavailable|has been removed|not available/i.test(text)) return pick("That video is not available (removed, private or blocked in your country).");
   if (/members.only|join this channel/i.test(text)) return pick("That video is for channel members only.");
-  if (/unsupported url/i.test(text)) return pick("Nizam cannot get a video from that link. Try a YouTube link, or download the video and drop the file in.");
+  if (/unsupported url/i.test(text)) return pick("SNU Clipper cannot get a video from that link. Try a YouTube link, or download the video and drop the file in.");
   return pick(MESSAGES.generic);
 }
 const SANS = '"Helvetica Neue", Arial, sans-serif';
@@ -15119,7 +15119,7 @@ const TRANSCRIPT_FORMAT_LABEL = {
 const MAX_TRANSCRIPT_BYTES = 20 * 1024 * 1024;
 const IMPORT_MESSAGES = {
   empty: "This transcript is empty. Paste the words, or choose a different file.",
-  unreadable: "Nizam could not read this as a transcript. Use an .srt or .vtt subtitle file, YouTube captions (.json3 or .srv3), or plain text.",
+  unreadable: "SNU Clipper could not read this as a transcript. Use an .srt or .vtt subtitle file, YouTube captions (.json3 or .srv3), or plain text.",
   tooFew: "This transcript has almost no words in it. Check it is the right file.",
   tooBig: "This file is too big to be a transcript. Choose the subtitle or text file for the video.",
   binary: "This looks like a video or another kind of file, not a transcript. Choose the subtitle or text file instead."
@@ -16774,7 +16774,7 @@ function LogoMark({ size = 28 }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: "data:image/png;base64,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", width: size, height: size, alt: "", "aria-hidden": true, style: { display: "block", objectFit: "contain" } });
 }
 function Wordmark({ className = "" }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: `font-semibold tracking-[-0.02em] ${className}`, style: { fontSize: 15.5 }, children: "Nizam" });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: `font-semibold tracking-[-0.02em] ${className}`, style: { fontSize: 15.5 }, children: "SNU Clipper" });
 }
 const NAV = [
   { id: "projects", label: "Projects", icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Film, { size: 16 }) },
@@ -16878,7 +16878,7 @@ function CloudAccountButton() {
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "min-w-0 flex-1", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block text-[12px] font-medium truncate", style: { color: "var(--color-text)" }, children: who }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block text-[11px] truncate", style: { color: "var(--color-muted)" }, children: minutes === null ? "Nizam Cloud" : `${minutes} Nizam Cloud minute${minutes === 1 ? "" : "s"}` })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block text-[11px] truncate", style: { color: "var(--color-muted)" }, children: minutes === null ? "SNU Clipper Cloud" : `${minutes} SNU Clipper Cloud minute${minutes === 1 ? "" : "s"}` })
         ] })
       ]
     }
@@ -16915,7 +16915,7 @@ function UpdateButton() {
         {
           className: `${base} update-glow hover:brightness-110`,
           style: orange,
-          title: update.canInstall ? `Install Nizam ${update.newVersion} (you have ${update.currentVersion})` : update.installBlockedReason,
+          title: update.canInstall ? `Install SNU Clipper ${update.newVersion} (you have ${update.currentVersion})` : update.installBlockedReason,
           onClick: () => void (update.downloadUrl ? openUpdateDownload() : runUpdate()),
           children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowDownToLine, { size: 13 }),
@@ -16931,7 +16931,7 @@ function UpdateButton() {
         {
           className: base,
           style: { background: "var(--color-brand-soft)", border: "1px solid var(--color-brand-edge)", color: "var(--color-text)", minWidth: 150 },
-          title: update.waiting ? "No internet. The download resumes when you are back online." : `Downloading Nizam ${update.newVersion}`,
+          title: update.waiting ? "No internet. The download resumes when you are back online." : `Downloading SNU Clipper ${update.newVersion}`,
           children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute inset-y-0 left-0 transition-[width] duration-300", style: { width: `${pct}%`, background: "linear-gradient(90deg,color-mix(in oklab,var(--color-brand) 55%,transparent),color-mix(in oklab,var(--color-brand-2) 55%,transparent))" } }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "relative flex items-center gap-1.5", children: [
@@ -16944,7 +16944,7 @@ function UpdateButton() {
       );
     }
     case "installing":
-      return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: base, style: orange, title: `Installing Nizam ${update.newVersion}. The app restarts on its own.`, children: [
+      return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: base, style: orange, title: `Installing SNU Clipper ${update.newVersion}. The app restarts on its own.`, children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { size: 12, className: "animate-spin" }),
         " Installing… restarting"
       ] });
@@ -17056,7 +17056,7 @@ async function readInstructionFile(file) {
   if (file.size > MAX_FILE_BYTES) throw new Error(`${name} is larger than 25 MB. Attach the part with the instructions, or paste them in.`);
   if (ext === ".doc") throw new Error(`${name} is an old Word file. Save it as .docx or PDF and attach that, or paste the text in.`);
   if (!INSTRUCTION_EXTENSIONS.includes(ext)) {
-    throw new Error(`Nizam cannot read ${ext || "that kind of"} files. Attach a .txt, .md, .pdf or .docx file, or paste the text in.`);
+    throw new Error(`SNU Clipper cannot read ${ext || "that kind of"} files. Attach a .txt, .md, .pdf or .docx file, or paste the text in.`);
   }
   let text;
   try {
@@ -17372,7 +17372,7 @@ function TranscriptImport() {
   };
   const t = draft.transcript;
   const shown = open || Boolean(t);
-  const warning = !t ? null : t.parsed.format === "plain" ? !quickListenFits(t.parsed.plainWords ?? []) ? "Plain text can only be timed quickly in Latin-letter languages. For Hindi, Urdu or Arabic, use .srt or .vtt; with this, Nizam listens to the whole video." : plainCoverageWarning(t.parsed, duration) : coverageWarning(t.parsed, duration, range);
+  const warning = !t ? null : t.parsed.format === "plain" ? !quickListenFits(t.parsed.plainWords ?? []) ? "Plain text can only be timed quickly in Latin-letter languages. For Hindi, Urdu or Arabic, use .srt or .vtt; with this, SNU Clipper listens to the whole video." : plainCoverageWarning(t.parsed, duration) : coverageWarning(t.parsed, duration, range);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-6", "data-testid": "transcript-import", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(YouTubeCaptions, {}),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -17413,7 +17413,7 @@ function TranscriptImport() {
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[12px] mt-2 flex items-start gap-1.5", style: { color: "var(--color-muted)" }, children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(Zap, { size: 13, className: "mt-0.5 shrink-0", style: { color: "var(--color-ok)" } }),
-          t.parsed.format === "plain" ? "Your words, timed with a quick listen. Several times faster." : "Your words and times as they are. Nizam skips listening."
+          t.parsed.format === "plain" ? "Your words, timed with a quick listen. Several times faster." : "Your words and times as they are. SNU Clipper skips listening."
         ] }),
         warning && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[12px] mt-2 flex items-start gap-1.5", style: { color: "var(--color-warn)" }, "data-testid": "transcript-warning", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(TriangleAlert, { size: 13, className: "mt-0.5 shrink-0" }),
@@ -17523,7 +17523,7 @@ function YouTubeCaptions() {
     return row(
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[12px]", style: { color: "var(--color-muted)" }, children: [
         want ? `This video has no captions in ${want} on YouTube` : "This video has no captions on YouTube",
-        ", so Nizam listens to it."
+        ", so SNU Clipper listens to it."
       ] })
     );
   }
@@ -17544,7 +17544,7 @@ function YouTubeCaptions() {
         ),
         "Use YouTube's captions (much faster)"
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[12px] mt-1", style: { color: "var(--color-muted)" }, children: draft.transcript ? "Your own transcript is used instead." : pick.auto ? `YouTube's automatic ${langName(pick.lang)} captions: no punctuation, so cuts may be less tidy.` : `Captions written for this video (${langName(pick.lang)}). Nizam skips listening.` })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[12px] mt-1", style: { color: "var(--color-muted)" }, children: draft.transcript ? "Your own transcript is used instead." : pick.auto ? `YouTube's automatic ${langName(pick.lang)} captions: no punctuation, so cuts may be less tidy.` : `Captions written for this video (${langName(pick.lang)}). SNU Clipper skips listening.` })
     ] })
   );
 }
@@ -19569,7 +19569,7 @@ function ClipWindow({ music, length, onChange }) {
 }
 const EXPORT_RESOLUTIONS = [
   { id: "auto", label: "Auto", hint: "Full HD, best for posting" },
-  { id: "1080", label: "1080p", hint: "Full HD, the sharpest Nizam makes" },
+  { id: "1080", label: "1080p", hint: "Full HD, the sharpest SNU Clipper makes" },
   { id: "720", label: "720p", hint: "Smaller files, quicker to make" },
   { id: "480", label: "480p", hint: "Smallest, for previews or slow uploads" }
 ];
@@ -19640,7 +19640,7 @@ function ConnectOpenRouter({ compact = false }) {
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-xl px-4 py-3 space-y-2", style: { background: "var(--color-bg-2)", border: "1px solid var(--color-brand)" }, children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-sm font-medium", children: "Free AI picks far better clips" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs", style: { color: "var(--color-muted)" }, children: "Sign in to OpenRouter with Google (an account is made for you if you have none). The key is free, comes back into Nizam by itself, and no card is asked for." }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs", style: { color: "var(--color-muted)" }, children: "Sign in to OpenRouter with Google (an account is made for you if you have none). The key is free, comes back into SNU Clipper by itself, and no card is asked for." }),
     button,
     error && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs", style: { color: "var(--color-err-text)" }, children: error })
   ] });
@@ -20025,7 +20025,7 @@ function StepMode() {
           active: mode === "live" && !livePlays,
           icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Radio, { size: 18 }),
           title: "Live clips",
-          sub: "Nizam watches a live stream and cuts as it goes",
+          sub: "SNU Clipper watches a live stream and cuts as it goes",
           points: ["Follows it live", "Stops when you say"],
           onSelect: () => choose("live")
         }
@@ -20161,7 +20161,7 @@ function StepLiveSource() {
       StepHead,
       {
         title: plays ? "Which gaming stream?" : "Which live stream?",
-        sub: "A stream that is live now. Nizam starts from this moment."
+        sub: "A stream that is live now. SNU Clipper starts from this moment."
       }
     ),
     /* @__PURE__ */ jsxRuntimeExports.jsx("label", { className: "label", children: "Live video link" }),
@@ -20180,7 +20180,7 @@ function StepLiveSource() {
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[11px] mt-1.5", style: { color: "var(--color-muted)" }, children: draft.url && !looksLikeUrl(draft.url) ? "That doesn't look like a link yet." : ytId ? `YouTube ${ytId}. Only the part you watch is recorded.` : "YouTube and most other live sources." }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(PromptBar, { mode: "live" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "notice notice-warn mt-4 text-xs", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Keep Nizam open while it watches. Only the last few minutes stay on disk." }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "notice notice-warn mt-4 text-xs", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Keep SNU Clipper open while it watches. Only the last few minutes stay on disk." }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(SetupNotes, {})
   ] });
 }
@@ -20189,7 +20189,7 @@ function StepGamingFormat() {
   const opts = draft.opts;
   const none = opts.facecam === "none";
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(StepHead, { title: "Facecam on top, gameplay below", sub: "Nizam finds the facecam and makes tall 9:16 clips." }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(StepHead, { title: "Facecam on top, gameplay below", sub: "SNU Clipper finds the facecam and makes tall 9:16 clips." }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-2 gap-3", "data-testid": "gaming-framing", children: [["auto", "Facecam over gameplay", "The cam across the top"], ["none", "Gameplay only", "This stream has no facecam"]].map(([id, title, sub]) => /* @__PURE__ */ jsxRuntimeExports.jsx(OptionCard, { active: id === "none" === none, onSelect: () => setDraftOpts({ facecam: id === "none" ? "none" : void 0 }), title, sub, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid place-items-center h-12", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "h-10 w-6 rounded overflow-hidden flex flex-col", style: { background: "#0d1017" }, children: [
       id === "auto" && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: "40%", background: "var(--grad-brand)" } }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-1", style: { background: "linear-gradient(135deg,#3b4657,#242b38)" } })
@@ -20491,7 +20491,7 @@ function StepDetails() {
               }
             )
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[11px] mt-1", style: { color: "var(--color-muted)" }, children: live ? "Stops once it has this many." : funny ? "Only truly funny moments count, so you may get fewer." : `Up to ${MAX_CLIPS}. Nizam tells you if the video has fewer.` })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[11px] mt-1", style: { color: "var(--color-muted)" }, children: live ? "Stops once it has this many." : funny ? "Only truly funny moments count, so you may get fewer." : `Up to ${MAX_CLIPS}. SNU Clipper tells you if the video has fewer.` })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "label", children: [
@@ -20625,13 +20625,13 @@ function CostLine() {
     text = "Free · uses the transcript you have";
     local = true;
   } else if (settings.cloudSpeech === "clipie" && cloud && !cloud.serverReady) {
-    text = "Free · runs on this computer (Nizam Cloud is coming soon)";
+    text = "Free · runs on this computer (SNU Clipper Cloud is coming soon)";
     local = true;
   } else if (settings.cloudSpeech === "clipie") {
     paid = true;
     const length = (opts.rangeEnd ?? draft.poster?.duration ?? 0) - (opts.rangeStart ?? 0);
     const left = cloud?.balance !== void 0 ? ` · ${Math.floor(cloud.balance / CREDITS_PER_MINUTE)} left` : "";
-    text = opts.mode === "live" ? `Uses Nizam Cloud minutes while it watches${left}` : length > 0 ? `Uses about ${Math.max(1, Math.ceil(length / 60))} Nizam Cloud min${left}` : `Uses Nizam Cloud minutes${left}`;
+    text = opts.mode === "live" ? `Uses SNU Clipper Cloud minutes while it watches${left}` : length > 0 ? `Uses about ${Math.max(1, Math.ceil(length / 60))} SNU Clipper Cloud min${left}` : `Uses SNU Clipper Cloud minutes${left}`;
   } else if (settings.cloudSpeech === "groq") {
     text = "Speech on Groq with your key";
   } else if (settings.plan === "paid" && settings.hasOpenAIKey) {
@@ -20769,7 +20769,7 @@ function ProjectsPage() {
       projects.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-10 card p-10 text-center nzp-empty", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-12 w-12 rounded-2xl grid place-items-center mx-auto", style: { background: "var(--color-bg-3)" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Film, { size: 22 }) }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 font-medium", children: "No projects yet" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-sm mt-1", style: { color: "var(--color-muted)" }, children: "Drop a recording or paste a video link — Nizam cuts your first clips right here on your machine." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-sm mt-1", style: { color: "var(--color-muted)" }, children: "Drop a recording or paste a video link — SNU Clipper cuts your first clips right here on your machine." }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "btn btn-primary mt-4", onClick: startNewProject, children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { size: 16 }),
           " New project"
@@ -21086,7 +21086,7 @@ function FailedActions({ project }) {
   ] });
 }
 const BROWSER_NAMES = { firefox: "Firefox", chrome: "Chrome", edge: "Edge", brave: "Brave", safari: "Safari" };
-const ROBOT_MESSAGE = "YouTube is asking Nizam to prove it is not a robot.";
+const ROBOT_MESSAGE = "YouTube is asking SNU Clipper to prove it is not a robot.";
 const ROBOT_TAIL = "This happens after many downloads from one network and usually lifts within an hour.";
 function robotCheck(message) {
   if (!message.startsWith(ROBOT_MESSAGE)) return null;
@@ -21128,7 +21128,7 @@ function BotCheck({ project }) {
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-semibold", children: ROBOT_MESSAGE }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-sm mt-1", style: { color: "var(--color-muted)" }, children: [
         ROBOT_TAIL,
-        " Nizam already tried the other ways it knows of asking for the video."
+        " SNU Clipper already tried the other ways it knows of asking for the video."
       ] }),
       check.note && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm mt-2", style: { color: "var(--color-warn)" }, "data-testid": "bot-note", children: check.note }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap gap-2 mt-4", children: [
@@ -21152,7 +21152,7 @@ function BotCheck({ project }) {
           " ",
           BROWSER_NAMES[b]
         ] }, b)) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[12px] mt-2.5", style: { color: "var(--color-muted)" }, children: "Nizam reads your YouTube sign-in from that browser and sends it only to YouTube. Heavy downloading can get an account limited." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[12px] mt-2.5", style: { color: "var(--color-muted)" }, children: "SNU Clipper reads your YouTube sign-in from that browser and sends it only to YouTube. Heavy downloading can get an account limited." }),
         using && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[12px] mt-1.5", style: { color: "var(--color-muted)" }, children: [
           "Using your ",
           BROWSER_NAMES[using],
@@ -22170,7 +22170,7 @@ function LiveStopped({ project }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 rounded-xl px-4 py-3 flex items-center gap-3 flex-wrap", style: { background: "var(--color-warn-soft)", border: "1px solid var(--color-warn-edge)" }, "data-testid": "live-stopped", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0 flex-1 text-sm", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "font-medium", children: [
-        "Nizam stopped watching",
+        "SNU Clipper stopped watching",
         after
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-xs mt-0.5", style: { color: "var(--color-muted)" }, children: [
@@ -22920,7 +22920,7 @@ function LiveSession({ project }) {
         "Opening the stream…"
       ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(Radio, { size: 14, className: "inline mr-2" }),
-        "Nothing scored yet. Nizam scores each finished sentence."
+        "Nothing scored yet. SNU Clipper scores each finished sentence."
       ] }) })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-6 flex items-center gap-3", children: [
@@ -22953,7 +22953,7 @@ const PAYMENTS = {
   proofEmail: "payments@example.com",
   /** How long confirmation can take, in hours. */
   confirmHours: 24,
-  /** Nizam Cloud minutes, bought the same ways and added to the account's email by hand. */
+  /** SNU Clipper Cloud minutes, bought the same ways and added to the account's email by hand. */
   minutePacks: [
     { id: "min150", label: "150 minutes", minutes: 150, usd: 5, pkr: 1400 },
     { id: "min330", label: "330 minutes", minutes: 330, usd: 10, pkr: 2800, note: "Popular" },
@@ -23082,9 +23082,9 @@ function BuyMinutes({ pack, email, onClose }) {
   const amount = method ? packPrice(pack, method) : `$${pack.usd}`;
   const name = shot?.split(/[\\/]/).pop();
   const mail = mailTo(
-    `Nizam Cloud minutes · ${pack.minutes} min · ${email}`,
+    `SNU Clipper Cloud minutes · ${pack.minutes} min · ${email}`,
     [
-      `Hi, I paid for ${pack.minutes} Nizam Cloud minutes. The screenshot is attached.`,
+      `Hi, I paid for ${pack.minutes} SNU Clipper Cloud minutes. The screenshot is attached.`,
       "",
       `Account email: ${email}`,
       `Pack: ${pack.minutes} minutes (${amount})`,
@@ -23094,7 +23094,7 @@ function BuyMinutes({ pack, email, onClose }) {
       `(Attach the screenshot: ${name ?? ""})`
     ].join("\n")
   );
-  const askCard = mailTo(`Nizam Cloud card payment link (${pack.minutes} min)`, `Hi, please send me a card payment link for ${pack.minutes} Nizam Cloud minutes ($${pack.usd}).
+  const askCard = mailTo(`SNU Clipper Cloud card payment link (${pack.minutes} min)`, `Hi, please send me a card payment link for ${pack.minutes} SNU Clipper Cloud minutes ($${pack.usd}).
 
 Account email: ${email}
 `);
@@ -23236,7 +23236,7 @@ function KeyField({ saved, placeholder, onSave, onRemove }) {
 function PlanPage() {
   const { settings } = useStoreKeys("settings");
   if (!settings) return null;
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(PageShell, { title: "Nizam Cloud", sub: "Nizam is free: every feature, no limits, no watermark. Nizam Cloud is optional.", wide: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(NizamCloudCard, {}) });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(PageShell, { title: "SNU Clipper Cloud", sub: "SNU Clipper is free: every feature, no limits, no watermark. SNU Clipper Cloud is optional.", wide: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(SNUClipperCloudCard, {}) });
 }
 function SpeechPage() {
   const { settings } = useStoreKeys("settings");
@@ -23253,13 +23253,13 @@ function SpeechPage() {
 }
 function FreeDetails() {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(NizamCloudNote, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SNUClipperCloudNote, {}),
     /* @__PURE__ */ jsxRuntimeExports.jsx(CloudSpeechCard, {}),
     /* @__PURE__ */ jsxRuntimeExports.jsx(AccelerationCard, {}),
     /* @__PURE__ */ jsxRuntimeExports.jsx(ModelsCard, {})
   ] });
 }
-function NizamCloudNote() {
+function SNUClipperCloudNote() {
   const { settings, go, cloud } = useStoreKeys("settings", "go", "cloud");
   if (!settings) return null;
   const on = settings.cloudSpeech === "clipie";
@@ -23268,7 +23268,7 @@ function NizamCloudNote() {
     /* @__PURE__ */ jsxRuntimeExports.jsx(Sparkles, { size: 16, style: { color: "var(--color-brand-ink)" } }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-sm font-medium", children: [
-        "Nizam Cloud ",
+        "SNU Clipper Cloud ",
         soon ? "is coming soon" : on ? "is on" : "is off"
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs mt-0.5", style: { color: "var(--color-muted)" }, children: "Fast, accurate speech in the cloud, with minutes you buy. Free on this computer without it." })
@@ -23276,7 +23276,7 @@ function NizamCloudNote() {
     /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "btn btn-ghost ml-auto shrink-0", onClick: () => go("plan"), children: "Open Cloud" })
   ] });
 }
-function NizamCloudCard() {
+function SNUClipperCloudCard() {
   const { settings, updateSettings, cloud: acc, cloudBusy: busy, refreshCloud: refresh, openSignIn, cloudSignOut } = useStoreKeys("settings", "updateSettings", "cloud", "cloudBusy", "refreshCloud", "openSignIn", "cloudSignOut");
   const [buying, setBuying] = reactExports.useState(null);
   reactExports.useEffect(() => {
@@ -23290,7 +23290,7 @@ function NizamCloudCard() {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "card p-5", "data-testid": "clipie-cloud", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(Sparkles, { size: 16, style: { color: "var(--color-brand-ink)" } }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-medium", children: "Nizam Cloud" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-medium", children: "SNU Clipper Cloud" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "pill ml-auto", style: { background: on && ready ? "var(--color-ok-soft)" : "var(--color-bg-3)", color: on && ready ? "var(--color-ok)" : "var(--color-muted)" }, children: acc && !acc.serverReady ? "coming soon" : on && ready ? "on" : "off" })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs mt-0.5", style: { color: "var(--color-muted)" }, children: "Fast, accurate speech, best for Urdu and Hindi. Only the audio is uploaded." }),
@@ -23311,7 +23311,7 @@ function NizamCloudCard() {
     acc && !acc.serverReady ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 rounded-xl px-4 py-5 text-center", style: { background: "var(--color-bg-3)", border: "1px solid var(--color-line)" }, "data-testid": "cloud-coming-soon", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-lg font-semibold", children: "Coming soon" }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-xs mt-1 leading-relaxed", style: { color: "var(--color-muted)" }, children: [
-        "Nizam Cloud is getting ready. Minutes are not on sale for now; your clips are made free on this computer.",
+        "SNU Clipper Cloud is getting ready. Minutes are not on sale for now; your clips are made free on this computer.",
         signedIn ? " Any minutes you already have are kept." : ""
       ] })
     ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
@@ -23348,7 +23348,7 @@ function NizamCloudCard() {
       signedIn && acc && /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "mt-4 flex items-center gap-3 rounded-xl px-4 py-3 cursor-pointer", style: { background: "var(--color-bg-3)", border: `1px solid ${on ? "var(--color-brand)" : "var(--color-line)"}`, opacity: acc.serverReady ? 1 : 0.6 }, children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("input", { type: "checkbox", className: "h-4 w-4", checked: on, disabled: !acc.serverReady, onChange: (e) => void updateSettings({ cloudSpeech: e.target.checked ? "clipie" : "off" }), "data-testid": "clipie-cloud-toggle" }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-sm font-medium", children: "Use Nizam Cloud" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-sm font-medium", children: "Use SNU Clipper Cloud" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs", style: { color: "var(--color-muted)" }, children: "1 min of audio uses 1 min. Failed parts are free." })
         ] })
       ] })
@@ -23385,7 +23385,7 @@ function CloudSpeechCard() {
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-xs mt-0.5", style: { color: "var(--color-muted)" }, children: [
       "Fast Whisper Large with your own free key. Only the audio is uploaded.",
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Hint, { text: "Groq's free key allows about 2 hours of audio an hour and 8 a day. Past that, or offline, Nizam transcribes on this computer." })
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Hint, { text: "Groq's free key allows about 2 hours of audio an hour and 8 a day. Past that, or offline, SNU Clipper transcribes on this computer." })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "mt-3 flex items-start gap-3 rounded-xl px-4 py-3 cursor-pointer", style: { background: "var(--color-bg-3)", border: `1px solid ${on ? "var(--color-brand)" : "var(--color-line)"}` }, children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("input", { type: "checkbox", className: "h-4 w-4 mt-0.5", checked: on, onChange: (e) => void updateSettings({ cloudSpeech: e.target.checked ? "groq" : "off" }), "data-testid": "cloud-speech-toggle" }),
@@ -23456,7 +23456,7 @@ function AccelerationCard() {
       ] })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-xs mt-0.5", style: { color: "var(--color-muted)" }, children: [
-      "Where speech runs. Nizam times both and keeps the faster.",
+      "Where speech runs. SNU Clipper times both and keeps the faster.",
       /* @__PURE__ */ jsxRuntimeExports.jsx(Hint, { text: "A graphics card is not always faster for speech: a weak built-in GPU is often slower than the processor." })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 grid grid-cols-3 gap-3 text-xs", children: [
@@ -23528,7 +23528,7 @@ function AutoModel() {
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-sm font-medium", children: [
         "Auto · pick per video’s language",
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Hint, { text: "Nizam hears the language, then uses the smallest downloaded model that is accurate for it: a small one for English, Large for Hindi and Urdu." })
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Hint, { text: "SNU Clipper hears the language, then uses the smallest downloaded model that is accurate for it: a small one for English, Large for Hindi and Urdu." })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs mt-0.5", style: { color: "var(--color-muted)" }, children: have.length > 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
         "English → ",
@@ -23627,7 +23627,7 @@ function AiPage() {
     PageShell,
     {
       title: "AI writing",
-      sub: "Picks the best moments and writes titles, hooks, hashtags and posts. Without a key, Nizam still makes clips.",
+      sub: "Picks the best moments and writes titles, hooks, hashtags and posts. Without a key, SNU Clipper still makes clips.",
       children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "card p-5 space-y-5", children: [
         active === "openrouter" && !settings.providersWithKey.includes("openrouter") && /* @__PURE__ */ jsxRuntimeExports.jsx(ConnectOpenRouter, {}),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
@@ -23812,7 +23812,7 @@ function StoragePage() {
     PageShell,
     {
       title: "Storage",
-      sub: "What Nizam keeps on this computer, and how to free space.",
+      sub: "What SNU Clipper keeps on this computer, and how to free space.",
       children: !storage ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-sm", style: { color: "var(--color-muted)" }, children: "Measuring…" }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(DiskCard, {}),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "card divide-y", style: { borderColor: "var(--color-line)" }, children: [
@@ -23987,7 +23987,7 @@ function DiskCard() {
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bar mt-2", style: { height: 8 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: `${Math.min(100, pct)}%`, background: pct > 90 ? "var(--color-err)" : void 0 } }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[11px] mt-1.5", style: { color: "var(--color-muted)" }, children: [
-      "Nizam uses ",
+      "SNU Clipper uses ",
       formatBytes(clipie),
       ". A job needs about 400 MB plus a third of the video's size."
     ] }),
@@ -24025,8 +24025,8 @@ function AboutPage() {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(
     PageShell,
     {
-      title: "About Nizam",
-      sub: "Nizam turns raw recordings into captioned clips, scripts and posts — your media stays 100% on your machine. Speech and rendering run here; only AI writing and Nizam Cloud go online. Built by Syed Nizam Uddin (SNU).",
+      title: "About SNU Clipper",
+      sub: "SNU Clipper turns raw recordings into captioned clips, scripts and posts — your media stays 100% on your machine. Speech and rendering run here; only AI writing and SNU Clipper Cloud go online. Built by Syed Nizam Uddin (SNU).",
       children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(UpdateCard, {}),
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "card divide-y", style: { borderColor: "var(--color-line)" }, children: rows.map(([k, v]) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-4 px-4 py-2.5 text-sm", style: { borderColor: "var(--color-line)" }, children: [
@@ -24053,11 +24053,11 @@ function UpdateCard() {
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-xs mt-1", style: { color: "var(--color-muted)" }, children: [
       (update.status === "available" || update.status === "ready") && `Version ${update.newVersion} is available.`,
       update.status === "downloading" && (update.waiting ? `No internet. Version ${update.newVersion} resumes downloading when you are back online (${update.percent ?? 0}%).` : `Downloading version ${update.newVersion}… ${update.percent ?? 0}%`),
-      update.status === "installing" && `Installing version ${update.newVersion}. Nizam restarts on its own.`,
+      update.status === "installing" && `Installing version ${update.newVersion}. SNU Clipper restarts on its own.`,
       update.status === "up-to-date" && "You are on the latest version.",
       update.status === "checking" && "Checking for a new version…",
       update.status === "error" && (update.error ?? "Could not check for updates."),
-      update.status === "idle" && "Nizam checks for updates shortly after it starts."
+      update.status === "idle" && "SNU Clipper checks for updates shortly after it starts."
     ] }),
     update.status === "downloading" && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bar mt-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: `${Math.max(4, update.percent ?? 0)}%` } }) }),
     !update.canInstall && update.installBlockedReason && (update.status === "available" || update.status === "ready") && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "notice notice-warn mt-3 text-xs", children: [
@@ -24067,7 +24067,7 @@ function UpdateCard() {
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 flex items-center gap-2", children: [
       update.newVersion && update.downloadUrl && (update.status === "available" || update.status === "ready" || update.status === "error") ? /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "btn btn-primary", onClick: () => void openUpdateDownload(), children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowDownToLine, { size: 15 }),
-        " Download Nizam ",
+        " Download SNU Clipper ",
         update.newVersion
       ] }) : (update.status === "available" || update.status === "ready" || update.status === "error" && update.newVersion && update.canInstall) && /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "btn btn-primary", onClick: () => void runUpdate(), children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowDownToLine, { size: 15 }),
@@ -24102,7 +24102,7 @@ function AppearancePage() {
     applyAppearance({ theme: next.theme ?? theme, accent: next.accent ?? accent });
     void updateSettings(next);
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(PageShell, { title: "Appearance", sub: "How Nizam looks. Your clips are not affected.", children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(PageShell, { title: "Appearance", sub: "How SNU Clipper looks. Your clips are not affected.", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "card p-5", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-medium", children: "Theme" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs mt-1", style: { color: "var(--color-muted)" }, children: "System follows your computer's light or dark setting." }),
@@ -24228,7 +24228,7 @@ function SignInDialog() {
       } else {
         const { needsConfirm } = await cloudSignUpEmail(email, password, name);
         if (needsConfirm) {
-          setNotice(`Account made. Open the link Nizam sent to ${email.trim()}, then sign in here.`);
+          setNotice(`Account made. Open the link SNU Clipper sent to ${email.trim()}, then sign in here.`);
           setMode("signin");
           setPassword("");
         }
@@ -24242,10 +24242,10 @@ function SignInDialog() {
   return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "fixed inset-0 z-50 grid place-items-center p-6", style: { background: "var(--color-scrim)" }, onMouseDown: (e) => e.target === e.currentTarget && openSignIn(false), "data-testid": "sign-in-dialog", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full max-w-[400px] max-h-full overflow-y-auto rounded-2xl p-6", style: { background: "var(--color-bg-2)", border: "1px solid var(--color-line)" }, children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(Sparkles, { size: 16, style: { color: "var(--color-brand-ink)" } }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-semibold", children: mode === "signup" ? "Create your Nizam account" : "Sign in to Nizam" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-semibold", children: mode === "signup" ? "Create your SNU Clipper account" : "Sign in to SNU Clipper" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "btn btn-ghost p-1.5 ml-auto", onClick: () => openSignIn(false), title: "Close", children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { size: 15 }) })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs mt-1", style: { color: "var(--color-muted)" }, children: "Your Nizam Cloud minutes stay with this account, on any computer." }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs mt-1", style: { color: "var(--color-muted)" }, children: "Your SNU Clipper Cloud minutes stay with this account, on any computer." }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-4 grid grid-cols-2 gap-1 rounded-xl p-1", style: { background: "var(--color-bg-3)" }, children: ["signup", "signin"].map((m) => /* @__PURE__ */ jsxRuntimeExports.jsx(
       "button",
       {
@@ -24309,7 +24309,7 @@ function App() {
       /* @__PURE__ */ jsxRuntimeExports.jsx(Sidebar, {}),
       /* @__PURE__ */ jsxRuntimeExports.jsx("main", { className: "page-in flex-1 min-w-0 h-full", children: !settings && startupError ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-full grid place-items-center", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-md text-center space-y-3", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-sm", children: [
-          "Nizam could not start: ",
+          "SNU Clipper could not start: ",
           startupError
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "btn btn-primary", onClick: () => void init(), children: "Try again" })
@@ -24338,7 +24338,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 );
 
 /* ==========================================================================
-   NIZAM PRODUCTIVITY PACK  ·  nzq- prefixed
+   SNU CLIPPER PRODUCTIVITY PACK  ·  nzq- prefixed
    Append VERBATIM after the ReactDOM.createRoot(...).render(...) call at the
    very end of out/renderer/assets/index-DBbn4Tny.js. Plain ES2020+, no imports.
    ========================================================================== */
@@ -24395,7 +24395,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     } catch (_) { try { el.remove(); } catch (_2) {} }
   }
 
-  function showNizamToast(message, tone) {
+  function showSNUClipperToast(message, tone) {
     const layer = ensureToastLayer();
     if (!layer) return undefined;
     const text = String(message ?? "");
@@ -24434,7 +24434,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     return el;
   }
 
-  try { window.nizamToast = showNizamToast; } catch (_) {}
+  try { window.snuToast = showSNUClipperToast; } catch (_) {}
 
   /* ------------------------------------------------------------------ *
    * 2. Copy feedback — wrap window.clipie.clipboard.write (idempotent)   *
@@ -24449,7 +24449,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         const args = arguments;
         const result = original.apply(this, args);
         const notify = () => {
-          try { showNizamToast("Copied to clipboard", "success"); } catch (_) {}
+          try { showSNUClipperToast("Copied to clipboard", "success"); } catch (_) {}
         };
         if (result && typeof result.then === "function") {
           return result.then(
@@ -24499,7 +24499,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           '<span class="nzq-help__brand">' + HEX + '</span>' +
           '<span class="nzq-help__heading">' +
             '<span class="nzq-help__title">Keyboard shortcuts</span>' +
-            '<span class="nzq-help__sub">Nizam &middot; work faster, no mouse required</span>' +
+            '<span class="nzq-help__sub">SNU Clipper &middot; work faster, no mouse required</span>' +
           '</span>' +
           '<button type="button" class="nzq-help__close" aria-label="Close">&times;</button>' +
         '</div>' +
@@ -24639,7 +24639,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   function checkUpdate() {
     let pending;
     try { pending = bridge() && bridge().updates && bridge().updates.check && bridge().updates.check(); }
-    catch (_) { showNizamToast("Update check could not start", "error"); return; }
+    catch (_) { showSNUClipperToast("Update check could not start", "error"); return; }
 
     Promise.resolve(pending).then((res) => {
       let msg = "Update check complete";
@@ -24649,14 +24649,14 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           const available = res.updateAvailable || res.available ||
             (status && status !== "none" && status !== "up-to-date" && status !== "uptodate" && status !== "idle");
           if (available) {
-            msg = res.newVersion ? "Update available · Nizam " + res.newVersion : "An update is available";
+            msg = res.newVersion ? "Update available · SNU Clipper " + res.newVersion : "An update is available";
           } else if (res.currentVersion) {
-            msg = "You're up to date · Nizam " + res.currentVersion;
+            msg = "You're up to date · SNU Clipper " + res.currentVersion;
           }
         }
       } catch (_) {}
-      showNizamToast(msg, "update");
-    }).catch(() => showNizamToast("Update check failed", "error"));
+      showSNUClipperToast(msg, "update");
+    }).catch(() => showSNUClipperToast("Update check failed", "error"));
   }
 
   function onKeydown(ev) {

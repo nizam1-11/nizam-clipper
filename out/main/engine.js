@@ -6314,7 +6314,7 @@ async function requestAnalysis(o, model) {
   const durationMin = (transcript.duration / 60).toFixed(1);
   const reel = options.mode === "reel";
   const system = [
-    "You are Nizam, an expert short-form video editor and content strategist.",
+    "You are SNU Clipper, an expert short-form video editor and content strategist.",
     reel ? "You receive a timestamped transcript of a short raw recording that will be published as ONE reel. Write the copy for it and return exactly one highlight covering the entire transcript (start = the first timestamp, end = the last timestamp)." : "You receive a timestamped transcript of a raw video and must find the moments that work as standalone social clips (TikTok, Reels, YouTube Shorts, LinkedIn).",
     "",
     reel ? "Rules for the single highlight:" : "Rules for highlights:",
@@ -6467,7 +6467,7 @@ async function chatRequest(o, noReasoning, withTemperature = true) {
     headers: {
       Authorization: `Bearer ${o.apiKey}`,
       "Content-Type": "application/json",
-      ...provider === "openrouter" ? { "HTTP-Referer": "https://nizam.app", "X-Title": "Nizam" } : {}
+      ...provider === "openrouter" ? { "HTTP-Referer": "https://snu.app", "X-Title": "SNU Clipper" } : {}
     },
     body: JSON.stringify(chatBody(o, provider, noReasoning, withTemperature)),
     signal: o.signal
@@ -7403,7 +7403,7 @@ function rulesProposals(s, sig, options, n, within = [0, s.length - 1]) {
     if (out.length >= n) break;
     const span = { start: s[c.first].start, end: s[c.last].end };
     if (out.some((o) => overlapSeconds({ start: s[o.first].start, end: s[o.last].end }, span) > 0.3)) continue;
-    out.push({ first: c.first, last: c.last, score: Math.max(0, Math.min(100, Math.round(c.score))), why: "Picked by Nizam's own search: hook words, pace, audio and clean edges.", origin: "rules" });
+    out.push({ first: c.first, last: c.last, score: Math.max(0, Math.min(100, Math.round(c.score))), why: "Picked by SNU Clipper's own search: hook words, pace, audio and clean edges.", origin: "rules" });
   }
   return out;
 }
@@ -9082,7 +9082,7 @@ async function withModel(o, chat2, s, sig0, lim, want, base, stats) {
   }
   finalists = kept;
   if (vetted && finalists.length < want) {
-    o.log(`Only ${finalists.length} moment${finalists.length === 1 ? "" : "s"} in this video match${finalists.length === 1 ? "es" : ""} your instructions, so Nizam made ${finalists.length} clip${finalists.length === 1 ? "" : "s"} instead of ${want}.`);
+    o.log(`Only ${finalists.length} moment${finalists.length === 1 ? "" : "s"} in this video match${finalists.length === 1 ? "es" : ""} your instructions, so SNU Clipper made ${finalists.length} clip${finalists.length === 1 ? "" : "s"} instead of ${want}.`);
   }
   o.onProgress(75, "Writing titles…");
   finalists.sort((a, b) => a.start - b.start);
@@ -9136,7 +9136,7 @@ async function withModel(o, chat2, s, sig0, lim, want, base, stats) {
     stats.skipped = [...budget.skipped];
     stats.models = models;
     o.log(`AI requests: ${budget.used} of ${budget.cap} (${Object.entries(budget.byStage).map(([k, v]) => `${k} ${v}`).join(", ")})${budget.skipped.length ? `; skipped ${budget.skipped.join(", ")}` : ""}.`);
-    if (budget.dead) o.log(`AI writing stopped early: ${budget.dead}. Nizam's own search filled in.`);
+    if (budget.dead) o.log(`AI writing stopped early: ${budget.dead}. SNU Clipper's own search filled in.`);
     return {
       summary: summary?.summary || base.summary,
       chapters: summary?.chapters.length ? summary.chapters : base.chapters,
@@ -9145,7 +9145,7 @@ async function withModel(o, chat2, s, sig0, lim, want, base, stats) {
       ...models.length ? { model: models.join(", ") } : {}
     };
   })().catch((err) => {
-    if (err.message !== "Cancelled") o.log(`The summary and script were not written (${err.message}); Nizam's own stand in.`);
+    if (err.message !== "Cancelled") o.log(`The summary and script were not written (${err.message}); SNU Clipper's own stand in.`);
     return {};
   });
   return { analysis, rest };
@@ -9996,7 +9996,7 @@ function cloudService(provider, model, baseUrl) {
       url: `${base}/v1/audio/transcriptions`,
       jobsUrl: `${base}/v1/jobs`,
       model: "whisper-large-v3",
-      label: "Nizam Cloud",
+      label: "SNU Clipper Cloud",
       // Pieces wait in the server's line (up to eight per account), which takes turns between
       // accounts, so sending more at once does not push anyone else back.
       parallel: 6,
@@ -10026,7 +10026,7 @@ function cloudService(provider, model, baseUrl) {
   };
 }
 class CloudSpeechError extends Error {
-  /** "credits": Nizam Cloud minutes used up. */
+  /** "credits": SNU Clipper Cloud minutes used up. */
   constructor(message, reason) {
     super(message);
     this.reason = reason;
@@ -10035,7 +10035,7 @@ class CloudSpeechError extends Error {
 }
 const SR$1 = 16e3;
 const MAX_RATE_WAIT_MS = 9e4;
-const WAITING = "No internet connection. Waiting for it to come back; Nizam carries on by itself.";
+const WAITING = "No internet connection. Waiting for it to come back; SNU Clipper carries on by itself.";
 async function transcribeCloud(opts) {
   let last = 0;
   const o = { ...opts, onProgress: (p, m) => opts.onProgress(p < 0 ? last : last = p, m) };
@@ -10172,7 +10172,7 @@ async function transcribePiece(o, svc, body, name, extra, signal, sleep2) {
           break;
         }
         if (res.status === 401 || res.status === 403) {
-          throw new CloudSpeechError(res.status === 403 ? "Your Nizam Cloud account has been turned off." : "Your Nizam Cloud sign-in has run out. Sign in again on the Cloud page.", "key");
+          throw new CloudSpeechError(res.status === 403 ? "Your SNU Clipper Cloud account has been turned off." : "Your SNU Clipper Cloud sign-in has run out. Sign in again on the Cloud page.", "key");
         }
         if (!res.ok) {
           if (++busy > 6) throw new CloudSpeechError(`${svc.label} is not answering properly right now.`, "service");
@@ -10181,7 +10181,7 @@ async function transcribePiece(o, svc, body, name, extra, signal, sleep2) {
         }
         busy = 0;
         const now = await res.json().catch(() => null);
-        if (!now) throw new CloudSpeechError(`${svc.label} sent back an answer Nizam could not read.`, "service");
+        if (!now) throw new CloudSpeechError(`${svc.label} sent back an answer SNU Clipper could not read.`, "service");
         if (now.status === "done" && now.result) return now.result;
         if (now.status === "failed") {
           if (attempt >= 1) throw new CloudSpeechError(`${svc.label} could not transcribe a part of this audio.`, "service");
@@ -10194,11 +10194,11 @@ async function transcribePiece(o, svc, body, name, extra, signal, sleep2) {
         }
         if (now.status === "queued" && Date.now() - started > MAX_QUEUE_WAIT_MS) {
           void fetch(`${svc.jobsUrl}/${job.id}`, { method: "DELETE", headers: auth }).catch(() => void 0);
-          throw new CloudSpeechError("Nizam Cloud is busy with other videos right now.", "limit");
+          throw new CloudSpeechError("SNU Clipper Cloud is busy with other videos right now.", "limit");
         }
         const eta = now.eta_seconds ?? 0;
         if (now.status === "queued" && (now.position ?? 0) > 0) {
-          const line = `Nizam Cloud: in line, ${now.position} part${now.position === 1 ? "" : "s"} ahead (${waitWords(eta)})…`;
+          const line = `SNU Clipper Cloud: in line, ${now.position} part${now.position === 1 ? "" : "s"} ahead (${waitWords(eta)})…`;
           if (line !== told) o.onProgress(-1, told = line);
         }
         await sleep2(now.status === "running" || eta < 30 ? 2e3 : 5e3, signal);
@@ -10220,7 +10220,7 @@ async function checkMinutes(o, svc, chunks) {
     return;
   }
   if (res.status === 401 || res.status === 403) {
-    throw new CloudSpeechError(res.status === 403 ? "Your Nizam Cloud account has been turned off." : "Your Nizam Cloud sign-in has run out. Sign in again on the Cloud page.", "key");
+    throw new CloudSpeechError(res.status === 403 ? "Your SNU Clipper Cloud account has been turned off." : "Your SNU Clipper Cloud sign-in has run out. Sign in again on the Cloud page.", "key");
   }
   if (!res.ok) return;
   const acc = await res.json().catch(() => null);
@@ -10230,7 +10230,7 @@ async function checkMinutes(o, svc, chunks) {
   if (acc.balance >= needed) return;
   const min = (credits) => Math.ceil(credits / perSecond / 60);
   const left = acc.balance >= 60 * perSecond ? `${Math.floor(acc.balance / perSecond / 60)} min left` : "less than a minute left";
-  throw new CloudSpeechError(`Your Nizam Cloud minutes are not enough for this video (${left}, it needs about ${min(needed)} min). Nothing was used. Add minutes on the Cloud page, or switch Nizam Cloud off to listen on this computer for free.`, "credits");
+  throw new CloudSpeechError(`Your SNU Clipper Cloud minutes are not enough for this video (${left}, it needs about ${min(needed)} min). Nothing was used. Add minutes on the Cloud page, or switch SNU Clipper Cloud off to listen on this computer for free.`, "credits");
 }
 function waitWords(s) {
   return s < 60 ? "under a minute" : `about ${Math.round(s / 60)} min`;
@@ -10267,23 +10267,23 @@ async function request(o, svc, body, name, extra, signal, sleep2, url = svc.url,
     }
     if (res.ok) {
       const json = await res.json().catch(() => null);
-      if (!json) throw new CloudSpeechError(`${svc.label} sent back an answer Nizam could not read.`, "service");
+      if (!json) throw new CloudSpeechError(`${svc.label} sent back an answer SNU Clipper could not read.`, "service");
       return json;
     }
     const detail = (await res.text().catch(() => "")).slice(0, 300);
     const clipie = svc.provider === "clipie";
     if (res.status === 401 || res.status === 403) {
-      if (clipie) throw new CloudSpeechError(res.status === 403 ? "Your Nizam Cloud account has been turned off." : "Your Nizam Cloud sign-in has run out. Sign in again on the Cloud page.", "key");
+      if (clipie) throw new CloudSpeechError(res.status === 403 ? "Your SNU Clipper Cloud account has been turned off." : "Your SNU Clipper Cloud sign-in has run out. Sign in again on the Cloud page.", "key");
       throw new CloudSpeechError(`${svc.label} refused the key. Check it in Settings → Speech.`, "key");
     }
     if (res.status === 402 && clipie) throw new CloudSpeechError(minutesMessage(detail), "credits");
     if (res.status === 429) {
       const wait = retryAfterMs(res.headers, detail);
       if (wait > MAX_RATE_WAIT_MS || ++slowDowns > 8) {
-        if (clipie) throw new CloudSpeechError("Nizam Cloud is busy with other videos right now.", "limit");
+        if (clipie) throw new CloudSpeechError("SNU Clipper Cloud is busy with other videos right now.", "limit");
         throw new CloudSpeechError(`${svc.label}'s free allowance for now is used up${wait > MAX_RATE_WAIT_MS ? ` (it frees up in about ${Math.ceil(wait / 6e4)} min)` : ""}.`, "limit");
       }
-      o.onProgress(-1, clipie ? `Nizam Cloud is busy; this part starts in ${Math.ceil(wait / 1e3)}s…` : `${svc.label} asked Nizam to slow down; carrying on in ${Math.ceil(wait / 1e3)}s…`);
+      o.onProgress(-1, clipie ? `SNU Clipper Cloud is busy; this part starts in ${Math.ceil(wait / 1e3)}s…` : `${svc.label} asked SNU Clipper to slow down; carrying on in ${Math.ceil(wait / 1e3)}s…`);
       await sleep2(wait, signal);
       continue;
     }
@@ -10303,7 +10303,7 @@ function minutesMessage(body) {
   }
   const min = (s) => Math.max(1, Math.ceil(s / 60));
   const left = typeof err.balance === "number" ? err.balance >= 60 ? `${Math.floor(err.balance / 60)} min left` : "less than a minute left" : "";
-  return `Your Nizam Cloud minutes have run out${left ? ` (${left}${typeof err.needed === "number" ? `, this part needs ${min(err.needed)} min` : ""})` : ""}. Add minutes on the Cloud page, or switch Nizam Cloud off to listen on this computer for free.`;
+  return `Your SNU Clipper Cloud minutes have run out${left ? ` (${left}${typeof err.needed === "number" ? `, this part needs ${min(err.needed)} min` : ""})` : ""}. Add minutes on the Cloud page, or switch SNU Clipper Cloud off to listen on this computer for free.`;
 }
 function retryAfterMs(headers, body) {
   const h = Number(headers.get("retry-after"));
@@ -13231,7 +13231,7 @@ async function runPipeline(job, emit, signal, hooks = {}) {
       }
     } else if (job.transcription !== "local") {
       log(
-        job.transcription === "clipie" ? job.clipieUrl ? "Not signed in to Nizam Cloud; transcribing on this computer." : "Nizam Cloud is coming soon; transcribing on this computer." : `No ${job.transcription === "groq" ? "Groq" : "OpenAI"} key saved; transcribing on this computer.`,
+        job.transcription === "clipie" ? job.clipieUrl ? "Not signed in to SNU Clipper Cloud; transcribing on this computer." : "SNU Clipper Cloud is coming soon; transcribing on this computer." : `No ${job.transcription === "groq" ? "Groq" : "OpenAI"} key saved; transcribing on this computer.`,
         "warn"
       );
       tKey = transcriptKey({ ...job, transcription: "local" }, source, window, importKey);
@@ -13293,7 +13293,7 @@ async function runPipeline(job, emit, signal, hooks = {}) {
     }
     if (window) transcript = shiftTranscript(transcript, window);
     log(`Transcribed ${transcript.words.length} words in ${((Date.now() - tStart) / 1e3).toFixed(0)}s (${transcript.provider}/${transcript.model})`);
-    if (transcript.words.length < 5) throw new Error("Almost no speech was detected. Nizam needs spoken content to work with.");
+    if (transcript.words.length < 5) throw new Error("Almost no speech was detected. SNU Clipper needs spoken content to work with.");
     await node_fs.promises.writeFile(path.join(job.outputDir, "transcript.json"), JSON.stringify(transcript, null, 2));
     await node_fs.promises.writeFile(path.join(job.outputDir, "transcript.txt"), transcript.segments.map((s) => `[${fmtDur(s.start)}] ${s.text}`).join("\n"));
     if (!job.videoPending) await writeStageKey(job.outputDir, "transcript", tKey);
@@ -13406,12 +13406,12 @@ async function runPipeline(job, emit, signal, hooks = {}) {
       const found = analysis.highlights.length;
       const instructed = Boolean(buildBrief(job.options).text) && analysis.source === "ai";
       if (instructed && found === 0) {
-        throw new Error("No moment in this video matches your instructions. Loosen them, or clear them for Nizam's usual picks, and try again.");
+        throw new Error("No moment in this video matches your instructions. Loosen them, or clear them for SNU Clipper's usual picks, and try again.");
       }
       if (found < asked && !instructed) {
         analysis = topUpHighlights(analysis, pickFrom, job.options);
         const filled = analysis.highlights.length;
-        if (filled > found) log(`The clip picker offered ${found} clip${found === 1 ? "" : "s"}; ${filled - found} more came from Nizam's own search to reach the ${asked} you asked for.`);
+        if (filled > found) log(`The clip picker offered ${found} clip${found === 1 ? "" : "s"}; ${filled - found} more came from SNU Clipper's own search to reach the ${asked} you asked for.`);
         if (filled < asked) log(`You asked for ${asked} clips and this video could only give ${filled}: there is not enough speech in it for more at that length.`, "warn");
       }
       analysis = { ...analysis, highlights: padHighlights(analysis.highlights, transcript.words, transcript.duration, job.options.maxClipSeconds) };
@@ -15026,7 +15026,7 @@ async function runLiveSession(job, emit, signal) {
     const after = videoEnd < 60 ? `${Math.round(videoEnd)} s` : `${Math.round(videoEnd / 60)} min`;
     log(`The recording stopped by itself after ${after} (${why}).`, "warn");
     if (project.clips.length === 0) {
-      throw new Error(`Nizam stopped watching after ${after}: ${why} before any moment scored ${threshold} or higher. Try again while the stream is live.`);
+      throw new Error(`SNU Clipper stopped watching after ${after}: ${why} before any moment scored ${threshold} or higher. Try again while the stream is live.`);
     }
     project.liveStopped = { reason: `${why[0].toUpperCase()}${why.slice(1)}.`, watched: Math.round(videoEnd) };
   }

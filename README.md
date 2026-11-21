@@ -1,17 +1,17 @@
-# Nizam (Rebuilt) — v1.19.0
+# SNU Clipper (Rebuilt) — v1.19.1
 
-[![Download Nizam for Windows](docs/download-button.png)](https://github.com/nizam1-11/nizam-clipper/releases/latest/download/Nizam-Setup-v1.19.0.exe)
+[![Download SNU Clipper for Windows](docs/download-button.png)](https://github.com/nizam1-11/snu-clipper/releases/latest/download/SNU-Clipper-Setup-v1.19.1.exe)
 
-[![Download Setup EXE](https://img.shields.io/badge/Download-Nizam%20Setup%20v1.19.0-E5B94C?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/nizam1-11/nizam-clipper/releases/latest/download/Nizam-Setup-v1.19.0.exe)
-[![Windows](https://img.shields.io/badge/Platform-Windows%20x64-0078D6?style=for-the-badge)](https://github.com/nizam1-11/nizam-clipper/releases)
+[![Download Setup EXE](https://img.shields.io/badge/Download-SNU Clipper%20Setup%20v1.19.1-E5B94C?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/nizam1-11/snu-clipper/releases/latest/download/SNU-Clipper-Setup-v1.19.1.exe)
+[![Windows](https://img.shields.io/badge/Platform-Windows%20x64-0078D6?style=for-the-badge)](https://github.com/nizam1-11/snu-clipper/releases)
 
-**Click the banner or badge above — it downloads `Nizam-Setup-v1.19.0.exe` directly (no ZIP).** Run it, confirm the prompt, and it extracts the app into a `Nizam` folder and launches it automatically. A portable ZIP is also available on the [Releases page](https://github.com/nizam1-11/nizam-clipper/releases) as a fallback.
+**Click the banner or badge above — it downloads `SNU-Clipper-Setup-v1.19.1.exe` directly (no ZIP).** Run it, confirm the prompt, and it extracts the app into a `SNU Clipper` folder and launches it automatically. A portable ZIP is also available on the [Releases page](https://github.com/nizam1-11/snu-clipper/releases) as a fallback.
 
-> यह Nizam v1.19.0 का rebuild hai — neeche setup, commands aur "naya feature kaise add karein" ke steps diye gaye hain.
+> यह SNU Clipper v1.19.1 का rebuild hai — neeche setup, commands aur "naya feature kaise add karein" ke steps diye gaye hain.
 
 ## What this is
 
-This is a **rebuilt, editable copy of Nizam v1.19.0**, an app originally made by **Syed Nizam Uddin**. It was produced by static reverse engineering: the installer was unpacked (NSIS / 7z), the Electron `app.asar` archive was extracted, and the main, preload and renderer files were laid out as a readable tree under `out/`.
+This is a **rebuilt, editable copy of SNU Clipper v1.19.1**, an app originally made by **Syed Nizam Uddin**. It was produced by static reverse engineering: the installer was unpacked (NSIS / 7z), the Electron `app.asar` archive was extracted, and the main, preload and renderer files were laid out as a readable tree under `out/`.
 
 No original TypeScript source was shipped with the app. What you have is the **compiled-but-readable JavaScript that Electron actually runs** — esbuild output that keeps component names and string literals intact. Treat `out/` as your editable source of truth.
 
@@ -25,7 +25,7 @@ Everything runs locally. The roughly **310 MB** of FFmpeg / FFprobe / ONNX Runti
 
 ```
 New folder (6)/
-├── Nizam.exe                  # Electron runtime + app bootstrap. Do not edit.
+├── SNU-Clipper.exe                  # Electron runtime + app bootstrap. Do not edit.
 ├── package.json                # Clean manifest for the rebuild (no electron dep — exe is bundled).
 ├── README.md                   # This file.
 ├── .gitignore                  # Ignores build staging / backups / logs, NOT node_modules or resources.
@@ -43,7 +43,7 @@ New folder (6)/
 │           └── index-*.css     # Compiled Tailwind v4 stylesheet.
 │
 ├── resources/
-│   ├── app.asar                # Packed app that Nizam.exe actually loads (rebuilt from out/).
+│   ├── app.asar                # Packed app that SNU-Clipper.exe actually loads (rebuilt from out/).
 │   ├── app.asar.bak            # Backup of the previous asar, written by `npm run build`.
 │   └── app.asar.unpacked/
 │       └── node_modules/       # Native binaries that cannot live inside the asar:
@@ -53,7 +53,7 @@ New folder (6)/
 │
 ├── node_modules/               # JS dependencies + the cached @electron/asar packer.
 └── tools/
-    ├── run.mjs                 # `npm start` → spawns Nizam.exe.
+    ├── run.mjs                 # `npm start` → spawns SNU-Clipper.exe.
     ├── rebuild-asar.mjs        # `npm run build` → repacks app.asar from out/.
     └── verify.mjs              # `npm run verify` → integrity checks.
 ```
@@ -62,9 +62,9 @@ New folder (6)/
 
 ## Quick start
 
-> **Cloned from GitHub?** This repo is source-only: the 235 MB `Nizam.exe` runtime and the
+> **Cloned from GitHub?** This repo is source-only: the 235 MB `SNU-Clipper.exe` runtime and the
 > ~200 MB native binaries under `resources/app.asar.unpacked/` are intentionally NOT committed
-> (GitHub's 100 MB per-file limit). To make it runnable: copy `Nizam.exe` into the project root
+> (GitHub's 100 MB per-file limit). To make it runnable: copy `SNU-Clipper.exe` into the project root
 > and copy `resources/app.asar.unpacked/` from a packaged build (or run `npm install` and rebuild
 > the archive with `npm run build`). Secrets (Supabase/Google keys, payment details) were replaced
 > with `YOUR-...` placeholders before publishing — fill them in locally if you need cloud/payment
@@ -72,11 +72,11 @@ New folder (6)/
 
 | Task | Command | Notes |
 |------|---------|-------|
-| Run the app | `npm start` | Launches `Nizam.exe` via `tools/run.mjs` with inherited stdio. You can also just **double-click `Nizam.exe`**. |
+| Run the app | `npm start` | Launches `SNU-Clipper.exe` via `tools/run.mjs` with inherited stdio. You can also just **double-click `SNU-Clipper.exe`**. |
 | Apply your edits | `npm run build` | Repacks `out/`, `node_modules/` and `package.json` into `resources/app.asar`. Run this after **every** change under `out/`. |
 | Check the install | `npm run verify` | Prints PASS/FAIL for the exe, archive, native binaries, entry points and electron-updater, plus total size. |
 
-Important: editing `out/` alone does **not** change the running app — `Nizam.exe` reads `resources/app.asar`. Run `npm run build` after edits, then restart the app. The previous archive is saved as `resources/app.asar.bak` if you need to roll back.
+Important: editing `out/` alone does **not** change the running app — `SNU-Clipper.exe` reads `resources/app.asar`. Run `npm run build` after edits, then restart the app. The previous archive is saved as `resources/app.asar.bak` if you need to roll back.
 
 The build script stages a temporary `build-staging-<pid>/` folder (no leading dot — a dot-prefixed staging path makes `@electron/asar`'s unpack glob match nothing), copies the editable files into it (excluding the `@electron/asar` packer itself), packs it with the locally cached `@electron/asar`, and only then swaps in the new `app.asar` and `app.asar.unpacked`. On any failure it restores the backups and cleans up.
 
@@ -86,7 +86,7 @@ The build script stages a temporary `build-staging-<pid>/` folder (no leading do
 
 ## Keyboard shortcuts & feedback (new)
 
-Nizam now ships with a small productivity layer (append-only, CSS + a self-contained renderer script):
+SNU Clipper now ships with a small productivity layer (append-only, CSS + a self-contained renderer script):
 
 | Shortcut | Action |
 |---|---|
@@ -99,7 +99,7 @@ Nizam now ships with a small productivity layer (append-only, CSS + a self-conta
 
 There is also a **Shortcuts** button in the title bar that opens the same panel. Copy actions anywhere in the app show a "Copied to clipboard" toast. Notifications stack up to three, dismiss on click, and auto-hide after a few seconds. The panel and toasts are injected into `document.body` (outside React's `#root`), so React re-renders cannot remove them, and all motion respects `prefers-reduced-motion`.
 
-For future features you can call `window.nizamToast("Your message", "success" | "info" | "warn" | "error" | "update")` from the renderer.
+For future features you can call `window.snuToast("Your message", "success" | "info" | "warn" | "error" | "update")` from the renderer.
 
 ---
 
@@ -156,7 +156,7 @@ The job orchestration in `out/main/engine.js` ties these stages together.
 
 ## Where things are stored
 
-State lives in Electron's `userData` directory (`%APPDATA%\Nizam` on Windows), **not** in the app folder:
+State lives in Electron's `userData` directory (`%APPDATA%\SNU Clipper` on Windows), **not** in the app folder:
 
 ```
 userData/
@@ -223,7 +223,7 @@ Edit files under `out/`, then run `npm run build` and restart the app.
 - `out/` is the editable source of truth and contains **readable compiled JavaScript** (not minified). The original TypeScript source was not shipped with the app.
 - The ~310 MB of FFmpeg / FFprobe / ONNX Runtime binaries under `resources/app.asar.unpacked/` are included on purpose for full offline functionality — do not delete them.
 - Bundled assets: 26 caption fonts, 5 Inter UI fonts, a 143-entry meme library and a YuNet face-detection ONNX model. The laughter model and meme media are fetched at runtime.
-- Original app by **Syed Nizam Uddin**, v1.19.0. The original MIT license and Electron/third-party license notices are present in the folder. This rebuild is for studying and extending software you are permitted to modify.
+- Original app by **Syed Nizam Uddin**, v1.19.1. The original MIT license and Electron/third-party license notices are present in the folder. This rebuild is for studying and extending software you are permitted to modify.
 - **Auto-update caution:** `resources/app-update.yml` still points at the original `Inshal-Amir` GitHub release feed. Before shipping your customized build, change that feed (or disable the updater in `out/main/index.js`) so an automatic update cannot replace your features with the stock app.
 - **Caution:** only add features you have the rights to add. Respect the original licenses and third-party terms, and keep secrets (API keys, tokens, credentials) out of the code and out of `out/`.
 
@@ -231,7 +231,7 @@ Edit files under `out/`, then run `npm run build` and restart the app.
 
 ## Troubleshooting
 
-- `Nizam.exe was not found` — make sure `Nizam.exe` sits next to `package.json` in the project root.
+- `SNU-Clipper.exe was not found` — make sure `SNU-Clipper.exe` sits next to `package.json` in the project root.
 - Edits don't show up — you must run `npm run build` after changing `out/`, then fully restart the app.
 - `npm run verify` reports FAIL — a required native binary or entry point is missing; restore it from the original package rather than editing the paths in `verify.mjs`.
 - Bad build — restore `resources/app.asar.bak` over `resources/app.asar`, fix your edits, and rebuild.

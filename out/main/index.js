@@ -107,11 +107,11 @@ function defaultOutputDir() {
   for (const name of ["videos", "documents", "home"]) {
     try {
       const dir = electron.app.getPath(name);
-      if (dir) return path.join(dir, "Nizam");
+      if (dir) return path.join(dir, "SNU Clipper");
     } catch {
     }
   }
-  return path.join(electron.app.getPath("userData"), "Nizam");
+  return path.join(electron.app.getPath("userData"), "SNU Clipper");
 }
 function providerForPlan(plan) {
   return plan === "paid" ? "openai" : "local";
@@ -386,7 +386,7 @@ async function connectOpenRouter() {
     servers.push(v4);
     v4.on("error", (err) => {
       finish();
-      reject(new Error(`Nizam could not start connecting (${err.message}).`));
+      reject(new Error(`SNU Clipper could not start connecting (${err.message}).`));
     });
     v4.listen(0, "127.0.0.1", () => {
       const port = v4.address().port;
@@ -399,7 +399,7 @@ async function connectOpenRouter() {
         callback_url: `http://localhost:${port}/openrouter`,
         code_challenge: challenge,
         code_challenge_method: "S256",
-        key_label: "Nizam",
+        key_label: "SNU Clipper",
         state: state2
       }).toString();
       void electron.shell.openExternal(auth.toString());
@@ -439,8 +439,8 @@ function focusApp$1() {
   if (process.platform === "darwin") electron.app.focus({ steal: true });
 }
 function donePage$1(ok) {
-  const title = ok ? "Nizam is connected to free AI" : "Connecting did not finish";
-  const line = ok ? "You can close this tab and go back to Nizam." : "Go back to Nizam and try again.";
+  const title = ok ? "SNU Clipper is connected to free AI" : "Connecting did not finish";
+  const line = ok ? "You can close this tab and go back to SNU Clipper." : "Go back to SNU Clipper and try again.";
   return `<!doctype html><meta charset="utf-8"><title>${title}</title><body style="font:16px system-ui;background:#0b0b10;color:#eee;display:grid;place-items:center;height:100vh;margin:0"><div style="text-align:center"><h2>${title}</h2><p style="color:#999">${line}</p></div></body>`;
 }
 const TITLE_BAR_HEIGHT = 38;
@@ -542,7 +542,7 @@ async function markInterruptedProjects(root) {
         ...project2,
         status: "done",
         error: void 0,
-        liveStopped: stoppedByPerson ? void 0 : { reason: project2.status === "processing" || /^Interrupted/.test(project2.error ?? "") ? "Nizam closed while it was watching." : "Something went wrong while watching.", watched: Math.round(project2.media?.duration ?? 0) },
+        liveStopped: stoppedByPerson ? void 0 : { reason: project2.status === "processing" || /^Interrupted/.test(project2.error ?? "") ? "SNU Clipper closed while it was watching." : "Something went wrong while watching.", watched: Math.round(project2.media?.duration ?? 0) },
         updatedAt: Date.now()
       });
       fixed++;
@@ -567,7 +567,7 @@ function isInsideDir(root, target, allowSame = false) {
   return rel.split(path.sep)[0] !== ".." && !path.isAbsolute(rel);
 }
 async function deleteProject(root, p) {
-  if (!isInsideDir(root, p.outputDir)) throw new Error("Refusing to delete a folder outside the Nizam output directory.");
+  if (!isInsideDir(root, p.outputDir)) throw new Error("Refusing to delete a folder outside the SNU Clipper output directory.");
   await node_fs.promises.rm(path.resolve(p.outputDir), { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
 }
 const WORK_DIR_NAME = ".work";
@@ -756,7 +756,7 @@ async function start() {
   const baseUrl = `http://127.0.0.1:${port}`;
   const proc = node_child_process.spawn(process.execPath, [script, "--port", String(port), "--host", "127.0.0.1"], {
     windowsHide: true,
-    // stdin stays open for as long as Nizam runs: the helper exits when it closes (a crash too).
+    // stdin stays open for as long as SNU Clipper runs: the helper exits when it closes (a crash too).
     stdio: ["pipe", "pipe", "pipe"],
     env: { ...process.env, ELECTRON_RUN_AS_NODE: "1", BGUTIL_EXIT_WITH_STDIN: "1" }
   });
@@ -1059,7 +1059,7 @@ function plainFailure(result, cookies) {
     const note = cookies ? `Even with your ${hardware.BROWSER_NAMES[cookies]} session, YouTube still asked.` : hardware.ROBOT_TAIL;
     return hardware.withDetails(`${hardware.ROBOT_MESSAGE} ${note}`, detail);
   }
-  if (k === "rateLimit") return hardware.withDetails("YouTube asked Nizam to slow down and is still refusing. Wait a few minutes, then try again.", detail);
+  if (k === "rateLimit") return hardware.withDetails("YouTube asked SNU Clipper to slow down and is still refusing. Wait a few minutes, then try again.", detail);
   return null;
 }
 const AUDIO_FORMAT = "ba[ext=m4a]/ba";
@@ -1076,7 +1076,7 @@ const VIDEO_FORMAT = [
   "b"
 ].join("/");
 const OFFLINE_MESSAGE = hardware.MESSAGES.offline;
-const WAITING = "No internet connection. Waiting for it to come back; Nizam carries on by itself.";
+const WAITING = "No internet connection. Waiting for it to come back; SNU Clipper carries on by itself.";
 async function waitForInternet(onWait, signal) {
   const { lookup } = await import("node:dns/promises");
   const up = () => lookup("www.youtube.com").then(() => true, () => false);
@@ -1601,7 +1601,7 @@ function hasAudio(file2, signal) {
 }
 function downloadLaughterModel(signal, onProgress) {
   return new Promise((resolve, reject) => {
-    const child2 = electron.utilityProcess.fork(enginePath(), [], { serviceName: "Nizam laughter model", stdio: "pipe" });
+    const child2 = electron.utilityProcess.fork(enginePath(), [], { serviceName: "SNU Clipper laughter model", stdio: "pipe" });
     const onAbort = () => child2.kill();
     signal.addEventListener("abort", onAbort, { once: true });
     let settled = false;
@@ -1676,7 +1676,7 @@ async function tidyModelsFolder(root, opts = {}) {
   const add = async (p, why) => items.push({ path: p, bytes: await sizeOf(p), why });
   for (const rel of NEVER_LOADED) {
     const p = path.join(root, rel);
-    if (await node_fs.promises.stat(p).catch(() => null)) await add(p, "model folder no version of Nizam loads");
+    if (await node_fs.promises.stat(p).catch(() => null)) await add(p, "model folder no version of SNU Clipper loads");
   }
   for (const model of local.WHISPER_MODEL_SIZES) {
     const dir = path.join(root, local.WHISPER_MODEL_IDS[model]);
@@ -1744,7 +1744,7 @@ async function modelStatuses() {
 function downloadModel(model) {
   if (current) throw new Error(`Already downloading the ${current.model} model. Wait for it to finish or cancel it first.`);
   const child2 = electron.utilityProcess.fork(enginePath(), [], {
-    serviceName: "nizam-model-download",
+    serviceName: "snu-model-download",
     stdio: "pipe",
     env: { ...process.env, CLIPIE_ENGINE: "1" }
   });
@@ -1812,7 +1812,7 @@ async function inspectModelsDir(dir) {
     await node_fs.promises.writeFile(probe, "");
     await node_fs.promises.rm(probe, { force: true });
   } catch (err) {
-    return { movable, ok: false, reason: `Nizam cannot write to that folder (${err.message}).` };
+    return { movable, ok: false, reason: `SNU Clipper cannot write to that folder (${err.message}).` };
   }
   return { movable, ok: true };
 }
@@ -1983,7 +1983,7 @@ async function signIn() {
     };
     server.on("error", (err) => {
       finish();
-      reject(new Error(`Nizam could not start the sign-in (${err.message}).`));
+      reject(new Error(`SNU Clipper could not start the sign-in (${err.message}).`));
     });
     server.listen(0, "127.0.0.1", () => {
       const port = server.address().port;
@@ -2019,12 +2019,12 @@ async function signIn() {
   try {
     res = await supabaseToken("id_token", { provider: "google", id_token: idToken, nonce });
   } catch {
-    throw new Error("Could not reach Nizam's sign-in service. Check your internet connection and try again.");
+    throw new Error("Could not reach SNU Clipper's sign-in service. Check your internet connection and try again.");
   }
   if (!res.ok) {
     const detail = (await res.text().catch(() => "")).slice(0, 300);
     console.error(`[account] Supabase id_token exchange ${res.status}: ${detail}`);
-    throw new Error(/provider is not enabled|Unsupported provider/i.test(detail) ? "Google sign-in is not switched on for Nizam yet." : "Nizam's sign-in service did not accept the sign-in. Try again.");
+    throw new Error(/provider is not enabled|Unsupported provider/i.test(detail) ? "Google sign-in is not switched on for SNU Clipper yet." : "SNU Clipper's sign-in service did not accept the sign-in. Try again.");
   }
   await keep(await res.json());
   focusApp();
@@ -2034,14 +2034,14 @@ function emailRefusal(status, body) {
   const code = body.error_code || body.code || "";
   const text = body.msg || body.message || body.error_description || "";
   console.error(`[account] email sign-in ${status}: ${code} ${text}`.slice(0, 300));
-  if (code === "user_already_exists" || /already registered/i.test(text)) return new Error("This email already has a Nizam account. Sign in instead.");
+  if (code === "user_already_exists" || /already registered/i.test(text)) return new Error("This email already has a SNU Clipper account. Sign in instead.");
   if (code === "invalid_credentials" || /invalid login credentials/i.test(text)) return new Error("Wrong email or password.");
-  if (code === "email_not_confirmed" || /not confirmed/i.test(text)) return new Error("Open the link in the email Nizam sent you first, then sign in.");
+  if (code === "email_not_confirmed" || /not confirmed/i.test(text)) return new Error("Open the link in the email SNU Clipper sent you first, then sign in.");
   if (code === "weak_password" || /password/i.test(text)) return new Error("Choose a longer password: at least 8 characters.");
   if (code === "email_address_invalid" || code === "validation_failed" || /email/i.test(text)) return new Error("That email address does not look right.");
   if (code === "signup_disabled" || code === "email_provider_disabled") return new Error("New accounts are closed for now.");
   if (status === 429) return new Error("Too many tries. Wait a minute and try again.");
-  return new Error("Nizam's sign-in service did not accept that. Try again.");
+  return new Error("SNU Clipper's sign-in service did not accept that. Try again.");
 }
 async function authCall(path2, body) {
   try {
@@ -2052,7 +2052,7 @@ async function authCall(path2, body) {
       signal: AbortSignal.timeout(2e4)
     });
   } catch {
-    throw new Error("Could not reach Nizam's sign-in service. Check your internet connection and try again.");
+    throw new Error("Could not reach SNU Clipper's sign-in service. Check your internet connection and try again.");
   }
 }
 async function signInWithEmail(email, password) {
@@ -2094,7 +2094,7 @@ async function renew() {
     await writeStored(null);
     return null;
   }
-  if (!res.ok) throw new Error("Nizam's sign-in service is not answering right now.");
+  if (!res.ok) throw new Error("SNU Clipper's sign-in service is not answering right now.");
   await keep(await res.json());
   return session.access;
 }
@@ -2152,8 +2152,8 @@ function focusApp() {
   if (process.platform === "darwin") electron.app.focus({ steal: true });
 }
 function donePage(ok) {
-  const title = ok ? "Signed in to Nizam" : "Sign-in did not finish";
-  const line = ok ? "You can close this tab and go back to Nizam." : "Go back to Nizam and try again.";
+  const title = ok ? "Signed in to SNU Clipper" : "Sign-in did not finish";
+  const line = ok ? "You can close this tab and go back to SNU Clipper." : "Go back to SNU Clipper and try again.";
   return `<!doctype html><meta charset="utf-8"><title>${title}</title><body style="font:16px system-ui;background:#0b0b10;color:#eee;display:grid;place-items:center;height:100vh;margin:0"><div style="text-align:center"><h2>${title}</h2><p style="color:#999">${line}</p></div></body>`;
 }
 const running$1 = /* @__PURE__ */ new Map();
@@ -2600,7 +2600,7 @@ async function runLiveEngine(entry, streamUrl, simulate) {
   });
   child2.on("exit", (code) => {
     if (running$1.has(id)) {
-      if (keepLiveClips(entry, "Nizam's live watcher stopped unexpectedly.")) return;
+      if (keepLiveClips(entry, "SNU Clipper's live watcher stopped unexpectedly.")) return;
       const failed = {
         ...entry.project,
         status: entry.cancelled ? "cancelled" : "failed",
@@ -2812,12 +2812,12 @@ async function saveLogo(file2) {
     const res = await local.run(resolveBinaries().ffmpeg, ["-v", "error", "-y", "-i", file2, "-frames:v", "1", "-vf", "scale='min(1024,iw)':-2:flags=lanczos,format=rgba", tmp]);
     if (res.code !== 0) {
       await node_fs.promises.rm(tmp, { force: true });
-      throw new Error("Nizam could not read that picture. Try a PNG or JPG.");
+      throw new Error("SNU Clipper could not read that picture. Try a PNG or JPG.");
     }
     await node_fs.promises.rename(tmp, out);
   }
   const size = await local.probe(resolveBinaries(), out);
-  if (!size.width || !size.height) throw new Error("Nizam could not read that picture. Try a PNG or JPG.");
+  if (!size.width || !size.height) throw new Error("SNU Clipper could not read that picture. Try a PNG or JPG.");
   return { path: out, w: size.width, h: size.height };
 }
 const PEAKS = 120;
@@ -2863,7 +2863,7 @@ async function saveMusic(file2) {
   }
   if (res.code !== 0 || !hasSound || !(duration > 0)) {
     await node_fs.promises.rm(out, { force: true }).catch(() => void 0);
-    throw new Error("Nizam could not find any sound in that file. Try an MP3, M4A or WAV.");
+    throw new Error("SNU Clipper could not find any sound in that file. Try an MP3, M4A or WAV.");
   }
   return {
     path: out,
@@ -3016,7 +3016,7 @@ async function runSpeedTest(model = "tiny") {
   if (running) throw new Error("A speed test is already running.");
   running = true;
   const child2 = electron.utilityProcess.fork(enginePath(), [], {
-    serviceName: "nizam-speedtest",
+    serviceName: "snu-speedtest",
     stdio: "pipe",
     env: { ...process.env, CLIPIE_ENGINE: "1" }
   });
@@ -3114,24 +3114,24 @@ async function installBlocker() {
   if (process.platform === "linux") {
     const kind = linuxPackage();
     if (kind === "deb" || kind === "rpm") {
-      return `This copy was installed from a .${kind} package, which can't update itself. Nizam opens the new .${kind} in your browser: open it to install over this one.`;
+      return `This copy was installed from a .${kind} package, which can't update itself. SNU Clipper opens the new .${kind} in your browser: open it to install over this one.`;
     }
-    if (kind === "other") return "This copy of Nizam can't update itself. Nizam opens the new version in your browser instead.";
+    if (kind === "other") return "This copy of SNU Clipper can't update itself. SNU Clipper opens the new version in your browser instead.";
     if (!await writable(path.dirname(process.env.APPIMAGE))) {
-      return `Nizam can't write to ${path.dirname(process.env.APPIMAGE)}, where its AppImage is. Nizam opens the new version in your browser instead.`;
+      return `SNU Clipper can't write to ${path.dirname(process.env.APPIMAGE)}, where its AppImage is. SNU Clipper opens the new version in your browser instead.`;
     }
     return void 0;
   }
   if (process.platform !== "darwin") return void 0;
   const bundle = macBundlePath();
   if (bundle.startsWith("/Volumes/") && !await writable(path.dirname(bundle))) {
-    return "Nizam is running from the disk image. Drag it to your Applications folder, open it from there, then update.";
+    return "SNU Clipper is running from the disk image. Drag it to your Applications folder, open it from there, then update.";
   }
   if (bundle.includes("/AppTranslocation/")) {
-    return "macOS is running Nizam from a temporary copy. Drag Nizam to your Applications folder, open it from there, then update.";
+    return "macOS is running SNU Clipper from a temporary copy. Drag SNU Clipper to your Applications folder, open it from there, then update.";
   }
   if (!await writable(path.dirname(bundle)) || !await writable(bundle)) {
-    return `Nizam can't write to ${path.dirname(bundle)}. Nizam opens the new version in your browser instead.`;
+    return `SNU Clipper can't write to ${path.dirname(bundle)}. SNU Clipper opens the new version in your browser instead.`;
   }
   return void 0;
 }
@@ -3276,7 +3276,7 @@ async function downloadAndInstall(skipPrompt = false) {
       void openDownload();
     } else {
       const win = electron.BrowserWindow.getFocusedWindow() ?? electron.BrowserWindow.getAllWindows()[0];
-      const opts = { type: "info", buttons: ["OK"], message: "Nizam can't update itself from here", detail: blocker };
+      const opts = { type: "info", buttons: ["OK"], message: "SNU Clipper can't update itself from here", detail: blocker };
       void (win ? electron.dialog.showMessageBox(win, opts) : electron.dialog.showMessageBox(opts));
     }
     return state;
@@ -3289,7 +3289,7 @@ async function downloadAndInstall(skipPrompt = false) {
       defaultId: 1,
       cancelId: 1,
       message: "A project is still processing",
-      detail: "Nizam restarts to finish the update, which stops the running job. Update anyway?"
+      detail: "SNU Clipper restarts to finish the update, which stops the running job. Update anyway?"
     };
     const { response } = win ? await electron.dialog.showMessageBox(win, opts) : await electron.dialog.showMessageBox(opts);
     if (response !== 0) return state;
@@ -3457,7 +3457,7 @@ function registerIpc() {
   electron.ipcMain.handle("settings:pickModelsDir", async (e) => {
     const win = electron.BrowserWindow.fromWebContents(e.sender);
     const res = await electron.dialog.showOpenDialog(win, {
-      title: "Where should Nizam keep speech models?",
+      title: "Where should SNU Clipper keep speech models?",
       properties: ["openDirectory", "createDirectory"],
       defaultPath: (await getSettings()).modelsDir
     });
@@ -3498,7 +3498,7 @@ function registerIpc() {
     const win = electron.BrowserWindow.fromWebContents(e.sender);
     const current2 = (await getSettings()).clipsDir;
     const res = await electron.dialog.showOpenDialog(win, {
-      title: "Where should Nizam save your clips?",
+      title: "Where should SNU Clipper save your clips?",
       properties: ["openDirectory", "createDirectory"],
       ...current2 ? { defaultPath: current2 } : {}
     });
@@ -3629,7 +3629,7 @@ electron.protocol.registerSchemesAsPrivileged([
 let mainWindow = null;
 function logError(what, err) {
   const text = err instanceof Error ? err.stack ?? err.message : String(err);
-  console.error(`[nizam] ${what}: ${text}`);
+  console.error(`[snu] ${what}: ${text}`);
   try {
     const dir = electron.app.getPath("logs");
     node_fs.mkdirSync(dir, { recursive: true });
@@ -3639,7 +3639,7 @@ function logError(what, err) {
   }
 }
 function logInfo(text) {
-  console.log(`[nizam] ${text}`);
+  console.log(`[snu] ${text}`);
   try {
     const dir = electron.app.getPath("logs");
     node_fs.mkdirSync(dir, { recursive: true });
@@ -3657,7 +3657,7 @@ function createWindow() {
     minWidth: 960,
     minHeight: 640,
     show: false,
-    title: "Nizam",
+    title: "SNU Clipper",
     backgroundColor: windowColors().background,
     // The app draws its own title bar (it holds the update button). macOS keeps its traffic lights,
     // centred in that bar; Windows and Linux get native minimise/maximise/close drawn over its right end.
@@ -3761,7 +3761,7 @@ electron.app.on("second-instance", () => {
   mainWindow.focus();
 });
 electron.app.whenReady().then(async () => {
-  electron.app.setAppUserModelId("app.nizam.desktop");
+  electron.app.setAppUserModelId("app.snu.desktop");
   await registerMediaProtocol();
   registerIpc();
   initUpdater();
@@ -3780,7 +3780,7 @@ electron.app.whenReady().then(async () => {
   if (!isTestRun) {
     void getSettings().then(async (s) => {
       const fixed = await markInterruptedProjects(s.outputDir);
-      if (fixed > 0) console.log(`[nizam] marked ${fixed} interrupted project(s)`);
+      if (fixed > 0) console.log(`[snu] marked ${fixed} interrupted project(s)`);
       await clearTemp(s.outputDir);
       await sweepOldDownloads(s.outputDir);
       await tidyModels((m) => logInfo(`[models] ${m}`)).catch((err) => logError("models folder tidy", err));

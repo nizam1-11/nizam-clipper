@@ -2762,7 +2762,7 @@ function loadTransformers(log) {
   } catch (err) {
     if (/\bsharp\b/i.test(err.message ?? "")) {
       throw new Error(
-        `This build of Nizam is missing its image library for ${process.platform}-${process.arch}, so the speech model cannot start. Reinstall from the latest download; if it keeps happening, please report it.`
+        `This build of SNU Clipper is missing its image library for ${process.platform}-${process.arch}, so the speech model cannot start. Reinstall from the latest download; if it keeps happening, please report it.`
       );
     }
     throw err;

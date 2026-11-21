@@ -1,4 +1,4 @@
-// tools/run.mjs — launch the bundled Electron runtime (Nizam.exe).
+// tools/run.mjs — launch the bundled Electron runtime (SNU-Clipper.exe).
 // Usage: npm start -- [extra args passed to the app]
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -7,13 +7,13 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
-const exe = path.join(root, 'Nizam.exe');
+const exe = path.join(root, 'SNU-Clipper.exe');
 
 if (!fs.existsSync(exe)) {
   console.error(
-    '[run] Nizam.exe was not found.\n' +
+    '[run] SNU-Clipper.exe was not found.\n' +
       `      Expected at: ${exe}\n` +
-      '      Keep Nizam.exe in the project root, next to package.json.'
+      '      Keep SNU-Clipper.exe in the project root, next to package.json.'
   );
   process.exit(1);
 }
@@ -28,20 +28,20 @@ const child = spawn(exe, args, {
 });
 
 child.on('error', (err) => {
-  console.error(`[run] Failed to start Nizam.exe: ${err.message}`);
+  console.error(`[run] Failed to start SNU-Clipper.exe: ${err.message}`);
   process.exitCode = 1;
 });
 
 child.on('spawn', () => {
-  console.log('[run] Nizam.exe started.');
+  console.log('[run] SNU-Clipper.exe started.');
 });
 
 child.on('exit', (code, signal) => {
   if (signal) {
-    console.log(`[run] Nizam.exe terminated by signal ${signal}.`);
+    console.log(`[run] SNU-Clipper.exe terminated by signal ${signal}.`);
     process.exitCode = 1;
   } else {
-    console.log(`[run] Nizam.exe exited with code ${code}.`);
+    console.log(`[run] SNU-Clipper.exe exited with code ${code}.`);
     process.exitCode = code ?? 0;
   }
 });

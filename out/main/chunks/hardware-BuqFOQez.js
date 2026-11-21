@@ -169,11 +169,11 @@ function friendlyError(raw) {
   if (/\b402\b|insufficient.{0,20}(credit|quota|balance)|credits?|quota/i.test(text)) return pick(MESSAGES.keyEmpty);
   if (/\b429\b|rate.?limit|too many requests/i.test(text)) return pick(MESSAGES.busy);
   if (/\b5\d\d\b|service unavailable|bad gateway|overloaded/i.test(text)) return pick(MESSAGES.busy);
-  if (/private video/i.test(text)) return pick("That video is private, so Nizam cannot open it.");
-  if (/confirm your age|age.restricted/i.test(text)) return pick("That video is age-restricted and needs a signed-in account. Nizam cannot open it.");
+  if (/private video/i.test(text)) return pick("That video is private, so SNU Clipper cannot open it.");
+  if (/confirm your age|age.restricted/i.test(text)) return pick("That video is age-restricted and needs a signed-in account. SNU Clipper cannot open it.");
   if (/video (is )?unavailable|has been removed|not available/i.test(text)) return pick("That video is not available (removed, private or blocked in your country).");
   if (/members.only|join this channel/i.test(text)) return pick("That video is for channel members only.");
-  if (/unsupported url/i.test(text)) return pick("Nizam cannot get a video from that link. Try a YouTube link, or download the video and drop the file in.");
+  if (/unsupported url/i.test(text)) return pick("SNU Clipper cannot get a video from that link. Try a YouTube link, or download the video and drop the file in.");
   return pick(MESSAGES.generic);
 }
 const TRANSCRIPT_FORMAT_LABEL = {
@@ -187,7 +187,7 @@ const TRANSCRIPT_FORMAT_LABEL = {
 const MAX_TRANSCRIPT_BYTES = 20 * 1024 * 1024;
 const IMPORT_MESSAGES = {
   empty: "This transcript is empty. Paste the words, or choose a different file.",
-  unreadable: "Nizam could not read this as a transcript. Use an .srt or .vtt subtitle file, YouTube captions (.json3 or .srv3), or plain text.",
+  unreadable: "SNU Clipper could not read this as a transcript. Use an .srt or .vtt subtitle file, YouTube captions (.json3 or .srv3), or plain text.",
   tooFew: "This transcript has almost no words in it. Check it is the right file.",
   tooBig: "This file is too big to be a transcript. Choose the subtitle or text file for the video.",
   binary: "This looks like a video or another kind of file, not a transcript. Choose the subtitle or text file instead."
@@ -526,7 +526,7 @@ const PAYMENTS = {
   proofEmail: "payments@example.com",
   /** How long confirmation can take, in hours. */
   confirmHours: 24,
-  /** Nizam Cloud minutes, bought the same ways and added to the account's email by hand. */
+  /** SNU Clipper Cloud minutes, bought the same ways and added to the account's email by hand. */
   minutePacks: [
     { id: "min150", label: "150 minutes", minutes: 150, usd: 5, pkr: 1400 },
     { id: "min330", label: "330 minutes", minutes: 330, usd: 10, pkr: 2800, note: "Popular" },
@@ -671,12 +671,12 @@ function isNetworkTrouble(err) {
   return NETWORK_TROUBLE.test(String(err?.message ?? err ?? ""));
 }
 const UPDATE_MESSAGES = {
-  offline: "No internet connection. Nizam checks again once you're back online.",
-  damaged: "The download arrived damaged, so Nizam did not install it. Click to try again.",
+  offline: "No internet connection. SNU Clipper checks again once you're back online.",
+  damaged: "The download arrived damaged, so SNU Clipper did not install it. Click to try again.",
   notYet: "The new version is still being published. Try again in a few minutes.",
   busy: "GitHub, where updates come from, is busy right now. Try again in a few minutes.",
   storage: "There isn't enough free space on this computer for the update. Free some space, then try again.",
-  permission: "Nizam isn't allowed to replace its own files here. Download the new version from the website and install it over this one.",
+  permission: "SNU Clipper isn't allowed to replace its own files here. Download the new version from the website and install it over this one.",
   generic: "The update could not finish. Click to try again, or download the new version from the website."
 };
 function updateErrorMessage(err) {
@@ -694,17 +694,17 @@ function updateErrorMessage(err) {
 function macZipFor(files, arch, appleSilicon) {
   const want = appleSilicon ? ["arm64", arch] : [arch];
   for (const a of want) {
-    const hit = files.find((f) => f.url === `Nizam-mac-${a}.zip`) ?? files.find((f) => f.url.endsWith(".zip") && f.url.includes(a));
+    const hit = files.find((f) => f.url === `SNU Clipper-mac-${a}.zip`) ?? files.find((f) => f.url.endsWith(".zip") && f.url.includes(a));
     if (hit) return hit;
   }
   return void 0;
 }
 function manualDownloadName(platform, arch, linux = "appimage") {
-  if (platform === "darwin") return `Nizam-mac-${arch === "arm64" ? "arm64" : "x64"}.dmg`;
-  if (platform === "win32") return "Nizam-windows-x64.exe";
-  if (linux === "deb") return "Nizam-linux-amd64.deb";
-  if (linux === "rpm") return "Nizam-linux-x86_64.rpm";
-  return "Nizam-linux-x86_64.AppImage";
+  if (platform === "darwin") return `SNU Clipper-mac-${arch === "arm64" ? "arm64" : "x64"}.dmg`;
+  if (platform === "win32") return "SNU Clipper-windows-x64.exe";
+  if (linux === "deb") return "SNU Clipper-linux-amd64.deb";
+  if (linux === "rpm") return "SNU Clipper-linux-x86_64.rpm";
+  return "SNU Clipper-linux-x86_64.AppImage";
 }
 function latestDownloadUrl(name, repo = RELEASES_REPO) {
   return `https://github.com/${repo.owner}/${repo.repo}/releases/latest/download/${encodeURIComponent(name)}`;
@@ -788,7 +788,7 @@ function attemptArgs(attempt, ctx) {
   if (ctx.cookies) args.push("--cookies-from-browser", ctx.cookies);
   return args;
 }
-const ROBOT_MESSAGE = "YouTube is asking Nizam to prove it is not a robot.";
+const ROBOT_MESSAGE = "YouTube is asking SNU Clipper to prove it is not a robot.";
 const ROBOT_TAIL = "This happens after many downloads from one network and usually lifts within an hour.";
 function robotCheck(message) {
   if (!message.startsWith(ROBOT_MESSAGE)) return null;
@@ -798,15 +798,15 @@ function robotCheck(message) {
 function cookieTrouble(browser, platform, stderr) {
   const name = BROWSER_NAMES[browser];
   if (browser === "safari" && platform === "darwin") {
-    return `Nizam could not read Safari's YouTube session: macOS needs to allow it first. Open System Settings → Privacy & Security → Full Disk Access, turn on Nizam, then try again. Or choose another browser.`;
+    return `SNU Clipper could not read Safari's YouTube session: macOS needs to allow it first. Open System Settings → Privacy & Security → Full Disk Access, turn on SNU Clipper, then try again. Or choose another browser.`;
   }
   if ((browser === "chrome" || browser === "edge" || browser === "brave") && platform === "win32") {
-    return `Nizam could not read ${name}'s YouTube session: on Windows, ${name} locks its cookies so other apps cannot read them. Firefox works: sign in to YouTube in Firefox and choose it here.`;
+    return `SNU Clipper could not read ${name}'s YouTube session: on Windows, ${name} locks its cookies so other apps cannot read them. Firefox works: sign in to YouTube in Firefox and choose it here.`;
   }
   if (/could not find \w+ cookies database|cookies? database/i.test(stderr)) {
-    return `Nizam could not find ${name}'s YouTube session. Open YouTube in ${name}, sign in, then try again. Or choose another browser.`;
+    return `SNU Clipper could not find ${name}'s YouTube session. Open YouTube in ${name}, sign in, then try again. Or choose another browser.`;
   }
-  return `Nizam could not read ${name}'s YouTube session. Close ${name} and try again, or choose another browser.`;
+  return `SNU Clipper could not read ${name}'s YouTube session. Close ${name} and try again, or choose another browser.`;
 }
 const MAX_FOLDER_NAME = 40;
 function emptyFolders() {
