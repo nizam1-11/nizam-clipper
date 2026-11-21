@@ -1,0 +1,51 @@
+# ==========================================================================
+# Nizam — GitHub push ignore rules
+# Source-only repository. Heavy binaries and local backups are NOT committed.
+# ==========================================================================
+
+# --- Heavy runtime binaries (download/copy separately; see README) ---
+*.exe
+*.dll
+*.pak
+*.bin
+*.node
+*.icns
+*.ico
+
+# Native unpacked payload (ffmpeg / ffprobe / onnxruntime, ~200 MB)
+resources/app.asar.unpacked/
+
+# Electron runtime data (not needed in a source-only repo)
+icudtl.dat
+snapshot_blob.bin
+v8_context_snapshot.bin
+chrome_*.pak
+resources.pak
+LICENSES.chromium.html
+
+# Node dependencies (run `npm install` after cloning to rebuild app.asar)
+node_modules/
+
+# --- Local backups (contain original pre-scrub sources / exe copies) ---
+*-backup/
+tools/*backup/
+tools/push-backup/
+*.orig
+*.bak
+
+# --- Build artifacts from tools/rebuild-asar.mjs ---
+build-staging-*/
+resources/app-*.asar
+
+# --- Runtime / temp / logs ---
+*.work/
+logs/
+*.log
+npm-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+
+# NOTE: resources/app.asar, resources/fonts, resources/ui-fonts,
+# resources/memes/library.json, resources/models, resources/bgutil,
+# out/, tools/*.mjs, package.json and README.md ARE committed.

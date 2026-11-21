@@ -1,0 +1,2990 @@
+[
+ {
+  "id": "vine-boom",
+  "name": "Vine boom",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "shock",
+   "joke_punchline"
+  ],
+  "mood": "dramatic",
+  "used_when": "A line lands with an unexpected, dumb or bold statement and the editor wants a heavy hit to stress it.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "6yrdS4tIP9U",
+  "duration": 1.216,
+  "hit": 0.05
+ },
+ {
+  "id": "bruh",
+  "name": "Bruh",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "confusion",
+   "cringe",
+   "self_own"
+  ],
+  "mood": "deadpan",
+  "used_when": "Someone says or does something so dumb that the only reply is a flat 'bruh'.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "kpwNjdEPz7E",
+  "duration": 0.576,
+  "hit": 0.13
+ },
+ {
+  "id": "fart-reverb",
+  "name": "Fart with reverb",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "awkward",
+   "fail",
+   "joke_punchline"
+  ],
+  "mood": "absurd",
+  "used_when": "An awkward moment or a total flop that the editor wants to make ridiculous.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "9FLRHejWAo8",
+  "clip": {
+   "start": 0,
+   "end": 3.08
+  },
+  "duration": 3.093,
+  "hit": 0.05
+ },
+ {
+  "id": "sad-violin",
+  "name": "Sad violin",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "sad",
+   "sarcasm"
+  ],
+  "mood": "mock sad",
+  "used_when": "Someone complains or tells a sob story and the editor mocks it with fake sadness.",
+  "placement": "under_line",
+  "region": "global",
+  "youtube_id": "w4_50lNhMmM",
+  "clip": {
+   "start": 0,
+   "end": 2.88
+  },
+  "duration": 2.816,
+  "hit": 0.72
+ },
+ {
+  "id": "crickets",
+  "name": "Crickets (awkward silence)",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "awkward",
+   "cringe"
+  ],
+  "mood": "awkward",
+  "used_when": "A joke gets no laugh or a question gets no answer and the silence hangs.",
+  "placement": "in_pause",
+  "region": "global",
+  "youtube_id": "CpGtBnVZLSk",
+  "clip": {
+   "start": 0,
+   "end": 2.94
+  },
+  "duration": 2.944,
+  "hit": 0.1
+ },
+ {
+  "id": "record-scratch",
+  "name": "Record scratch",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "shock",
+   "confusion"
+  ],
+  "mood": "abrupt",
+  "used_when": "Someone says something that stops the conversation dead, right before a 'wait, what?' reaction.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "gNHooTszyW4",
+  "duration": 0.661,
+  "hit": 0.03
+ },
+ {
+  "id": "dun-dun-dun",
+  "name": "Dun dun dun",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "shock",
+   "exaggeration"
+  ],
+  "mood": "dramatic",
+  "used_when": "A reveal or confession is played up as if it were a big plot twist.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "Bnmp_oAHRC0",
+  "duration": 2.368,
+  "hit": 0.02
+ },
+ {
+  "id": "oh-no-no-no-laugh",
+  "name": "Oh no no no laugh",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "fail",
+   "roast",
+   "taunt"
+  ],
+  "mood": "mocking",
+  "used_when": "Someone is about to fail or just got caught, and the editor laughs at them.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "-0ZCBGbT0Co",
+  "clip": {
+   "start": 0,
+   "end": 2.98
+  },
+  "duration": 2.987,
+  "hit": 1.16
+ },
+ {
+  "id": "windows-xp-error",
+  "name": "Windows XP error",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "fail",
+   "confusion"
+  ],
+  "mood": "glitchy",
+  "used_when": "Someone's brain 'crashes': a wrong answer, a stumble or a blank stare.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "kBNOZdXwzdg",
+  "duration": 0.832,
+  "hit": 0.03
+ },
+ {
+  "id": "taco-bell-bong",
+  "name": "Taco Bell bong",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "joke_punchline",
+   "shock"
+  ],
+  "mood": "ominous",
+  "used_when": "A statement lands with weight or a punchline needs one deep, ominous hit.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "kLvGB3Ol2p4",
+  "duration": 1.899,
+  "hit": 0.13
+ },
+ {
+  "id": "metal-pipe",
+  "name": "Metal pipe falling",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "fail",
+   "shock",
+   "joke_punchline"
+  ],
+  "mood": "chaotic",
+  "used_when": "Something falls, crashes or collapses, literally or as a joke, and needs a loud clang.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "iDLmYZ5HqgM",
+  "duration": 2.645,
+  "hit": 0.03
+ },
+ {
+  "id": "emotional-damage-sfx",
+  "name": "Emotional damage",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "roast",
+   "taunt"
+  ],
+  "mood": "savage",
+  "used_when": "Right after someone gets roasted or hears a brutal truth.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "tcPKQ3fuIVU",
+  "clip": {
+   "start": 0.93,
+   "end": 3.05
+  },
+  "duration": 2.133,
+  "hit": 0.05
+ },
+ {
+  "id": "anime-wow",
+  "name": "Anime wow",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "wholesome",
+   "exaggeration",
+   "sarcasm"
+  ],
+  "mood": "cute",
+  "used_when": "Something impressive or cute happens, often used ironically for something unimpressive.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "BnTdfA5aTpY",
+  "clip": {
+   "start": 0.24,
+   "end": 1.84
+  },
+  "duration": 1.6,
+  "hit": 0.02
+ },
+ {
+  "id": "john-cena",
+  "name": "And his name is John Cena",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "victory",
+   "shock",
+   "exaggeration"
+  ],
+  "mood": "hype",
+  "used_when": "A surprise entrance or a bold move gets announced like a wrestling star.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "Ya3UkMerKa4",
+  "clip": {
+   "start": 0.19,
+   "end": 3.22
+  },
+  "duration": 3.051,
+  "hit": 1.99
+ },
+ {
+  "id": "curb-your-enthusiasm",
+  "name": "Curb Your Enthusiasm theme",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "awkward",
+   "fail",
+   "self_own"
+  ],
+  "mood": "awkward",
+  "used_when": "A moment ends in social embarrassment or an own-goal, used as the outro of the clip.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "CdqMZ_s7Y6k",
+  "clip": {
+   "start": 0,
+   "end": 3.09
+  },
+  "duration": 3.093,
+  "hit": 0.02
+ },
+ {
+  "id": "mlg-airhorn",
+  "name": "MLG airhorn",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "victory",
+   "exaggeration"
+  ],
+  "mood": "hype",
+  "used_when": "Someone makes a sick comeback or a flex and the editor goes over the top with hype.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "iZzCSk7QRno",
+  "duration": 2.965,
+  "hit": 0.04
+ },
+ {
+  "id": "sad-trombone",
+  "name": "Sad trombone",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "fail",
+   "sad"
+  ],
+  "mood": "deflated",
+  "used_when": "A plan fails or an attempt falls flat.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "CQeezCdF4mk",
+  "clip": {
+   "start": 0,
+   "end": 3.12
+  },
+  "duration": 3.051,
+  "hit": 0.26
+ },
+ {
+  "id": "price-is-right-fail",
+  "name": "Price is Right losing horn",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "fail",
+   "self_own"
+  ],
+  "mood": "deflated",
+  "used_when": "Someone guesses wrong or loses a small bet or game.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "_asNhzXq72w",
+  "clip": {
+   "start": 0,
+   "end": 3.03
+  },
+  "duration": 2.987,
+  "hit": 0.03
+ },
+ {
+  "id": "gta-wasted",
+  "name": "GTA wasted",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "fail",
+   "roast"
+  ],
+  "mood": "dramatic",
+  "used_when": "Someone gets destroyed in an argument or physically wipes out.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "K3kFQHKE0LA",
+  "clip": {
+   "start": 0,
+   "end": 2.9
+  },
+  "duration": 2.901,
+  "hit": 0.03
+ },
+ {
+  "id": "rimshot",
+  "name": "Ba dum tss",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "joke_punchline",
+   "cringe"
+  ],
+  "mood": "corny",
+  "used_when": "Right after a pun or a dad joke.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "tnkmZ7igWas",
+  "duration": 1.963,
+  "hit": 0.12
+ },
+ {
+  "id": "spongebob-disappointed",
+  "name": "SpongeBob disappointed (steel sting)",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "sad",
+   "fail",
+   "awkward"
+  ],
+  "mood": "letdown",
+  "used_when": "A letdown moment: excitement followed by disappointment.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "J3AUydOQsHU",
+  "clip": {
+   "start": 0,
+   "end": 3.09
+  },
+  "duration": 3.029,
+  "hit": 0.02
+ },
+ {
+  "id": "among-us-role-reveal",
+  "name": "Among Us role reveal",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "sus",
+   "shock"
+  ],
+  "mood": "suspicious",
+  "used_when": "Someone's true intentions are revealed, or a line sounds suspicious.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "ekL881PJMjI",
+  "clip": {
+   "start": 0,
+   "end": 3.03
+  },
+  "duration": 3.008,
+  "hit": 0.91
+ },
+ {
+  "id": "fbi-open-up",
+  "name": "FBI open up",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "sus",
+   "roast"
+  ],
+  "mood": "alarmed",
+  "used_when": "Someone says something creepy or inappropriate enough to call the FBI.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "QQR7t712Mhg",
+  "clip": {
+   "start": 0.88,
+   "end": 1.92
+  },
+  "duration": 1.045,
+  "hit": 0.18
+ },
+ {
+  "id": "to-be-continued",
+  "name": "To be continued (Roundabout)",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "fail",
+   "shock"
+  ],
+  "mood": "cliffhanger",
+  "used_when": "The clip freezes right before a disaster or a big reaction.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "9bdORiwoLho",
+  "clip": {
+   "start": 2.89,
+   "end": 5.98
+  },
+  "duration": 3.093,
+  "hit": 0.48
+ },
+ {
+  "id": "nani",
+  "name": "Nani?!",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "confusion",
+   "shock"
+  ],
+  "mood": "anime",
+  "used_when": "Someone reacts in total disbelief to a surprise.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "k69XCqaWfXU",
+  "duration": 1.472,
+  "hit": 0.14
+ },
+ {
+  "id": "bonk",
+  "name": "Bonk",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "roast",
+   "joke_punchline"
+  ],
+  "mood": "slapstick",
+  "used_when": "Someone gets told off for a dumb or horny comment.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "6TP0abZdRXg",
+  "duration": 0.448,
+  "hit": 0.02
+ },
+ {
+  "id": "cartoon-boing",
+  "name": "Cartoon boing",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "joke_punchline",
+   "awkward"
+  ],
+  "mood": "goofy",
+  "used_when": "A goofy movement, bounce or silly idea.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "TLqL_68JPec",
+  "clip": {
+   "start": 0,
+   "end": 3
+  },
+  "duration": 2.923,
+  "hit": 0.02
+ },
+ {
+  "id": "roblox-oof",
+  "name": "Roblox oof",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "fail",
+   "self_own"
+  ],
+  "mood": "goofy",
+  "used_when": "A small painful fail or a self-inflicted mistake.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "3w-2gUSus34",
+  "duration": 0.384,
+  "hit": 0.07
+ },
+ {
+  "id": "villager-hmm",
+  "name": "Minecraft villager hmm",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "confusion",
+   "sus"
+  ],
+  "mood": "skeptical",
+  "used_when": "Someone is unconvinced or thinks something over skeptically.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "wEut4fwlp70",
+  "duration": 0.725,
+  "hit": 0.15
+ },
+ {
+  "id": "hello-darkness",
+  "name": "Hello darkness my old friend",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "sad",
+   "awkward",
+   "self_own"
+  ],
+  "mood": "gloomy",
+  "used_when": "Someone realizes they messed up or gets hit with a depressing realization.",
+  "placement": "under_line",
+  "region": "global",
+  "youtube_id": "cZpNI9tMJiE",
+  "clip": {
+   "start": 3.07,
+   "end": 6.22
+  },
+  "duration": 3.072,
+  "hit": 0.12
+ },
+ {
+  "id": "coffin-dance",
+  "name": "Coffin dance (Astronomia)",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "fail",
+   "roast"
+  ],
+  "mood": "funeral",
+  "used_when": "A total failure or someone who is 'dead' after a roast.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "HhKK_8tHH-0",
+  "clip": {
+   "start": 7.41,
+   "end": 10.28
+  },
+  "duration": 2.88,
+  "hit": 0.43
+ },
+ {
+  "id": "oh-my-god-wow",
+  "name": "Oh my god, wow!",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "shock",
+   "exaggeration",
+   "wholesome"
+  ],
+  "mood": "amazed",
+  "used_when": "Something impressive or unbelievable is revealed.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "uvsPzuriDdA",
+  "clip": {
+   "start": 0.47,
+   "end": 2.41
+  },
+  "duration": 1.856,
+  "hit": 0.07
+ },
+ {
+  "id": "spongebob-fail",
+  "name": "SpongeBob fail",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "fail",
+   "self_own"
+  ],
+  "mood": "deflated",
+  "used_when": "Someone's attempt goes wrong in a silly, harmless way.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "h0AazmWw8Sg",
+  "clip": {
+   "start": 0,
+   "end": 3.06
+  },
+  "duration": 3.051,
+  "hit": 0.02
+ },
+ {
+  "id": "owen-wilson-wow",
+  "name": "Owen Wilson wow",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "sarcasm",
+   "shock"
+  ],
+  "mood": "deadpan",
+  "used_when": "A mildly impressive or shocking fact, often used ironically.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "e2PKhXkHQYQ",
+  "clip": {
+   "start": 0.15,
+   "end": 0.75
+  },
+  "duration": 0.597,
+  "hit": 0.03
+ },
+ {
+  "id": "mission-failed",
+  "name": "Mission failed, we'll get em next time",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "fail",
+   "self_own"
+  ],
+  "mood": "defeated",
+  "used_when": "A plan or a pickup line fails, and the editor accepts defeat.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "dwLCjZVEtpE",
+  "clip": {
+   "start": 0.38,
+   "end": 3.07
+  },
+  "duration": 2.709,
+  "hit": 0.13
+ },
+ {
+  "id": "crowd-oooh",
+  "name": "Crowd oooh",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "roast",
+   "taunt"
+  ],
+  "mood": "sitcom",
+  "used_when": "Someone just got burned by a savage comeback.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "F_ZAwZKGUiA",
+  "clip": {
+   "start": 0,
+   "end": 3.09
+  },
+  "duration": 3.029,
+  "hit": 0.03
+ },
+ {
+  "id": "what-the-hell-no-way",
+  "name": "What the hell, oh my god, no way",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "shock",
+   "confusion"
+  ],
+  "mood": "disbelief",
+  "used_when": "A wild statement or revelation leaves everyone in disbelief.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "q9zKYh8sY_E",
+  "clip": {
+   "start": 0.46,
+   "end": 3.43
+  },
+  "duration": 2.987,
+  "hit": 0.62
+ },
+ {
+  "id": "aughhh",
+  "name": "AUGHHH",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "fail",
+   "exaggeration"
+  ],
+  "mood": "screaming",
+  "used_when": "Someone is overwhelmed, frustrated or has a meltdown.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "gft2w1d6gZE",
+  "clip": {
+   "start": 0.74,
+   "end": 2.39
+  },
+  "duration": 1.664,
+  "hit": 0.06
+ },
+ {
+  "id": "android-notification-meme",
+  "name": "Android notification (screeched)",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "awkward",
+   "joke_punchline"
+  ],
+  "mood": "random",
+  "used_when": "A sudden random or awkward pause that the editor fills with nonsense.",
+  "placement": "in_pause",
+  "region": "global",
+  "youtube_id": "mWL6irMdNDg",
+  "duration": 1.579,
+  "hit": 0.02
+ },
+ {
+  "id": "censor-beep",
+  "name": "Censor beep",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "joke_punchline",
+   "cringe"
+  ],
+  "mood": "cheeky",
+  "used_when": "Bleeping a swear word or pretending something was too explicit.",
+  "placement": "under_line",
+  "region": "global",
+  "youtube_id": "RPfCZhvj1Ng",
+  "duration": 1.493,
+  "hit": 0.02
+ },
+ {
+  "id": "cartoon-running",
+  "name": "Cartoon running",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "awkward",
+   "fail"
+  ],
+  "mood": "escape",
+  "used_when": "Someone leaves in a hurry or wants to escape a conversation.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "igSHbtv52G4",
+  "duration": 1.707,
+  "hit": 0.03
+ },
+ {
+  "id": "nope",
+  "name": "Nope",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "awkward",
+   "confusion"
+  ],
+  "mood": "refusal",
+  "used_when": "Someone flatly refuses an idea or backs away from something scary.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "9QE5DEQjmoQ",
+  "duration": 0.384,
+  "hit": 0.15
+ },
+ {
+  "id": "hallelujah",
+  "name": "Hallelujah chorus",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "victory",
+   "wholesome",
+   "exaggeration"
+  ],
+  "mood": "heavenly",
+  "used_when": "Something finally goes right or a brilliant idea arrives.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "0aNmsUYZPW0",
+  "clip": {
+   "start": 0.58,
+   "end": 1.72
+  },
+  "duration": 1.152,
+  "hit": 0.02
+ },
+ {
+  "id": "suspense",
+  "name": "Suspense sting",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "sus",
+   "shock"
+  ],
+  "mood": "tense",
+  "used_when": "Build-up before a reveal or a suspicious moment.",
+  "placement": "in_pause",
+  "region": "global",
+  "youtube_id": "fl3HFkSp_lc",
+  "duration": 1.472,
+  "hit": 0.11
+ },
+ {
+  "id": "gigachad",
+  "name": "Gigachad theme",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "victory",
+   "exaggeration"
+  ],
+  "mood": "confident",
+  "used_when": "Someone says something confidently based or pulls off a flex.",
+  "placement": "under_line",
+  "region": "global",
+  "youtube_id": "IRBe7XATG1w",
+  "clip": {
+   "start": 0,
+   "end": 3.07
+  },
+  "duration": 3.072,
+  "hit": 0.1
+ },
+ {
+  "id": "windows-shutdown",
+  "name": "Windows XP shutdown",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "fail",
+   "awkward"
+  ],
+  "mood": "shutdown",
+  "used_when": "Someone gives up, falls asleep, passes out or mentally shuts down.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "A8wK-vhuWog",
+  "duration": 2.709,
+  "hit": 0.44
+ },
+ {
+  "id": "here-we-go-again",
+  "name": "Ah shit, here we go again",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "self_own",
+   "sad"
+  ],
+  "mood": "weary",
+  "used_when": "The same problem or annoying situation comes back again.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "aCV0QvCEX20",
+  "duration": 2.347,
+  "hit": 0.12
+ },
+ {
+  "id": "few-moments-later",
+  "name": "A few moments later",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "joke_punchline",
+   "exaggeration"
+  ],
+  "mood": "transition",
+  "used_when": "A time skip, usually right before the consequence of a decision.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "mWyZQG5clQI",
+  "clip": {
+   "start": 0,
+   "end": 3.12
+  },
+  "duration": 3.136,
+  "hit": 2.82
+ },
+ {
+  "id": "laugh-track",
+  "name": "Sitcom laugh track",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "joke_punchline",
+   "sarcasm"
+  ],
+  "mood": "sitcom",
+  "used_when": "A joke lands, or a bad joke gets a sarcastic canned laugh.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "4VTBMznLrWs",
+  "clip": {
+   "start": 0,
+   "end": 3.02
+  },
+  "duration": 3.029,
+  "hit": 0.39
+ },
+ {
+  "id": "crowd-aww",
+  "name": "Crowd aww",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "wholesome",
+   "sad"
+  ],
+  "mood": "sympathetic",
+  "used_when": "A cute moment, or a sad one mocked with fake sympathy.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "ewGwngOFsXk",
+  "duration": 1.472,
+  "hit": 0.26
+ },
+ {
+  "id": "slow-clap",
+  "name": "Slow clap",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "sarcasm",
+   "cringe"
+  ],
+  "mood": "sarcastic",
+  "used_when": "Someone states the obvious or does something dumb and gets ironic applause.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "ir9aevAY8u8",
+  "clip": {
+   "start": 0,
+   "end": 2.92
+  },
+  "duration": 2.923,
+  "hit": 0.02
+ },
+ {
+  "id": "kids-yay",
+  "name": "Kids yay",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "victory",
+   "wholesome",
+   "sarcasm"
+  ],
+  "mood": "celebrating",
+  "used_when": "A small win, or a sarcastic celebration of something underwhelming.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "5gsp7eNmT-c",
+  "clip": {
+   "start": 0.67,
+   "end": 3.99
+  },
+  "duration": 3.307,
+  "hit": 0.1
+ },
+ {
+  "id": "finish-him",
+  "name": "Finish him!",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "roast",
+   "taunt"
+  ],
+  "mood": "combat",
+  "used_when": "One person is losing an argument and the other goes in for the final roast.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "xrvb1bz31sQ",
+  "duration": 1.195,
+  "hit": 0.04
+ },
+ {
+  "id": "oh-baby-a-triple",
+  "name": "Oh baby, a triple!",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "victory",
+   "exaggeration"
+  ],
+  "mood": "hype",
+  "used_when": "Someone lands several good points or jokes in a row.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "XlLbsTP0C_U",
+  "clip": {
+   "start": 0,
+   "end": 2.71
+  },
+  "duration": 2.688,
+  "hit": 0.15
+ },
+ {
+  "id": "clown-horn",
+  "name": "Clown horn",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "self_own",
+   "roast",
+   "cringe"
+  ],
+  "mood": "clownish",
+  "used_when": "Someone says something foolish or makes a clown of themselves.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "Z0mrOFZuNJo",
+  "duration": 0.853,
+  "hit": 0.04
+ },
+ {
+  "id": "crowd-gasp",
+  "name": "Crowd gasp",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "shock",
+   "roast"
+  ],
+  "mood": "scandalized",
+  "used_when": "A scandalous confession or a shocking statement.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "GrEJ0ccLDII",
+  "duration": 1.003,
+  "hit": 0.29
+ },
+ {
+  "id": "ff-victory",
+  "name": "Final Fantasy victory fanfare",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "victory"
+  ],
+  "mood": "triumphant",
+  "used_when": "Someone wins an argument, a bet or finishes a task.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "m3wH9K9cDcI",
+  "clip": {
+   "start": 0,
+   "end": 1.83
+  },
+  "duration": 1.835,
+  "hit": 0.51
+ },
+ {
+  "id": "mario-death",
+  "name": "Mario death",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "fail",
+   "self_own"
+  ],
+  "mood": "retro",
+  "used_when": "Someone fails or loses; game over for that idea.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "m9zhgDsd4P4",
+  "duration": 2.667,
+  "hit": 0.62
+ },
+ {
+  "id": "vsauce-music",
+  "name": "Vsauce music",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "confusion",
+   "sus"
+  ],
+  "mood": "mysterious",
+  "used_when": "Someone asks a deep or weird question, or makes a mind-blowing point.",
+  "placement": "under_line",
+  "region": "global",
+  "youtube_id": "32EJg8lqJgQ",
+  "clip": {
+   "start": 0,
+   "end": 3.06
+  },
+  "duration": 3.072,
+  "hit": 0.17
+ },
+ {
+  "id": "worlds-smallest-violin",
+  "name": "World's smallest violin (Mr. Krabs)",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "sarcasm",
+   "roast"
+  ],
+  "mood": "mock sad",
+  "used_when": "Someone complains and the editor responds with zero sympathy.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "VYlkgMz5k5M",
+  "clip": {
+   "start": 0.49,
+   "end": 2.36
+  },
+  "duration": 1.877,
+  "hit": 0.05
+ },
+ {
+  "id": "sheesh",
+  "name": "Sheesh",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "victory",
+   "exaggeration"
+  ],
+  "mood": "impressed",
+  "used_when": "Someone does or says something impressive or spicy.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "x857aRVU-jY",
+  "clip": {
+   "start": 0,
+   "end": 2.28
+  },
+  "duration": 2.283,
+  "hit": 0.2
+ },
+ {
+  "id": "we-got-him",
+  "name": "Ladies and gentlemen, we got him",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "roast",
+   "victory",
+   "sus"
+  ],
+  "mood": "triumphant",
+  "used_when": "Someone gets caught in a lie or exposes themselves.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "RYonSOkZ5ZE",
+  "clip": {
+   "start": 3.92,
+   "end": 6.48
+  },
+  "duration": 2.56,
+  "hit": 0.17
+ },
+ {
+  "id": "im-not-gonna-sugarcoat-it",
+  "name": "I'm not gonna sugarcoat it",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "roast",
+   "taunt"
+  ],
+  "mood": "blunt",
+  "used_when": "Right before or after someone delivers a brutally honest opinion.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "re9cIXVPVhQ",
+  "clip": {
+   "start": 0,
+   "end": 2.13
+  },
+  "duration": 2.133,
+  "hit": 0.06
+ },
+ {
+  "id": "yeet",
+  "name": "Yeet",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "exaggeration",
+   "joke_punchline"
+  ],
+  "mood": "energetic",
+  "used_when": "Something gets thrown, or someone dismisses an idea with force.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "JqwMdzrqZn8",
+  "duration": 0.597,
+  "hit": 0.05
+ },
+ {
+  "id": "lightskin-stare",
+  "name": "Lightskin stare",
+  "kind": "sound",
+  "lang": "none",
+  "types": [
+   "sus",
+   "awkward"
+  ],
+  "mood": "smug",
+  "used_when": "A silent stare or a smug pause after a suggestive remark.",
+  "placement": "in_pause",
+  "region": "global",
+  "youtube_id": "dpTOgspMh4Y",
+  "clip": {
+   "start": 0,
+   "end": 3.12
+  },
+  "duration": 3.072,
+  "hit": 0.37
+ },
+ {
+  "id": "tuturu",
+  "name": "Tuturu",
+  "kind": "sound",
+  "lang": "en",
+  "types": [
+   "wholesome",
+   "awkward"
+  ],
+  "mood": "cheerful",
+  "used_when": "A cheerful greeting or an awkward attempt to lighten the mood.",
+  "placement": "after_line",
+  "region": "global",
+  "youtube_id": "R-XA37pMAVc",
+  "clip": {
+   "start": 0.05,
+   "end": 1.24
+  },
+  "duration": 1.195,
+  "hit": 0.03
+ },
+ {
+  "id": "emotional-damage",
+  "name": "Emotional damage (Steven He)",
+  "kind": "video",
+  "lang": "en",
+  "types": [
+   "roast",
+   "taunt"
+  ],
+  "mood": "savage",
+  "used_when": "Right after someone gets roasted or hears a brutal truth.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "iTYrRc-Xsk4",
+  "clip": {
+   "start": 0.87,
+   "end": 3.59
+  },
+  "duration": 2.731,
+  "hit": 0.46
+ },
+ {
+  "id": "no-god-please-no",
+  "name": "No God! Please no! (Michael Scott)",
+  "kind": "video",
+  "lang": "en",
+  "types": [
+   "shock",
+   "sad",
+   "exaggeration"
+  ],
+  "mood": "despair",
+  "used_when": "Someone hears terrible news or realizes the worst is happening.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "31g0YE61PLQ",
+  "clip": {
+   "start": 0.75,
+   "end": 2.18
+  },
+  "duration": 1.451,
+  "hit": 0.03
+ },
+ {
+  "id": "why-are-you-running",
+  "name": "Why are you running?",
+  "kind": "video",
+  "lang": "en",
+  "types": [
+   "confusion",
+   "roast"
+  ],
+  "mood": "chaotic",
+  "used_when": "Someone dodges a question or avoids responsibility.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "r5736lbkVIc",
+  "clip": {
+   "start": 0.66,
+   "end": 3.96
+  },
+  "duration": 3.243,
+  "hit": 1.93
+ },
+ {
+  "id": "wait-thats-illegal",
+  "name": "Wait, that's illegal",
+  "kind": "video",
+  "lang": "en",
+  "types": [
+   "shock",
+   "sus"
+  ],
+  "mood": "deadpan",
+  "used_when": "Someone breaks an unwritten rule or suggests something outrageous.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "G2-M_-yiUho",
+  "clip": {
+   "start": 0.43,
+   "end": 2.78
+  },
+  "duration": 2.283,
+  "hit": 0.3
+ },
+ {
+  "id": "roll-safe",
+  "name": "Roll Safe (think about it)",
+  "kind": "video",
+  "lang": "none",
+  "types": [
+   "sarcasm",
+   "exaggeration"
+  ],
+  "mood": "smug",
+  "used_when": "Someone shares 'genius' logic that is actually dumb.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "GdYo1Q5YZ7o",
+  "clip": {
+   "start": 0,
+   "end": 2.88
+  },
+  "duration": 2.88,
+  "hit": 0.37
+ },
+ {
+  "id": "surprised-pikachu",
+  "name": "Surprised Pikachu",
+  "kind": "video",
+  "lang": "none",
+  "types": [
+   "shock",
+   "self_own"
+  ],
+  "mood": "fake shock",
+  "used_when": "Someone is shocked by a consequence that was completely predictable.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "pG2_WAm0K8U",
+  "clip": {
+   "start": 0,
+   "end": 3.05
+  },
+  "duration": 3.051,
+  "hit": 1.19
+ },
+ {
+  "id": "rock-eyebrow",
+  "name": "The Rock eyebrow raise",
+  "kind": "video",
+  "lang": "none",
+  "types": [
+   "sus",
+   "confusion"
+  ],
+  "mood": "suspicious",
+  "used_when": "A line sounds suspicious or suggestive.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "Mw3jK9YwOxk",
+  "clip": {
+   "start": 2.66,
+   "end": 4.76
+  },
+  "duration": 2.112,
+  "hit": 0.59
+ },
+ {
+  "id": "kermit-falling",
+  "name": "Kermit falling off a building",
+  "kind": "video",
+  "lang": "none",
+  "types": [
+   "fail",
+   "sad"
+  ],
+  "mood": "dramatic",
+  "used_when": "Someone gives up in despair or their plan crashes down.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "5AzT5nQh8bk",
+  "clip": {
+   "start": 3.22,
+   "end": 6.18
+  },
+  "duration": 2.965,
+  "hit": 0.22
+ },
+ {
+  "id": "idiot-sandwich",
+  "name": "Idiot sandwich (Gordon Ramsay)",
+  "kind": "video",
+  "lang": "en",
+  "types": [
+   "roast",
+   "self_own"
+  ],
+  "mood": "savage",
+  "used_when": "Someone admits to or does something idiotic.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "vR7KLmVThLk",
+  "clip": {
+   "start": 0.67,
+   "end": 3.21
+  },
+  "duration": 2.453,
+  "hit": 0.03
+ },
+ {
+  "id": "robert-b-weide",
+  "name": "Directed by Robert B. Weide",
+  "kind": "video",
+  "lang": "none",
+  "types": [
+   "awkward",
+   "fail",
+   "self_own"
+  ],
+  "mood": "awkward",
+  "used_when": "The clip ends on an embarrassing or awkward moment, as the credits roll.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "h3RNElMbdUY",
+  "clip": {
+   "start": 0,
+   "end": 2.94
+  },
+  "duration": 2.944,
+  "hit": 0.52
+ },
+ {
+  "id": "dramatic-chipmunk",
+  "name": "Dramatic chipmunk",
+  "kind": "video",
+  "lang": "none",
+  "types": [
+   "shock",
+   "exaggeration"
+  ],
+  "mood": "dramatic",
+  "used_when": "A dramatic reveal or a sudden intense look.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "mfhBM_Yay6w",
+  "clip": {
+   "start": 0,
+   "end": 3.12
+  },
+  "duration": 3.136,
+  "hit": 0.24
+ },
+ {
+  "id": "huh-cat",
+  "name": "Huh? cat",
+  "kind": "video",
+  "lang": "none",
+  "types": [
+   "confusion"
+  ],
+  "mood": "confused",
+  "used_when": "Someone says something that makes no sense.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "igO9SmiY4hs",
+  "clip": {
+   "start": 0,
+   "end": 3
+  },
+  "duration": 3.008,
+  "hit": 1.5
+ },
+ {
+  "id": "ight-imma-head-out",
+  "name": "Ight imma head out",
+  "kind": "video",
+  "lang": "none",
+  "types": [
+   "awkward",
+   "cringe"
+  ],
+  "mood": "exit",
+  "used_when": "The conversation gets too awkward or weird and it's time to leave.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "bliW5nc7-40",
+  "clip": {
+   "start": 0,
+   "end": 2.96
+  },
+  "duration": 2.901,
+  "hit": 1.94
+ },
+ {
+  "id": "stop-it-get-some-help",
+  "name": "Stop it. Get some help.",
+  "kind": "video",
+  "lang": "en",
+  "types": [
+   "roast",
+   "cringe"
+  ],
+  "mood": "disapproving",
+  "used_when": "Someone confesses a weird habit or says something unhinged.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "9Deg7VrpHbM",
+  "clip": {
+   "start": 0.71,
+   "end": 3.31
+  },
+  "duration": 2.539,
+  "hit": 0.05
+ },
+ {
+  "id": "free-real-estate",
+  "name": "It's free real estate",
+  "kind": "video",
+  "lang": "en",
+  "types": [
+   "victory",
+   "sarcasm"
+  ],
+  "mood": "sly",
+  "used_when": "Someone takes advantage of an easy opportunity.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "oNCI8xoc_6o",
+  "clip": {
+   "start": 0.48,
+   "end": 3.38
+  },
+  "duration": 2.816,
+  "hit": 0.4
+ },
+ {
+  "id": "getting-paid",
+  "name": "Wait, you guys are getting paid?",
+  "kind": "video",
+  "lang": "en",
+  "types": [
+   "shock",
+   "self_own"
+  ],
+  "mood": "betrayed",
+  "used_when": "Someone learns others got something they didn't.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "8oQgB3sX_e4",
+  "clip": {
+   "start": 0.02,
+   "end": 1.98
+  },
+  "duration": 1.963,
+  "hit": 0.36
+ },
+ {
+  "id": "kazoo-kid-who-are-you",
+  "name": "Wait a minute, who are you?",
+  "kind": "video",
+  "lang": "en",
+  "types": [
+   "confusion",
+   "sus"
+  ],
+  "mood": "suspicious",
+  "used_when": "Someone suddenly doubts who they are talking to or what's happening.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "YX3l3Pe66bk",
+  "clip": {
+   "start": 3.23,
+   "end": 6.27
+  },
+  "duration": 3.008,
+  "hit": 0.12
+ },
+ {
+  "id": "its-britney",
+  "name": "It's Britney, bitch",
+  "kind": "video",
+  "lang": "en",
+  "types": [
+   "victory",
+   "exaggeration"
+  ],
+  "mood": "sassy",
+  "used_when": "Someone makes a confident, dramatic entrance or statement.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "cXBX2PumuBk",
+  "clip": {
+   "start": 3.12,
+   "end": 6.48
+  },
+  "duration": 3.371,
+  "hit": 0.52
+ },
+ {
+  "id": "confused-math-lady",
+  "name": "Confused math lady",
+  "kind": "video",
+  "lang": "none",
+  "types": [
+   "confusion"
+  ],
+  "mood": "puzzled",
+  "used_when": "Someone tries to follow complicated or nonsensical logic.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "hlLzgUn5tPI",
+  "clip": {
+   "start": 0,
+   "end": 3.09
+  },
+  "duration": 3.093,
+  "hit": 0.67
+ },
+ {
+  "id": "once-again-asking",
+  "name": "I am once again asking",
+  "kind": "video",
+  "lang": "en",
+  "types": [
+   "joke_punchline",
+   "sarcasm"
+  ],
+  "mood": "pleading",
+  "used_when": "Someone asks for the same favor or money again.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "-Icw0lIgbws",
+  "clip": {
+   "start": 0.23,
+   "end": 3.36
+  },
+  "duration": 3.115,
+  "hit": 0.61
+ },
+ {
+  "id": "i-am-inevitable",
+  "name": "I am inevitable (Thanos)",
+  "kind": "video",
+  "lang": "en",
+  "types": [
+   "victory",
+   "taunt"
+  ],
+  "mood": "smug",
+  "used_when": "Someone predicts they will win or gloats before a sure outcome.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "3bY0unjZ5Kw",
+  "clip": {
+   "start": 1.68,
+   "end": 4.69
+  },
+  "duration": 3.008,
+  "hit": 0.03
+ },
+ {
+  "id": "are-you-sure-about-that",
+  "name": "Are you sure about that? (John Cena)",
+  "kind": "video",
+  "lang": "en",
+  "types": [
+   "sarcasm",
+   "roast",
+   "sus"
+  ],
+  "mood": "doubtful",
+  "used_when": "Someone makes a claim that is obviously false.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "oHC1230OpOg",
+  "clip": {
+   "start": 1.86,
+   "end": 4.25
+  },
+  "duration": 2.389,
+  "hit": 0.37
+ },
+ {
+  "id": "thats-what-she-said",
+  "name": "That's what she said",
+  "kind": "video",
+  "lang": "en",
+  "types": [
+   "joke_punchline",
+   "sus"
+  ],
+  "mood": "cheeky",
+  "used_when": "Someone says something that sounds unintentionally dirty.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "-7i--kXQW8Y",
+  "clip": {
+   "start": 0.78,
+   "end": 3.27
+  },
+  "duration": 2.496,
+  "hit": 0.09
+ },
+ {
+  "id": "say-sike",
+  "name": "Say sike right now",
+  "kind": "video",
+  "lang": "en",
+  "types": [
+   "shock",
+   "confusion"
+  ],
+  "mood": "disbelief",
+  "used_when": "Someone hears something outrageous and wants it to be a joke.",
+  "placement": "cut_in",
+  "region": "global",
+  "youtube_id": "iQIRlmB-jwY",
+  "clip": {
+   "start": 0,
+   "end": 0.96
+  },
+  "duration": 0.96,
+  "hit": 0.06
+ },
+ {
+  "id": "moye-moye",
+  "name": "Moye moye",
+  "kind": "sound",
+  "lang": "none",
+  "quote": "moye moye",
+  "meaning": "sad 'it all went wrong' tune",
+  "types": [
+   "fail",
+   "sad"
+  ],
+  "mood": "deflated",
+  "used_when": "Someone's plan, flex or confident claim collapses in front of everyone.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "XhPHtBf1_Ic",
+  "clip": {
+   "start": 1.47,
+   "end": 4.64
+  },
+  "duration": 3.115,
+  "hit": 0.54
+ },
+ {
+  "id": "aayein",
+  "name": "Aayein?",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "aayein?",
+  "meaning": "huh? what did you just say?",
+  "types": [
+   "confusion",
+   "awkward"
+  ],
+  "mood": "baffled",
+  "used_when": "Someone says something so dumb or unexpected the listener can only go 'huh?'.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "5KyjRUUn3A8",
+  "duration": 0.427,
+  "hit": 0.17
+ },
+ {
+  "id": "rasode-mein-kaun-tha",
+  "name": "Rasode mein kaun tha",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Rasode mein kaun tha? Tum thi, main thi, kaun tha?",
+  "meaning": "who was in the kitchen?",
+  "types": [
+   "sus",
+   "exaggeration"
+  ],
+  "mood": "dramatic interrogation",
+  "used_when": "Overly dramatic questioning over a tiny mistake, or hunting for who is to blame.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "AJ21n8WxfYY",
+  "clip": {
+   "start": 0,
+   "end": 3.01
+  },
+  "duration": 3.029,
+  "hit": 0.02
+ },
+ {
+  "id": "utha-le-re-baba",
+  "name": "Utha le re baba",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Utha le re baba, utha le... mereko nahi re, in dono ko utha le",
+  "meaning": "God take them away (not me, them)",
+  "types": [
+   "taunt",
+   "sarcasm"
+  ],
+  "mood": "fed up",
+  "used_when": "When someone is fed up with the annoying people around them or with a hopeless situation.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "2Gh4cQC1U3g",
+  "clip": {
+   "start": 0,
+   "end": 3.1
+  },
+  "duration": 3.115,
+  "hit": 0.39
+ },
+ {
+  "id": "ye-baburao-ka-style-hai",
+  "name": "Ye Baburao ka style hai",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Ye Baburao ka style hai",
+  "meaning": "this is Baburao's style",
+  "types": [
+   "victory",
+   "sarcasm"
+  ],
+  "mood": "swag",
+  "used_when": "Someone does something weird or clumsy but claims it's their signature style.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "_FbGrDqTgMI",
+  "clip": {
+   "start": 0.17,
+   "end": 1.86
+  },
+  "duration": 1.707,
+  "hit": 0.06
+ },
+ {
+  "id": "kuch-toh-gadbad-hai",
+  "name": "Kuch toh gadbad hai Daya",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Kuch toh gadbad hai, Daya",
+  "meaning": "something is fishy, Daya",
+  "types": [
+   "sus",
+   "confusion"
+  ],
+  "mood": "suspicious",
+  "used_when": "A story doesn't add up and someone smells a lie or a hidden motive.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "pzRsOTVMnmA",
+  "clip": {
+   "start": 0,
+   "end": 3.05
+  },
+  "duration": 2.965,
+  "hit": 0.56
+ },
+ {
+  "id": "kahan-se-aate-hain-aise-log",
+  "name": "Kahan se aate hain aise log",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Kahan se aate hain aise log",
+  "meaning": "where do such people even come from?",
+  "types": [
+   "roast",
+   "taunt"
+  ],
+  "mood": "disbelief",
+  "used_when": "Someone says or does something so stupid the speaker questions their existence.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "2vRs2MQkND0",
+  "clip": {
+   "start": 0.06,
+   "end": 3.48
+  },
+  "duration": 3.371,
+  "hit": 0.13
+ },
+ {
+  "id": "ye-bik-gayi-hai-gormint",
+  "name": "Ye bik gayi hai gormint",
+  "kind": "sound",
+  "lang": "ur",
+  "quote": "Ye bik gayi hai gormint",
+  "meaning": "this government has sold out",
+  "types": [
+   "roast",
+   "exaggeration"
+  ],
+  "mood": "angry rant",
+  "used_when": "Blaming the system or someone in charge in an over-the-top rant about prices or unfairness.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "MF9NQnlB26E",
+  "clip": {
+   "start": 0,
+   "end": 3.12
+  },
+  "duration": 3.136,
+  "hit": 0.16
+ },
+ {
+  "id": "ghabrana-nahi-hai",
+  "name": "Ghabrana nahi hai",
+  "kind": "sound",
+  "lang": "ur",
+  "quote": "Sab se pehle aap ne ghabrana nahi hai",
+  "meaning": "first of all, don't panic",
+  "types": [
+   "sarcasm",
+   "exaggeration"
+  ],
+  "mood": "false calm",
+  "used_when": "Things are clearly going badly but someone insists everything is fine.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "4RCjlhXLV5U",
+  "clip": {
+   "start": 0.12,
+   "end": 2.28
+  },
+  "duration": 2.176,
+  "hit": 0.12
+ },
+ {
+  "id": "ye-dukh-kahe-khatam-nahi-hota",
+  "name": "Ye dukh kahe khatam nahi hota",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Saala ye dukh kahe khatam nahi hota hai be",
+  "meaning": "why does this misery never end?",
+  "types": [
+   "sad",
+   "self_own"
+  ],
+  "mood": "weary despair",
+  "used_when": "Bad luck keeps piling up on the same person one after another.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "yxoSSJ4PbzE",
+  "clip": {
+   "start": 1.29,
+   "end": 2.71
+  },
+  "duration": 1.429,
+  "hit": 0.13
+ },
+ {
+  "id": "tumse-na-ho-payega",
+  "name": "Beta tumse na ho payega",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Beta, tumse na ho payega",
+  "meaning": "kid, you can't do this",
+  "types": [
+   "taunt",
+   "roast",
+   "fail"
+  ],
+  "mood": "dismissive",
+  "used_when": "Someone boasts or tries something and clearly isn't capable of it.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "PThp1-QZELY",
+  "clip": {
+   "start": 1.28,
+   "end": 2.13
+  },
+  "duration": 0.853,
+  "hit": 0.21
+ },
+ {
+  "id": "paisa-hi-paisa-hoga",
+  "name": "Paisa hi paisa hoga",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Paisa hi paisa hoga",
+  "meaning": "there will be money everywhere",
+  "types": [
+   "exaggeration",
+   "victory"
+  ],
+  "mood": "greedy excitement",
+  "used_when": "Someone gets overexcited about a get-rich scheme, salary or deal.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "Bx2DQstf5M8",
+  "clip": {
+   "start": 0,
+   "end": 3.04
+  },
+  "duration": 2.987,
+  "hit": 0.06
+ },
+ {
+  "id": "zor-zor-se-scheme",
+  "name": "Zor zor se bolke scheme bata de",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Zor zor se bolke sabko scheme bata de",
+  "meaning": "go on, shout the plan to everyone",
+  "types": [
+   "taunt",
+   "sarcasm"
+  ],
+  "mood": "exasperated",
+  "used_when": "Someone blurts out a secret or plan in front of the wrong people.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "DDvGAVMPgdY",
+  "duration": 2.368,
+  "hit": 0.4
+ },
+ {
+  "id": "dhak-dhak-horela-hai",
+  "name": "Mereko toh aisa dhak dhak horela hai",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Mereko toh aisa dhak dhak horela hai",
+  "meaning": "my heart is pounding",
+  "types": [
+   "awkward",
+   "exaggeration"
+  ],
+  "mood": "nervous",
+  "used_when": "Someone is nervous or scared before a result, a confession or a risky move.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "9xBRejrXpPs",
+  "clip": {
+   "start": 0,
+   "end": 3.02
+  },
+  "duration": 2.923,
+  "hit": 0.33
+ },
+ {
+  "id": "abhi-maza-aayega-na-bhidu",
+  "name": "Abhi maza aayega na bhidu",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Abhi maza aayega na bhidu",
+  "meaning": "now the fun begins, buddy",
+  "types": [
+   "victory",
+   "taunt"
+  ],
+  "mood": "mischievous",
+  "used_when": "Right before chaos, a twist or a confrontation starts.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "J035Qxbum_E",
+  "clip": {
+   "start": 0,
+   "end": 3.09
+  },
+  "duration": 3.072,
+  "hit": 0.19
+ },
+ {
+  "id": "kya-karu-main-mar-jau",
+  "name": "Kya karu main mar jau",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Kya karu main mar jau? Meri koi feeling nahi hai?",
+  "meaning": "what should I do, die? don't I have feelings?",
+  "types": [
+   "sarcasm",
+   "exaggeration"
+  ],
+  "mood": "dramatic sulk",
+  "used_when": "Someone reacts to criticism with over-the-top drama.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "NS9AwKTj3VE",
+  "clip": {
+   "start": 0,
+   "end": 3
+  },
+  "duration": 3.008,
+  "hit": 0.06
+ },
+ {
+  "id": "bhai-sahab-ye-kis-line-mein",
+  "name": "Bhai sahab ye kis line mein aa gaye aap",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Bhai sahab, ye kis line mein aa gaye aap",
+  "meaning": "sir, what line of work did you get into?",
+  "types": [
+   "roast",
+   "sarcasm",
+   "cringe"
+  ],
+  "mood": "mocking surprise",
+  "used_when": "Someone is doing something embarrassing or totally unsuited to them.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "0Ow3SRV5RHM",
+  "clip": {
+   "start": 0.09,
+   "end": 1.72
+  },
+  "duration": 1.643,
+  "hit": 1.09
+ },
+ {
+  "id": "khatam-tata-bye-bye",
+  "name": "Khatam tata bye bye",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Khatam, tata, bye bye, goodbye, gaya",
+  "meaning": "it's over, bye bye",
+  "types": [
+   "fail",
+   "sarcasm"
+  ],
+  "mood": "over",
+  "used_when": "Something or someone is finished for good: a plan, a relationship, a player.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "5JBaTfjT0_A",
+  "clip": {
+   "start": 0,
+   "end": 3.12
+  },
+  "duration": 3.072,
+  "hit": 0.04
+ },
+ {
+  "id": "kuch-bhi",
+  "name": "Kuch bhi",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Kuch bhi",
+  "meaning": "anything, whatever / nonsense",
+  "types": [
+   "confusion",
+   "sarcasm"
+  ],
+  "mood": "unimpressed",
+  "used_when": "Someone says something absurd or makes up a nonsense fact.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "DCFvDqrCxs4",
+  "clip": {
+   "start": 0,
+   "end": 1.01
+  },
+  "duration": 1.024,
+  "hit": 0.03
+ },
+ {
+  "id": "ruko-zara-sabar-karo",
+  "name": "Ruko zara sabar karo",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Ruko zara, sabar karo",
+  "meaning": "wait, have patience",
+  "types": [
+   "taunt",
+   "exaggeration"
+  ],
+  "mood": "hold on",
+  "used_when": "Right before the payoff or when someone is too impatient.",
+  "placement": "in_pause",
+  "region": "desi",
+  "youtube_id": "dVaJn_fOWgE",
+  "duration": 2.176,
+  "hit": 0.07
+ },
+ {
+  "id": "pehli-fursat-mein-nikal",
+  "name": "Pehli fursat mein nikal",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Pehli fursat mein nikal",
+  "meaning": "get out at the first chance",
+  "types": [
+   "roast",
+   "taunt"
+  ],
+  "mood": "dismissive",
+  "used_when": "Rejecting someone's bad idea, bad joke or bad pitch outright.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "GsijUGNDyzQ",
+  "clip": {
+   "start": 0,
+   "end": 2.89
+  },
+  "duration": 2.837,
+  "hit": 1.08
+ },
+ {
+  "id": "are-bhai-bhai-bhai",
+  "name": "Are bhai bhai bhai",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Are bhai bhai bhai",
+  "meaning": "whoa whoa whoa, bro",
+  "types": [
+   "shock",
+   "exaggeration"
+  ],
+  "mood": "hype",
+  "used_when": "Something wild or over the top just happened; hype or disbelief.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "OVVgocRfldA",
+  "duration": 1.749,
+  "hit": 0.44
+ },
+ {
+  "id": "samajh-rahe-ho-na",
+  "name": "Samajh rahe ho na",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Samajh rahe ho? Samajh rahe ho na?",
+  "meaning": "you get it, right?",
+  "types": [
+   "sus",
+   "joke_punchline"
+  ],
+  "mood": "knowing wink",
+  "used_when": "After a double meaning or an innuendo that everyone got.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "27MW2bhBKTM",
+  "clip": {
+   "start": 0.71,
+   "end": 1.47
+  },
+  "duration": 0.683,
+  "hit": 0.37
+ },
+ {
+  "id": "wah-modi-ji-wah",
+  "name": "Wah Modi ji wah",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Wah Modi ji wah",
+  "meaning": "wow Modi ji, wow",
+  "types": [
+   "sarcasm"
+  ],
+  "mood": "mock praise",
+  "used_when": "Sarcastically praising a bad decision or a clearly bad result.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "Q1UeRusAPfc",
+  "clip": {
+   "start": 0,
+   "end": 2.36
+  },
+  "duration": 2.368,
+  "hit": 0.2
+ },
+ {
+  "id": "tarikh-pe-tarikh",
+  "name": "Tarikh pe tarikh",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Tarikh pe tarikh, tarikh pe tarikh",
+  "meaning": "date after date (endless delays)",
+  "types": [
+   "taunt",
+   "exaggeration"
+  ],
+  "mood": "frustrated",
+  "used_when": "Something keeps getting postponed: a launch, a payment, a promise.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "xyj-BxMdor0",
+  "clip": {
+   "start": 0,
+   "end": 3.33
+  },
+  "duration": 3.328,
+  "hit": 0.09
+ },
+ {
+  "id": "hello-friends-chai-pee-lo",
+  "name": "Hello friends chai pee lo",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Hello friends, chai pee lo",
+  "meaning": "hello friends, have some tea",
+  "types": [
+   "cringe",
+   "wholesome"
+  ],
+  "mood": "cringe intro",
+  "used_when": "A cringy or awkwardly cheerful intro, or offering something at the wrong time.",
+  "placement": "in_pause",
+  "region": "desi",
+  "youtube_id": "nK0w6GfHJFI",
+  "clip": {
+   "start": 3.72,
+   "end": 4.85
+  },
+  "duration": 1.109,
+  "hit": 0.04
+ },
+ {
+  "id": "tu-ja-re",
+  "name": "Tu ja re",
+  "kind": "sound",
+  "lang": "hi",
+  "quote": "Tu ja re",
+  "meaning": "you just go away",
+  "types": [
+   "roast",
+   "taunt"
+  ],
+  "mood": "dismissive",
+  "used_when": "Shooing off someone who is being annoying or talking nonsense.",
+  "placement": "after_line",
+  "region": "desi",
+  "youtube_id": "KDTbGC3AX3s",
+  "clip": {
+   "start": 0,
+   "end": 3.06
+  },
+  "duration": 3.008,
+  "hit": 0.31
+ },
+ {
+  "id": "pawri-ho-rahi-hai",
+  "name": "Pawri ho rahi hai",
+  "kind": "video",
+  "lang": "ur",
+  "quote": "Ye hamari car hai, ye hum hain, aur ye hamari pawri ho rahi hai",
+  "meaning": "we're having a party",
+  "types": [
+   "sarcasm",
+   "victory"
+  ],
+  "mood": "posh flex",
+  "used_when": "Showing off a hangout or rich-kid vibe, or sarcastically calling a mess a party.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "pjgg2pMKilE",
+  "clip": {
+   "start": 0.5,
+   "end": 3.48
+  },
+  "duration": 2.987,
+  "hit": 0.03
+ },
+ {
+  "id": "o-bhai-maro-mujhe-maro",
+  "name": "O bhai maro mujhe maro",
+  "kind": "video",
+  "lang": "ur",
+  "quote": "O bhai maro mujhe maro",
+  "meaning": "bro, just kill me",
+  "types": [
+   "sad",
+   "exaggeration",
+   "fail"
+  ],
+  "mood": "frustrated fan",
+  "used_when": "Someone watches something painfully bad and can't take it anymore.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "0UWL4Oa6PQA",
+  "clip": {
+   "start": 0,
+   "end": 2.89
+  },
+  "duration": 2.901,
+  "hit": 0.54
+ },
+ {
+  "id": "ekdum-se-waqt-badal-diya",
+  "name": "Ekdum se waqt badal diya",
+  "kind": "video",
+  "lang": "ur",
+  "quote": "Ekdum se waqt badal diya, jazbaat badal diye, zindagi badal di",
+  "meaning": "everything changed in an instant",
+  "types": [
+   "shock",
+   "exaggeration"
+  ],
+  "mood": "sudden twist",
+  "used_when": "A sudden plot twist or dramatic turnaround.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "V0gihYHqI7g",
+  "clip": {
+   "start": 2.38,
+   "end": 3.55
+  },
+  "duration": 1.173,
+  "hit": 0.1
+ },
+ {
+  "id": "kitne-tejasvi-log",
+  "name": "Kitne tejasvi log hain",
+  "kind": "video",
+  "lang": "hi",
+  "quote": "Kitne tejasvi log hain hamare paas",
+  "meaning": "what brilliant people we have",
+  "types": [
+   "sarcasm",
+   "roast"
+  ],
+  "mood": "mock admiration",
+  "used_when": "Sarcastic praise after someone says something dumb and proud.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "fK4z7JKoTEg",
+  "clip": {
+   "start": 0,
+   "end": 2.91
+  },
+  "duration": 2.88,
+  "hit": 0.49
+ },
+ {
+  "id": "yeh-sab-doglapan-hai",
+  "name": "Yeh sab doglapan hai",
+  "kind": "video",
+  "lang": "hi",
+  "quote": "Yeh sab doglapan hai",
+  "meaning": "this is all hypocrisy",
+  "types": [
+   "roast",
+   "taunt"
+  ],
+  "mood": "calling out",
+  "used_when": "Calling out someone's hypocrisy or double standards.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "4TjrQ9sG9TE",
+  "clip": {
+   "start": 0,
+   "end": 3.05
+  },
+  "duration": 3.029,
+  "hit": 0.42
+ },
+ {
+  "id": "carry-yeh-kya-hai",
+  "name": "Yeh kya hai (CarryMinati)",
+  "kind": "video",
+  "lang": "hi",
+  "quote": "Yeh kya hai?",
+  "meaning": "what is this?",
+  "types": [
+   "confusion",
+   "cringe"
+  ],
+  "mood": "disgusted confusion",
+  "used_when": "Reacting to something weird, cringe or badly made.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "i_gUXogHpSI",
+  "clip": {
+   "start": 1.52,
+   "end": 4.12
+  },
+  "duration": 2.603,
+  "hit": 0.1
+ },
+ {
+  "id": "carry-bahut-tez-ho-rahe-ho",
+  "name": "Bahut tez ho rahe ho",
+  "kind": "video",
+  "lang": "hi",
+  "quote": "Bahut tez ho rahe ho",
+  "meaning": "you're getting too smart",
+  "types": [
+   "sus",
+   "taunt"
+  ],
+  "mood": "side-eye",
+  "used_when": "Someone tries to be over-smart or pulls a sneaky move.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "bQBkmt6C-C8",
+  "clip": {
+   "start": 0.53,
+   "end": 4.04
+  },
+  "duration": 3.52,
+  "hit": 0.16
+ },
+ {
+  "id": "control-uday-control",
+  "name": "Control Uday control",
+  "kind": "video",
+  "lang": "hi",
+  "quote": "Control, Uday, control",
+  "meaning": "control yourself, Uday",
+  "types": [
+   "awkward",
+   "exaggeration"
+  ],
+  "mood": "restraint",
+  "used_when": "Someone is barely holding back anger or excitement.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "gti0L0NYmqo",
+  "clip": {
+   "start": 0.61,
+   "end": 3.98
+  },
+  "duration": 3.285,
+  "hit": 0.56
+ },
+ {
+  "id": "rajpal-yadav-shocked",
+  "name": "Rajpal Yadav shocked",
+  "kind": "video",
+  "lang": "none",
+  "meaning": "stunned face",
+  "types": [
+   "shock",
+   "confusion"
+  ],
+  "mood": "stunned",
+  "used_when": "Silent shocked reaction to an unexpected statement or reveal.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "eKSTaoSDrwI",
+  "clip": {
+   "start": 0,
+   "end": 2.94
+  },
+  "duration": 2.944,
+  "hit": 0.44
+ },
+ {
+  "id": "johnny-lever-surprise",
+  "name": "Johnny Lever surprised",
+  "kind": "video",
+  "lang": "none",
+  "meaning": "surprised reaction",
+  "types": [
+   "shock"
+  ],
+  "mood": "surprised",
+  "used_when": "Wide-eyed surprise at a revelation.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "VvIlc3hsUwc",
+  "clip": {
+   "start": 0,
+   "end": 2.97
+  },
+  "duration": 2.88,
+  "hit": 0.58
+ },
+ {
+  "id": "sidhu-laughing",
+  "name": "Sidhu laughing",
+  "kind": "video",
+  "lang": "none",
+  "meaning": "big hearty laugh",
+  "types": [
+   "joke_punchline"
+  ],
+  "mood": "laughing",
+  "used_when": "After a good joke lands; the laughing judge reaction.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "1WJIm3Z04pM",
+  "clip": {
+   "start": 0,
+   "end": 2.9
+  },
+  "duration": 2.837,
+  "hit": 0.14
+ },
+ {
+  "id": "babu-bhaiya-laughing",
+  "name": "Babu bhaiya laughing",
+  "kind": "video",
+  "lang": "none",
+  "meaning": "laughing reaction",
+  "types": [
+   "joke_punchline",
+   "sarcasm"
+  ],
+  "mood": "laughing",
+  "used_when": "Laughing at a joke, or mock-laughing at a bad one.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "PwFVx2acEAw",
+  "duration": 2.987,
+  "hit": 0.96
+ },
+ {
+  "id": "mast-joke-mara-re",
+  "name": "Mast joke mara re",
+  "kind": "video",
+  "lang": "hi",
+  "quote": "Mast joke mara re",
+  "meaning": "great joke, man",
+  "types": [
+   "sarcasm",
+   "joke_punchline"
+  ],
+  "mood": "sarcastic laugh",
+  "used_when": "After a bad joke, or after a joke that actually lands.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "azYN3VZO8ew",
+  "clip": {
+   "start": 0,
+   "end": 3.1
+  },
+  "duration": 3.115,
+  "hit": 0.44
+ },
+ {
+  "id": "harsh-beniwal-ye-kya-ho-gaya",
+  "name": "Ye kya ho gaya",
+  "kind": "video",
+  "lang": "hi",
+  "quote": "Ye kya ho gaya? Ye kya sun raha hoon main?",
+  "meaning": "what just happened? what am I hearing?",
+  "types": [
+   "shock",
+   "confusion"
+  ],
+  "mood": "disbelief",
+  "used_when": "Hearing something unbelievable or outrageous.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "wfbdEGrCNek",
+  "clip": {
+   "start": 0,
+   "end": 3.07
+  },
+  "duration": 3.008,
+  "hit": 0.99
+ },
+ {
+  "id": "akshay-kumar-smiling",
+  "name": "Akshay Kumar smiling",
+  "kind": "video",
+  "lang": "none",
+  "meaning": "smug smile",
+  "types": [
+   "sus",
+   "victory"
+  ],
+  "mood": "smug",
+  "used_when": "Smug smile when someone's plan works or after an innuendo.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "vRZIVuSz8n4",
+  "clip": {
+   "start": 0,
+   "end": 3.12
+  },
+  "duration": 3.093,
+  "hit": 0.31
+ },
+ {
+  "id": "do-takay-ki-larki",
+  "name": "Do takay ki larki",
+  "kind": "video",
+  "lang": "ur",
+  "quote": "Is do takay ki larki ke liye aap mujhe pachas million de rahe thay?",
+  "meaning": "you offered me 50 million for this worthless girl?",
+  "types": [
+   "roast",
+   "exaggeration"
+  ],
+  "mood": "melodramatic",
+  "used_when": "Over-dramatic dismissal of something or someone as worthless.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "tqJaFNA1Q90",
+  "clip": {
+   "start": 0.64,
+   "end": 2.41
+  },
+  "duration": 1.771,
+  "hit": 0.23
+ },
+ {
+  "id": "hindustani-bhau-tapa-tap",
+  "name": "Tapa tap",
+  "kind": "video",
+  "lang": "hi",
+  "quote": "Tapa tap tapa tap",
+  "meaning": "smack smack",
+  "types": [
+   "roast",
+   "taunt"
+  ],
+  "mood": "aggressive",
+  "used_when": "Threatening a beating in a jokey way, or after someone gets owned.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "Vz-cEd9dyns",
+  "clip": {
+   "start": 0,
+   "end": 2.92
+  },
+  "duration": 2.859,
+  "hit": 1.81
+ },
+ {
+  "id": "nana-patekar-laugh",
+  "name": "Nana Patekar laugh",
+  "kind": "video",
+  "lang": "none",
+  "meaning": "maniacal laugh",
+  "types": [
+   "sarcasm",
+   "joke_punchline"
+  ],
+  "mood": "evil laugh",
+  "used_when": "Evil or mocking laugh after a savage line.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "wZEgLLyoO1M",
+  "clip": {
+   "start": 0,
+   "end": 2.98
+  },
+  "duration": 2.987,
+  "hit": 0.45
+ },
+ {
+  "id": "ducky-bhai-joker-reaction",
+  "name": "Ducky Bhai joker reaction",
+  "kind": "video",
+  "lang": "none",
+  "meaning": "clown reaction",
+  "types": [
+   "roast",
+   "cringe"
+  ],
+  "mood": "mocking",
+  "used_when": "Calling someone a clown after a foolish statement.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "wZI20LvKZD0",
+  "clip": {
+   "start": 0,
+   "end": 3
+  },
+  "duration": 2.944,
+  "hit": 0
+ },
+ {
+  "id": "wo-to-mai-kha-gaya",
+  "name": "Wo toh main kha gaya",
+  "kind": "video",
+  "lang": "hi",
+  "quote": "Wo toh main kha gaya",
+  "meaning": "oh, I ate that",
+  "types": [
+   "self_own",
+   "awkward"
+  ],
+  "mood": "guilty",
+  "used_when": "Someone admits, awkwardly, that they ruined or used up the thing everyone wanted.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "9DNP3TsU2u4",
+  "clip": {
+   "start": 0,
+   "end": 2.92
+  },
+  "duration": 2.923,
+  "hit": 0.8
+ },
+ {
+  "id": "bhagwan-ka-diya-sab-kuch-hai",
+  "name": "Bhagwan ka diya sab kuch hai",
+  "kind": "video",
+  "lang": "hi",
+  "quote": "Bhagwan ka diya sab kuch hai: daulat hai, shohrat hai, izzat hai",
+  "meaning": "God gave me everything",
+  "types": [
+   "sarcasm",
+   "exaggeration"
+  ],
+  "mood": "mock humble",
+  "used_when": "Mock humble-brag, or someone who has everything except the one thing that matters.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "wBPgGNIL0fs",
+  "clip": {
+   "start": 0.22,
+   "end": 1.42
+  },
+  "duration": 1.216,
+  "hit": 0.19
+ },
+ {
+  "id": "just-chill-dhondu",
+  "name": "Just chill Dhondu",
+  "kind": "video",
+  "lang": "hi",
+  "quote": "Dhondu, just chill",
+  "meaning": "relax, Dhondu",
+  "types": [
+   "awkward",
+   "sarcasm"
+  ],
+  "mood": "calm down",
+  "used_when": "Telling someone to relax when they overreact.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "1fm7AvJ-vo0",
+  "clip": {
+   "start": 0,
+   "end": 3
+  },
+  "duration": 2.944,
+  "hit": 0.56
+ },
+ {
+  "id": "zardari-laughing",
+  "name": "Zardari laughing",
+  "kind": "video",
+  "lang": "none",
+  "meaning": "awkward laugh",
+  "types": [
+   "joke_punchline",
+   "awkward"
+  ],
+  "mood": "awkward laugh",
+  "used_when": "Awkward or mocking laugh at a bad joke or blunder.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "RFa1NlaBLes",
+  "clip": {
+   "start": 0,
+   "end": 2.99
+  },
+  "duration": 3.008,
+  "hit": 1.15
+ },
+ {
+  "id": "salman-khan-laughing",
+  "name": "Salman Khan laughing",
+  "kind": "video",
+  "lang": "none",
+  "meaning": "can't stop laughing",
+  "types": [
+   "joke_punchline"
+  ],
+  "mood": "laughing",
+  "used_when": "A joke that is genuinely hilarious; uncontrolled laugh.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "0yElZOJHnYE",
+  "clip": {
+   "start": 7.98,
+   "end": 10.65
+  },
+  "duration": 2.688,
+  "hit": 0.63
+ },
+ {
+  "id": "kapil-sharma-clapping",
+  "name": "Kapil Sharma clapping",
+  "kind": "video",
+  "lang": "none",
+  "meaning": "slow applause",
+  "types": [
+   "sarcasm",
+   "victory"
+  ],
+  "mood": "applause",
+  "used_when": "Sarcastic or genuine applause after a bold or stupid line.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "m5VZjSVS26o",
+  "clip": {
+   "start": 0,
+   "end": 3.01
+  },
+  "duration": 2.965,
+  "hit": 1.38
+ },
+ {
+  "id": "arpit-bala-shocked",
+  "name": "Arpit Bala shocked",
+  "kind": "video",
+  "lang": "hi",
+  "quote": "Ye kaise ho gaya?",
+  "meaning": "how did that happen?",
+  "types": [
+   "shock",
+   "confusion"
+  ],
+  "mood": "shocked",
+  "used_when": "Something unexpected or impossible just happened.",
+  "placement": "cut_in",
+  "region": "desi",
+  "youtube_id": "-Y8CjsNyZQg",
+  "clip": {
+   "start": 0,
+   "end": 2.97
+  },
+  "duration": 2.987,
+  "hit": 0.2
+ }
+]
