@@ -1,0 +1,63 @@
+name: Bug report
+description: Something in SNU Clipper is broken or behaves unexpectedly
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please fill in as much as you can — it helps a lot.
+
+  - type: input
+    id: version
+    attributes:
+      label: SNU Clipper version
+      description: Found in Settings → About, or the release tag you downloaded.
+      placeholder: "v1.19.2"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "Windows 11 (23H2), x64"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Describe the problem, and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps, e.g. 1. Open New project 2. Drop an mp4 3. Click Continue...
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log output (optional)
+      description: If the processing screen shows a Log, paste the last lines here.
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I tried restarting the app
+          required: false
+        - label: I searched existing issues
+          required: false

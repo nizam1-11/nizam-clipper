@@ -3,6 +3,7 @@
 [![Download SNU Clipper for Windows](docs/download-button.png)](https://github.com/nizam1-11/snu-clipper/releases/latest/download/SNU-Clipper-Setup-v1.19.2.exe)
 
 [![Download Setup EXE](https://img.shields.io/badge/Download-SNU Clipper%20Setup%20v1.19.2-E5B94C?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/nizam1-11/snu-clipper/releases/latest/download/SNU-Clipper-Setup-v1.19.2.exe)
+[![Verify](https://github.com/nizam1-11/snu-clipper/actions/workflows/verify.yml/badge.svg)](https://github.com/nizam1-11/snu-clipper/actions/workflows/verify.yml)
 [![Windows](https://img.shields.io/badge/Platform-Windows%20x64-0078D6?style=for-the-badge)](https://github.com/nizam1-11/snu-clipper/releases)
 
 **Click the banner or badge above — it downloads `SNU-Clipper-Setup-v1.19.2.exe` directly (no ZIP).** Run it, confirm the prompt, and it extracts the app into a `SNU Clipper` folder and launches it automatically. A portable ZIP is also available on the [Releases page](https://github.com/nizam1-11/snu-clipper/releases) as a fallback.
