@@ -75,7 +75,8 @@ const readme = read('README.md') || '';
 for (const m of readme.matchAll(/!\[[^\]]*\]\((docs\/[^)]+)\)/g)) {
   check(`README image ${m[1]}`, fs.existsSync(path.join(root, m[1])));
 }
-check('README points to v1.19.2 setup', readme.includes('SNU-Clipper-Setup-v1.19.2.exe'));
+const setupName = pkg ? `SNU-Clipper-Setup-v${pkg.version}.exe` : '';
+check(`README setup link matches package version (${setupName})`, setupName ? readme.includes(setupName) : false);
 
 // --- 5. update feed -------------------------------------------------------
 const yml = read('resources/app-update.yml') || '';

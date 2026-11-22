@@ -129,6 +129,8 @@ async function load() {
     whisperModel: "base",
     outputDir: defaultOutputDir(),
     modelsDir: defaultModelsDir(),
+    welcomeSeen: false,
+    desktopShortcutCreated: false,
     defaults: { ...local.DEFAULT_JOB_DEFAULTS }
   };
   try {
@@ -158,6 +160,8 @@ async function load() {
       modelsDir: raw.modelsDir || base.modelsDir,
       theme: isThemeMode(raw.theme) ? raw.theme : void 0,
       accent: isAccent(raw.accent) ? raw.accent : void 0,
+      welcomeSeen: raw.welcomeSeen === true,
+      desktopShortcutCreated: raw.desktopShortcutCreated === true,
       defaults: { ...base.defaults, ...raw.defaults ?? {} }
     };
     merged.transcription = providerForPlan(merged.plan);
@@ -237,6 +241,8 @@ async function getSettings() {
     modelsDir: s.modelsDir ?? defaultModelsDir(),
     theme: s.theme ?? DEFAULT_APPEARANCE.theme,
     accent: s.accent ?? DEFAULT_APPEARANCE.accent,
+    welcomeSeen: s.welcomeSeen === true,
+    desktopShortcutCreated: s.desktopShortcutCreated === true,
     defaults: s.defaults
   };
 }
@@ -312,6 +318,7 @@ async function updateSettings(u) {
   if (isThemeMode(u.theme)) s.theme = u.theme;
   if (isAccent(u.accent)) s.accent = u.accent;
   if (u.defaults) s.defaults = { ...s.defaults, ...u.defaults };
+  if (u.welcomeSeen !== void 0) s.welcomeSeen = Boolean(u.welcomeSeen);
   await save$1(s);
   return getSettings();
 }
@@ -3760,11 +3767,35 @@ electron.app.on("second-instance", () => {
   mainWindow.show();
   mainWindow.focus();
 });
+async function ensureDesktopShortcut() {
+  // Windows only. Portable build + packaged exe; never in test/headless runs.
+  if (process.platform !== "win32" || isTestRun || !electron.app.isPackaged) return;
+  try {
+    const s = await load();
+    if (s.desktopShortcutCreated === true) return;
+    const desktop = electron.app.getPath("desktop");
+    const link = path.join(desktop, "SNU Clipper.lnk");
+    // "create" returns false when the file already exists -> treat as success.
+    const ok = electron.shell.writeShortcutLink(link, "create", {
+      target: process.execPath,
+      cwd: path.dirname(process.execPath),
+      icon: process.execPath,
+      iconIndex: 0,
+      description: "SNU Clipper - offline AI video clipper"
+    });
+    await save$1({ ...s, desktopShortcutCreated: true });
+    logInfo(`[shortcut] desktop link ${ok ? "created" : "already present"}`);
+  } catch (err) {
+    logError("desktop shortcut", err);
+  }
+}
+
 electron.app.whenReady().then(async () => {
   electron.app.setAppUserModelId("app.snu.desktop");
   await registerMediaProtocol();
   registerIpc();
   initUpdater();
+  if (!isTestRun) void ensureDesktopShortcut();
   if (process.env.CLIPIE_HEADLESS_DOWNLOAD) {
     const out = process.env.CLIPIE_HEADLESS_OUT || path.join(electron.app.getPath("temp"), "clipie-headless-download");
     try {

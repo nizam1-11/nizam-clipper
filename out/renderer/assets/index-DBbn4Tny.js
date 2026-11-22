@@ -24708,3 +24708,228 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   try { syncHelpButton(); } catch (_) {}
   watchChrome();
 })();
+
+/* ==========================================================================
+   SNU CLIPPER — FIRST-RUN WELCOME. Pure ES2020+, no imports, no dependencies.
+   ========================================================================== */
+(function () {
+  "use strict";
+  try {
+    if (window.__nzwWelcomeBooted) return;
+    window.__nzwWelcomeBooted = true;
+
+    var OVERLAY_ID = "nzw-welcome";
+    var LS_KEY = "nzw.welcomeSeen";
+    var REDUCED = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+    function bridge() { try { return window.clipie || null; } catch (_) { return null; } }
+    function settingsApi() { var b = bridge(); return b && b.settings ? b.settings : null; }
+
+    function localSeen() {
+      try { return !!(window.localStorage && window.localStorage.getItem(LS_KEY) === "1"); }
+      catch (_) { return false; }
+    }
+    function mirrorSeen() {
+      try { if (window.localStorage) window.localStorage.setItem(LS_KEY, "1"); } catch (_) {}
+    }
+    function remoteSeen(s) {
+      if (!s || typeof s !== "object") return false;
+      if (s.welcomeSeen === true) return true;
+      if (s.flags && s.flags.welcomeSeen === true) return true;
+      if (s.defaults && s.defaults.welcomeSeen === true) return true;
+      return false;
+    }
+    function persistSeen() {
+      mirrorSeen();
+      var api = settingsApi();
+      if (!api || typeof api.update !== "function") return;
+      try {
+        var p = api.update({ welcomeSeen: true, defaults: { welcomeSeen: true } });
+        if (p && typeof p.catch === "function") p.catch(function () {});
+      } catch (_) {}
+    }
+
+    function shortcutCreated() {
+      try {
+        var g = window.__SNU_WELCOME__;
+        if (g && g.shortcutCreated === false) return false;
+        var b = bridge();
+        if (b && b.app && b.app.shortcutCreated === false) return false;
+      } catch (_) {}
+      return true;
+    }
+
+    var SVG_FALLBACK = "data:image/svg+xml," + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">' +
+        '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
+          '<stop stop-color="#E5B94C"/><stop offset="1" stop-color="#F4D06A"/>' +
+        '</linearGradient></defs>' +
+        '<path d="M64 8 112 36v56L64 120 16 92V36z" fill="none" stroke="url(#g)" stroke-width="6" stroke-linejoin="round"/>' +
+        '<path d="M64 30 94 47v34L64 98 34 81V47z" fill="url(#g)" opacity=".14"/>' +
+        '<text x="64" y="75" text-anchor="middle" font-family="Georgia,serif" font-size="28" font-weight="700" fill="url(#g)">SNU</text>' +
+      '</svg>'
+    );
+    function logoSource() {
+      try {
+        if (window.__SNU_LOGO_SRC__) return String(window.__SNU_LOGO_SRC__);
+        var imgs = document.querySelectorAll('img[src^="data:image/png;base64,"]');
+        for (var i = 0; i < imgs.length; i++) {
+          var src = imgs[i].getAttribute("src") || "";
+          if (src.length > 4000) return src;
+        }
+      } catch (_) {}
+      return SVG_FALLBACK;
+    }
+    function upgradeLogo() {
+      try {
+        var el = document.getElementById(OVERLAY_ID);
+        if (!el) return;
+        var img = el.querySelector(".nzw-mark img");
+        if (!img || img.getAttribute("src") !== SVG_FALLBACK) return;
+        var real = logoSource();
+        if (real !== SVG_FALLBACK) img.setAttribute("src", real);
+      } catch (_) {}
+    }
+
+    var S = 'fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+    var ICON = {
+      offline:  '<svg viewBox="0 0 24 24" ' + S + '><path d="M12 3 4.5 6v5c0 4.6 3 8.3 7.5 10 4.5-1.7 7.5-5.4 7.5-10V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+      captions: '<svg viewBox="0 0 24 24" ' + S + '><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 10.5a2.5 2.5 0 1 0 0 3M17 10.5a2.5 2.5 0 1 0 0 3"/></svg>',
+      fast:     '<svg viewBox="0 0 24 24" ' + S + '><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>',
+      keys:     '<svg viewBox="0 0 24 24" ' + S + '><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>',
+      desktop:  '<svg viewBox="0 0 24 24" ' + S + '><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>'
+    };
+    function feature(icon, label, note, hot) {
+      return '<div class="nzw-feature' + (hot ? ' nzw-feature--hot' : '') + '">' + icon +
+             '<strong>' + label + '</strong><span>' + note + '</span></div>';
+    }
+
+    function markup() {
+      var strip = shortcutCreated()
+        ? '<div class="nzw-shortcut">' + ICON.desktop +
+          '<span>You\u2019ll find SNU Clipper on your Desktop.</span></div>'
+        : '';
+      return '' +
+        '<div class="nzw-card no-drag" role="dialog" aria-modal="true" aria-labelledby="nzw-title" aria-describedby="nzw-tag">' +
+          '<div class="nzw-mark"><img alt="SNU emblem" src="' + logoSource() + '"></div>' +
+          '<p class="nzw-eyebrow">Welcome</p>' +
+          '<h1 class="nzw-title" id="nzw-title">SNU Clipper</h1>' +
+          '<p class="nzw-tagline" id="nzw-tag">Turns raw recordings into captioned clips, scripts and posts \u2014 your media stays 100% on your machine.</p>' +
+          '<div class="nzw-features">' +
+            feature(ICON.offline,  "100% offline",  "No uploads, no cloud", false) +
+            feature(ICON.captions, "Auto captions", "Ready in one click",  false) +
+            feature(ICON.fast,     "Fast by default","Local, GPU-aware",    true)  +
+            feature(ICON.keys,     "Shortcuts",     "Move without the mouse", false) +
+          '</div>' +
+          strip +
+          '<div class="nzw-actions">' +
+            '<button type="button" class="nzw-cta" id="nzw-cta">Get started</button>' +
+            '<span class="nzw-hint">or press Enter</span>' +
+          '</div>' +
+          '<p class="nzw-foot">Built by <b>Syed Nizam Uddin</b> &nbsp;\u00b7&nbsp; SNU</p>' +
+        '</div>';
+    }
+
+    function show() {
+      if (document.getElementById(OVERLAY_ID)) return;
+      var body = document.body || document.documentElement;
+      if (!body) { document.addEventListener("DOMContentLoaded", show, { once: true }); return; }
+
+      var previousFocus = null;
+      try { previousFocus = document.activeElement; } catch (_) {}
+      var el = document.createElement("div");
+      el.id = OVERLAY_ID;
+      el.className = "nzw-overlay no-drag";
+      el.innerHTML = markup();
+      body.appendChild(el);
+
+      var closed = false;
+      var focusTimer = null;
+
+      function onKey(ev) {
+        if (closed) return;
+        var k = ev && ev.key;
+        if (k === "Enter" || k === "Escape" || k === " ") {
+          try { ev.preventDefault(); } catch (_) {}
+          close();
+        }
+      }
+      function finish() {
+        try { document.removeEventListener("keydown", onKey, true); } catch (_) {}
+        if (focusTimer) { clearTimeout(focusTimer); focusTimer = null; }
+        try { if (el.parentNode) el.parentNode.removeChild(el); } catch (_) {}
+        try { if (previousFocus && previousFocus.focus) previousFocus.focus({ preventScroll: true }); } catch (_) {}
+      }
+      function close() {
+        if (closed) return;
+        closed = true;
+        persistSeen();
+        el.style.pointerEvents = "none";
+        el.classList.add("nzw-overlay--out");
+        if (REDUCED) finish();
+        else setTimeout(finish, 220);
+      }
+
+      el.addEventListener("click", function (ev) {
+        try {
+          if (ev.target.closest && ev.target.closest("#nzw-cta")) close();
+          else if (ev.target === el) close();
+        } catch (_) { close(); }
+      });
+      document.addEventListener("keydown", onKey, true);
+
+      try {
+        focusTimer = setTimeout(function () {
+          focusTimer = null;
+          if (closed) return;
+          var cta = el.querySelector("#nzw-cta");
+          if (cta && cta.focus) cta.focus({ preventScroll: true });
+        }, REDUCED ? 0 : 1040);
+      } catch (_) {}
+
+      try {
+        var n = 0;
+        (function tick() { if (n++ < 6 && !closed) { upgradeLogo(); requestAnimationFrame(tick); } })();
+      } catch (_) { upgradeLogo(); }
+
+      window.__nzwWelcomeClose = close;
+      window.__nzwWelcomeSetShortcut = function (created) {
+        try {
+          var stripEl = el.querySelector(".nzw-shortcut");
+          if (stripEl && created === false) stripEl.hidden = true;
+        } catch (_) {}
+      };
+    }
+
+    var decided = false;
+    function decide(seen) {
+      if (decided) return;
+      decided = true;
+      if (seen) { mirrorSeen(); return; }
+      show();
+    }
+
+    var timer = null;
+    try { timer = setTimeout(function () { decide(localSeen()); }, 350); } catch (_) {}
+
+    var api = settingsApi();
+    if (!api || typeof api.get !== "function") {
+      if (timer) clearTimeout(timer);
+      decide(localSeen());
+      return;
+    }
+    try {
+      var r = api.get();
+      if (r && typeof r.then === "function") {
+        r.then(function (s) { if (timer) clearTimeout(timer); decide(!!localSeen() || remoteSeen(s)); },
+               function ()  { if (timer) clearTimeout(timer); decide(localSeen()); });
+      } else {
+        if (timer) clearTimeout(timer);
+        decide(!!localSeen() || remoteSeen(r));
+      }
+    } catch (_) {
+      if (timer) clearTimeout(timer);
+      decide(localSeen());
+    }
+  } catch (_) { /* Never let onboarding break app boot. */ }
+})();
