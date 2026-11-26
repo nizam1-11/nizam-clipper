@@ -198,14 +198,14 @@ if ($LASTEXITCODE -ne 0) { throw 'ZIP creation failed' }
 Write-Host ("[6/8] zip ready: {0} MB" -f [math]::Round((Get-Item $zip).Length / 1MB, 1))
 
 # --- 6b. update feed (latest.yml) ------------------------------------------
-# The in-app updater reads this file. It points at the portable ZIP so the
-# update can be applied silently without an NSIS installer / UAC prompt.
+# In-app updater reads this file. It points at the portable ZIP so updates
+# can be applied silently without an NSIS installer / UAC prompt.
 $zipHex = (Get-FileHash -LiteralPath $zip -Algorithm SHA512).Hash
 $shaBytes = [byte[]]::new($zipHex.Length / 2)
 for ($i = 0; $i -lt $shaBytes.Length; $i++) { $shaBytes[$i] = [Convert]::ToByte($zipHex.Substring($i * 2, 2), 16) }
 $shaB64 = [Convert]::ToBase64String($shaBytes)
 $zipSize = (Get-Item $zip).Length
-$latestYml = Join-Path $temp 'snu-latest.yml'
+$latestYml = Join-Path $temp 'latest.yml'
 $yml = @"
 version: $Version
 files:

@@ -3110,16 +3110,20 @@ function run(cmd, cmdArgs) {
     c.once("close", function (code) { code === 0 ? res() : rej(new Error(cmd + " exited " + code)); });
   });
 }
-function copyDir(src, dst) {
-  for (const e of fs.readdirSync(src, { withFileTypes: true })) {
-    const s = path.join(src, e.name), d = path.join(dst, e.name);
-    if (e.isDirectory()) { fs.mkdirSync(d, { recursive: true }); copyDir(s, d); }
-    else { fs.mkdirSync(path.dirname(d), { recursive: true }); fs.copyFileSync(s, d); }
-  }
+function copyOver(src, dst) {
+  return new Promise(function (res, rej) {
+    const robocopy = path.join(process.env.SystemRoot || "C:/Windows", "System32", "robocopy.exe");
+    const c = cp.spawn(robocopy, [src, dst, "/E", "/NFL", "/NDL", "/NJH", "/NJS", "/NP", "/R:1", "/W:1"], { windowsHide: true, stdio: "ignore" });
+    c.once("error", rej);
+    c.once("close", function (code) { code < 8 ? res() : rej(new Error("robocopy exited " + code)); });
+  });
 }
 function relaunch() {
-  try { cp.spawn(path.join(installDir, "SNU-Clipper.exe"), [], { cwd: installDir, detached: true, stdio: "ignore", windowsHide: true }).unref(); }
-  catch (e) { w("relaunch failed " + e.message); }
+  try {
+    const env = Object.assign({}, process.env);
+    delete env.ELECTRON_RUN_AS_NODE;
+    cp.spawn(path.join(installDir, "SNU-Clipper.exe"), [], { cwd: installDir, detached: true, stdio: "ignore", windowsHide: true, env: env }).unref();
+  } catch (e) { w("relaunch failed " + e.message); }
 }
 (async function () {
   try {
@@ -3134,7 +3138,7 @@ function relaunch() {
     w("extracted");
     if (!fs.existsSync(path.join(staging, "SNU-Clipper.exe"))) throw new Error("The update archive does not contain SNU Clipper.");
     if (!fs.existsSync(path.join(staging, "resources", "app.asar"))) throw new Error("The update archive does not contain the app data.");
-    copyDir(staging, installDir);
+    await copyOver(staging, installDir);
     w("files replaced");
     try { fs.rmSync(staging, { recursive: true, force: true }); } catch (e) {}
     try { fs.rmSync(archive, { force: true }); } catch (e) {}
@@ -3224,6 +3228,10 @@ function winLaunchInstaller(archive, version) {
   // The helper must not run from the installed exe: Windows locks a running exe,
   // and the helper has to copy a new one over it.
   node_fs.copyFileSync(electron.app.getPath("exe"), runner);
+  // Electron-as-Node needs its ICU/snapshot data beside the runner exe.
+  for (const name of ["icudtl.dat", "snapshot_blob.bin", "v8_context_snapshot.bin", "resources.pak", "chrome_100_percent.pak", "chrome_200_percent.pak"]) {
+    try { node_fs.copyFileSync(path.join(installDir, name), path.join(WIN_UPDATE_DIR, name)); } catch (_) {}
+  }
   node_child_process.spawn(runner, [helper, String(process.pid), archive, installDir, version, log], {
     env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
     detached: true,
