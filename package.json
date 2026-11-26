@@ -1,7 +1,7 @@
 {
   "name": "snu-clipper",
   "productName": "SNU Clipper",
-  "version": "1.20.0",
+  "version": "1.21.0",
   "private": true,
   "license": "MIT",
   "description": "Rebuilt from SNU Clipper v1.19.0 via static reverse engineering (REA + asar extraction). Add your own features in out/.",

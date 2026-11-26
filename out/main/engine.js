@@ -10915,7 +10915,9 @@ function cropRect(box, srcAspect, dstAspect) {
   const { zoom, x, y } = box ?? local.CENTRED_CROP;
   const coverW = srcAspect > dstAspect ? dstAspect / srcAspect : 1;
   const coverH = srcAspect > dstAspect ? 1 : srcAspect / dstAspect;
-  const z = clamp$2(zoom, 1, local.MAX_CROP_ZOOM);
+  // Any number is allowed. 100% = normal, >100% zooms in, below 100% / negative shows more.
+  const pct = (Number.isFinite(zoom) ? zoom : 1) * 100;
+  const z = pct >= 100 ? pct / 100 : pct > 0 ? 0.5 + pct / 200 : 0.5 / (1 + Math.abs(pct) / 100);
   const w = clamp$2(coverW / z, 0.02, 1);
   const h = clamp$2(coverH / z, 0.02, 1);
   const cx = clamp$2(x, w / 2, 1 - w / 2);
@@ -10924,7 +10926,7 @@ function cropRect(box, srcAspect, dstAspect) {
 }
 function settleCrop(box, srcAspect, dstAspect) {
   const rect = cropRect(box, srcAspect, dstAspect);
-  return { zoom: clamp$2(box.zoom, 1, local.MAX_CROP_ZOOM), x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 };
+  return { zoom: Number.isFinite(box.zoom) ? box.zoom : 1, x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 };
 }
 function isCentred(box) {
   if (!box) return true;
@@ -12652,20 +12654,58 @@ function remapTime(t, keep) {
   }
   return acc;
 }
-function buildVideoFilter(aspect, layout, assPath, srcW, srcH, fontsDir, crop, follow, resolution, stack) {
+function nzlNum(v, lo, hi, fallback) { return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : fallback; }
+function nzlSettings(raw) {
+  const x = raw && typeof raw === "object" ? raw : {};
+  const part = (k) => x[k] && typeof x[k] === "object" ? x[k] : {};
+  const c = part("color"), r = part("rotate"), m = part("mirror"), s = part("speed");
+  return {
+    color: {
+      enabled: c.enabled === true,
+      preset: typeof c.preset === "string" ? c.preset : "natural",
+      brightness: nzlNum(c.brightness, -1, 1, 0),
+      contrast: nzlNum(c.contrast, 0, 3, 1),
+      saturation: nzlNum(c.saturation, 0, 3, 1),
+      hue: nzlNum(c.hue, -180, 180, 0),
+      temperature: nzlNum(c.temperature, -1, 1, 0)
+    },
+    rotate: { enabled: r.enabled === true, degrees: [0, 90, 180, 270].includes(r.degrees) ? r.degrees : 0 },
+    mirror: { enabled: m.enabled === true, h: m.h === true, v: m.v === true },
+    speed: { enabled: s.enabled === true, value: nzlNum(s.value, 0.5, 3, 1) }
+  };
+}
+function nzlSpeed(settings) {
+  const s = nzlSettings(settings).speed;
+  return s.enabled ? s.value : 1;
+}
+function atempoChain(speed) {
+  if (!(speed > 0) || Math.abs(speed - 1) < 1e-6) return "";
+  let left = speed;
+  const out = [];
+  while (left > 2) { out.push("atempo=2"); left /= 2; }
+  while (left < 0.5) { out.push("atempo=0.5"); left /= 0.5; }
+  out.push(`atempo=${left.toFixed(4)}`);
+  return out.join(",") + ",";
+}
+function buildVideoFilter(aspect, layout, assPath, srcW, srcH, fontsDir, crop, follow, resolution, stack, editPreset) {
   const { w, h } = targetSize(aspect, resolution);
   const unit = Math.min(w, h) / 1080;
   const blurR = (r) => Math.max(1, Math.round(r * unit));
-  const srcAspect = srcW / srcH;
+  const fx = nzlSettings(editPreset);
+  let effW = srcW, effH = srcH, rotatePrefix = "";
+  if (fx.rotate.enabled && fx.rotate.degrees === 90) { rotatePrefix = "transpose=1,"; effW = srcH; effH = srcW; }
+  else if (fx.rotate.enabled && fx.rotate.degrees === 270) { rotatePrefix = "transpose=2,"; effW = srcH; effH = srcW; }
+  else if (fx.rotate.enabled && fx.rotate.degrees === 180) rotatePrefix = "hflip,vflip,";
+  const srcAspect = effW / effH;
   const dstAspect = w / h;
   let chain;
   const nearlySame = Math.abs(srcAspect - dstAspect) < 0.02;
-  if (layout === "stack" && srcW > 0 && srcH > 0) {
-    chain = stackFilter(stackPlan(srcW, srcH, w, h, stack), w);
-  } else if (layout === "follow" && follow?.length && srcW > 0 && srcH > 0 && !nearlySame) {
+  if (layout === "stack" && effW > 0 && effH > 0) {
+    chain = stackFilter(stackPlan(effW, effH, w, h, stack), w);
+  } else if (layout === "follow" && follow?.length && effW > 0 && effH > 0 && !nearlySame) {
     const even2 = (value2) => Math.max(2, Math.round(value2 / 2) * 2);
-    const cw = srcAspect > dstAspect ? Math.min(srcW, even2(srcH * dstAspect)) : srcW;
-    const ch = srcAspect > dstAspect ? srcH : Math.min(srcH, even2(srcW / dstAspect));
+    const cw = srcAspect > dstAspect ? Math.min(effW, even2(effH * dstAspect)) : effW;
+    const ch = srcAspect > dstAspect ? effH : Math.min(effH, even2(effW / dstAspect));
     const at = (share, size, total) => Math.max(0, Math.min(total - size, Math.round(share * total - size / 2)));
     const piecewise = (values) => {
       let expr = String(values[values.length - 1]);
@@ -12675,14 +12715,16 @@ function buildVideoFilter(aspect, layout, assPath, srcW, srcH, fontsDir, crop, f
     const xs = follow.map((s) => at(s.cx, cw, srcW));
     const ys = follow.map((s) => at(s.cy, ch, srcH));
     chain = `crop=${cw}:${ch}:x='${piecewise(xs)}':y='${piecewise(ys)}',scale=${w}:${h}`;
-  } else if (layout === "manual" && srcW > 0 && srcH > 0) {
+  } else if (layout === "manual" && effW > 0 && effH > 0) {
     const rect = cropRect(crop, srcAspect, dstAspect);
     const even2 = (value2, limit) => Math.max(2, Math.min(limit, Math.round(value2 / 2) * 2));
-    const cw = even2(srcW * rect.w, srcW);
-    const ch = even2(srcH * rect.h, srcH);
-    const cx = Math.max(0, Math.min(srcW - cw, Math.round(srcW * rect.x)));
-    const cy = Math.max(0, Math.min(srcH - ch, Math.round(srcH * rect.y)));
-    chain = `crop=${cw}:${ch}:${cx}:${cy},scale=${w}:${h}:force_original_aspect_ratio=increase,crop=${w}:${h}`;
+    const cw = even2(effW * rect.w, effW);
+    const ch = even2(effH * rect.h, effH);
+    const cx = Math.max(0, Math.min(effW - cw, Math.round(effW * rect.x)));
+    const cy = Math.max(0, Math.min(effH - ch, Math.round(effH * rect.y)));
+    const zoomOut = Number.isFinite(crop?.zoom) && crop.zoom < 1;
+    chain = `crop=${cw}:${ch}:${cx}:${cy},scale=${w}:${h}:force_original_aspect_ratio=${zoomOut ? "decrease" : "increase"}` +
+      (zoomOut ? `,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2:color=black` : `,crop=${w}:${h}`);
   } else if (layout === "original" || nearlySame) {
     chain = `scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2:color=black`;
   } else if (layout === "crop" || layout === "follow") {
@@ -12690,9 +12732,23 @@ function buildVideoFilter(aspect, layout, assPath, srcW, srcH, fontsDir, crop, f
   } else {
     chain = `split=2[bg][fg];[bg]scale=${w}:${h}:force_original_aspect_ratio=increase,crop=${w}:${h},boxblur=luma_radius=${blurR(SNU_WEAK ? 12 : 30)}:luma_power=${SNU_WEAK ? 1 : 2}:chroma_radius=${blurR(SNU_WEAK ? 6 : 15)}:chroma_power=${SNU_WEAK ? 1 : 2},eq=brightness=-0.08[bgb];[fg]scale=${w}:${h}:force_original_aspect_ratio=decrease[fgs];[bgb][fgs]overlay=(W-w)/2:(H-h)/2`;
   }
+  if (fx.color.enabled) {
+    const c = fx.color;
+    let grade = `eq=brightness=${c.brightness.toFixed(4)}:contrast=${c.contrast.toFixed(4)}:saturation=${c.saturation.toFixed(4)}:hue=${Math.round(c.hue)}`;
+    if (Math.abs(c.temperature) > 0.001) {
+      const t = (c.temperature * 0.15).toFixed(4);
+      grade += `,colorbalance=rs=${t}:bs=${(-c.temperature * 0.15).toFixed(4)}`;
+    }
+    chain += `,${grade}`;
+  }
   chain += `,setsar=1,format=yuv420p`;
+  // Mirror the picture BEFORE captions, text cards and logo are composited.
+  if (fx.mirror.enabled) {
+    if (fx.mirror.h) chain += ",hflip";
+    if (fx.mirror.v) chain += ",vflip";
+  }
   if (assPath) chain += `,${assFilter(assPath, fontsDir)}`;
-  return { filter: chain, w, h };
+  return { filter: rotatePrefix + chain, w, h };
 }
 function assFilter(assPath, fontsDir) {
   return `ass='${local.escapeFilterPath(assPath)}'${fontsDir ? `:fontsdir='${local.escapeFilterPath(fontsDir)}'` : ""}`;
@@ -12789,6 +12845,9 @@ async function renderClip(o) {
   const seekMs = seekPoint(rough);
   const keep = snapToFrames(rough, seekMs);
   const editedDuration = keep.reduce((a, k) => a + (k.end - k.start), 0);
+  const speed = nzlSpeed(settings);
+  const outDuration = editedDuration / speed;
+  const speedVf = speed === 1 ? "" : `setpts=PTS/${speed.toFixed(4)},`;
   const removed = h.end - h.start - editedDuration;
   const base = `clip-${String(o.index + 1).padStart(2, "0")}`;
   const saveDir = o.saveDir ?? o.outDir;
@@ -12804,14 +12863,14 @@ async function renderClip(o) {
     if (wd.end <= h.start || wd.start >= h.end) continue;
     const inKeep = keep.find((k) => wd.start < k.end && wd.end > k.start);
     if (!inKeep) continue;
-    const s = remapTime(Math.max(wd.start, inKeep.start), keep);
-    const e = remapTime(Math.min(wd.end, inKeep.end), keep);
+    const s = remapTime(Math.max(wd.start, inKeep.start), keep) / speed;
+    const e = remapTime(Math.min(wd.end, inKeep.end), keep) / speed;
     if (e > s) clipWords.push({ text: hinglishWord(wd.text), start: s, end: e });
   }
   const preset = local.findPreset(settings.captionStyle);
   const lines = groupWords(clipWords, preset?.maxWords ?? 4);
   const useCaptions = Boolean(preset) && lines.length > 0;
-  const top = resolveTopText(h.hook ?? "", settings.topText, editedDuration) ?? void 0;
+  const top = resolveTopText(h.hook ?? "", settings.topText, outDuration) ?? void 0;
   const useAss = useCaptions || Boolean(top);
   if (useAss) {
     const overrides = {
@@ -12827,14 +12886,14 @@ async function renderClip(o) {
   await node_fs.promises.writeFile(srtPath, buildSrt(groupWords(clipWords, 4)), "utf8");
   const parts = cutFilters(keep, seekMs, o.hasAudio);
   const follow = settings.layout === "follow" ? await followShots(o, keep, path.join(o.outDir, `${base}.faces.json`)) : void 0;
-  const texts = resolveTextOverlays(settings.texts, editedDuration).filter((t) => t.card);
+  const texts = resolveTextOverlays(settings.texts, outDuration).filter((t) => t.card);
   const missing = (settings.texts?.length ?? 0) - texts.length;
   if (missing > 0) o.log(`${missing} added text(s) had no drawn card or no time on screen in this clip, so they are left out.`);
   const logo = resolveLogo(settings.logo);
   const layered = texts.length > 0 || Boolean(logo);
-  const vf = buildVideoFilter(settings.aspect, settings.layout, useAss && !layered ? assPath : null, o.sourceWidth, o.sourceHeight, o.fontsDir, settings.crop, follow, settings.resolution, settings.stack);
+  const vf = buildVideoFilter(settings.aspect, settings.layout, useAss && !layered ? assPath : null, o.sourceWidth, o.sourceHeight, o.fontsDir, settings.crop, follow, settings.resolution, settings.stack, settings.editPreset);
   if (layered) {
-    parts.push(`[vc]${vf.filter}[vbase]`);
+    parts.push(`[vc]${speedVf}${vf.filter}[vbase]`);
     let cur = "[vbase]";
     if (texts.length) {
       parts.push(...textOverlayFilters(texts, cur, "[vtext]", 1, vf.w, vf.h));
@@ -12843,9 +12902,9 @@ async function renderClip(o) {
     if (logo) parts.push(...logoFilters(logo, cur, "[vlogo]", 1 + texts.length, vf.w, vf.h)), cur = "[vlogo]";
     parts.push(`${cur}${useAss ? assFilter(assPath, o.fontsDir) : "null"}[vout]`);
   } else {
-    parts.push(`[vc]${vf.filter}[vout]`);
+    parts.push(`[vc]${speedVf}${vf.filter}[vout]`);
   }
-  if (o.hasAudio) parts.push(SNU_WEAK ? `[ac]aresample=48000[aout]` : `[ac]aresample=48000,loudnorm=I=-16:TP=-1.5:LRA=11[aout]`);
+  if (o.hasAudio) parts.push(`[ac]${atempoChain(speed)}${SNU_WEAK ? "aresample=48000" : "aresample=48000,loudnorm=I=-16:TP=-1.5:LRA=11"}[aout]`);
   const filterComplex = parts.join(";");
   let filterArgs = ["-filter_complex", filterComplex];
   if (filterComplex.length > 8e3) {
@@ -12883,7 +12942,7 @@ async function renderClip(o) {
     "-movflags",
     "+faststart",
     "-t",
-    (editedDuration + 0.05).toFixed(3),
+    (outDuration + 0.05).toFixed(3),
     "-progress",
     "pipe:2",
     outPath
@@ -12893,7 +12952,7 @@ async function renderClip(o) {
     stallMs: RENDER_STALL_MS,
     hardMs: 9e5,
     onStderr: (line) => {
-      const p = local.parseProgress(line, editedDuration);
+      const p = local.parseProgress(line, outDuration);
       if (p >= 0) o.onProgress(p);
     }
   });
@@ -12913,7 +12972,7 @@ async function renderClip(o) {
     }
   }
   if (res.code !== 0) throw new Error(`Render failed for ${base}: ${local.lastLines(res.stderr)}`);
-  let finalDuration = editedDuration;
+  let finalDuration = outDuration;
   if (h.memes?.length && o.memesDir && settings.memes !== false && o.hasAudio) {
     const mixed = await mixMemes({
       bins: o.bins,
@@ -12922,7 +12981,7 @@ async function renderClip(o) {
       height: vf.h,
       duration: editedDuration,
       memesDir: o.memesDir,
-      memes: h.memes.map((m) => ({ ...m, rel: remapTime(m.at, keep) })),
+      memes: h.memes.map((m) => ({ ...m, rel: remapTime(m.at, keep) / speed })),
       encoderArgs: local.sizedEncoderArgs(encoderArgs, vf.w, vf.h, settings.aspect),
       log: o.log,
       signal: o.signal
@@ -12945,7 +13004,7 @@ async function renderClip(o) {
       musicNote = "The music could not be added, so this clip has none. Choose the song again and press Apply.";
     }
   }
-  await local.thumbnail(o.bins, outPath, Math.min(1, editedDuration / 3), thumbPath, 540);
+  await local.thumbnail(o.bins, outPath, Math.min(1, outDuration / 3), thumbPath, 540);
   return {
     highlightId: h.id,
     index: o.index,
@@ -13111,7 +13170,8 @@ function clipSettingsFrom(options) {
     ...options.logo ? { logo: options.logo } : {},
     ...options.music ? { music: options.music } : {},
     ...options.resolution && options.resolution !== "auto" ? { resolution: options.resolution } : {},
-    ...options.stack ? { stack: options.stack } : {}
+    ...options.stack ? { stack: options.stack } : {},
+    ...options.editPreset ? { editPreset: options.editPreset } : {}
   };
 }
 function resolveRange(options, duration2) {
@@ -13138,15 +13198,50 @@ function shiftTranscript(transcript, window) {
 }
 function topUpHighlights(analysis, transcript, options) {
   const want = Math.max(1, Math.round(options.clipCount));
-  const have = analysis.highlights;
-  if (have.length >= want) return analysis;
-  const spare = heuristicAnalysis(transcript, { ...options, clipCount: want * 4 }).highlights;
-  const out = [...have];
-  for (const candidate of spare) {
+  const out = [...(analysis.highlights || [])];
+  if (out.length >= want) return analysis;
+  const words2 = transcript.words || [];
+  const sentences = words2.length
+    ? buildSentences(words2)
+    : (transcript.segments || []).map((s) => ({ start: s.start, end: s.end, text: s.text, closed: true }));
+  if (!sentences.length) return analysis;
+  const r = (n) => Math.round(n * 1e3) / 1e3;
+  // Extra clips may be a little shorter than the main picks, but never tiny.
+  const minExtra = Math.max(4, Math.min(options.minClipSeconds, 10));
+  const used = out.map((h) => ({ start: h.start, end: h.end }));
+  const scored = [];
+  for (let i = 0; i < sentences.length; i++) {
+    for (let j = i; j < sentences.length; j++) {
+      const sec = sentences[j].end - sentences[i].start;
+      if (sec > options.maxClipSeconds) break;
+      if (sec < minExtra) continue;
+      const texts = sentences.slice(i, j + 1).map((s) => s.text);
+      const open = hookPower(texts[0]);
+      const payoff = payoffPower(texts[texts.length - 1]);
+      const flaw = openerFlawAt(sentences, i, options.language) || endFlawAt(sentences, j);
+      scored.push({ i, j, sec, score: scoreSpan(texts, sec, options) + open * 1.2 + payoff - (flaw ? 3 : 0) });
+    }
+  }
+  scored.sort((a, b) => b.score - a.score);
+  for (const c of scored) {
     if (out.length >= want) break;
-    const clashes = out.some((h) => Math.min(h.end, candidate.end) - Math.max(h.start, candidate.start) > 1);
-    if (clashes) continue;
-    out.push({ ...candidate, reason: `${candidate.reason} Added to reach the ${want} clips you asked for.` });
+    const first = sentences[c.i], last = sentences[c.j];
+    // Leave a small gap so the padding added later cannot make clips overlap.
+    if (used.some((u) => Math.min(u.end, last.end) - Math.max(u.start, first.start) > -0.5)) continue;
+    const texts = sentences.slice(c.i, c.j + 1).map((s) => s.text);
+    const text = texts.join(" ");
+    used.push({ start: first.start, end: last.end });
+    out.push({
+      id: "",
+      start: r(first.start),
+      end: r(last.end),
+      title: makeTitle(text) || `Clip ${out.length + 1}`,
+      hook: firstSentence(texts[0]).split(/\s+/).slice(0, 9).join(" ").replace(/[,.;:!?۔؟।]+$/, ""),
+      description: truncate(text, 180),
+      hashtags: defaultHashtags(options.audience),
+      reason: `Added to reach the ${want} clips you asked for: its own hook and payoff, with no overlap with the earlier clips.`,
+      score: Math.max(30, Math.min(95, Math.round(c.score)))
+    });
   }
   out.sort((a, b) => a.start - b.start);
   out.forEach((h, i) => h.id = `h${i + 1}`);

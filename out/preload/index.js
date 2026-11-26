@@ -97,6 +97,7 @@ const api = {
     poster: (p, at) => electron.ipcRenderer.invoke("files:poster", p, at),
     remotePoster: (url) => electron.ipcRenderer.invoke("files:remotePoster", url),
     saveTextCard: (dataUrl) => electron.ipcRenderer.invoke("files:saveTextCard", dataUrl),
+    saveCover: (dataUrl, name) => electron.ipcRenderer.invoke("files:saveCover", dataUrl, name),
     pickLogo: () => electron.ipcRenderer.invoke("files:pickLogo"),
     pickMusic: () => electron.ipcRenderer.invoke("files:pickMusic"),
     pickScreenshot: () => electron.ipcRenderer.invoke("files:pickScreenshot")

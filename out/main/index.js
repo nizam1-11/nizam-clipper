@@ -3673,6 +3673,22 @@ function rewriteImportedProject(pj, id, outputDir) {
   return copy;
 }
 
+async function saveCover(dataUrl, name) {
+  const m = /^data:image\/png;base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ""));
+  if (!m) throw new Error("Not a PNG cover");
+  const bytes = Buffer.from(m[1], "base64");
+  if (bytes.length > 4e7) throw new Error("Cover image too large");
+  const win = electron.BrowserWindow.getFocusedWindow();
+  const pics = electron.app.getPath("pictures");
+  const res = await electron.dialog.showSaveDialog(win, {
+    title: "Save SNU Clipper cover",
+    defaultPath: path.join(pics || electron.app.getPath("documents"), String(name || "cover.png")),
+    filters: [{ name: "PNG image", extensions: ["png"] }]
+  });
+  if (res.canceled || !res.filePath) return { canceled: true };
+  await node_fs.promises.writeFile(res.filePath, bytes);
+  return { ok: true, path: res.filePath };
+}
 async function exportProjectBackup(projectId) {
   const settings = await getSettings();
   const p = await findProject(settings.outputDir, String(projectId));
@@ -3818,6 +3834,7 @@ function registerIpc() {
   electron.ipcMain.handle("files:poster", (_e, p, at) => posterFor(p, at));
   electron.ipcMain.handle("files:remotePoster", (_e, url) => remotePosterFor(url));
   electron.ipcMain.handle("files:saveTextCard", (_e, dataUrl) => saveTextCard(dataUrl));
+  electron.ipcMain.handle("files:saveCover", (_e, dataUrl, name) => saveCover(dataUrl, name));
   electron.ipcMain.handle("files:pickScreenshot", async (e) => {
     const win = electron.BrowserWindow.fromWebContents(e.sender);
     const res = await electron.dialog.showOpenDialog(win, {

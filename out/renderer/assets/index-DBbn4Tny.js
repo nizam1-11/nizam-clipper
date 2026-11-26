@@ -17630,7 +17630,9 @@ function cropRect(box, srcAspect, dstAspect) {
   const { zoom, x, y } = box ?? CENTRED_CROP;
   const coverW = srcAspect > dstAspect ? dstAspect / srcAspect : 1;
   const coverH = srcAspect > dstAspect ? 1 : srcAspect / dstAspect;
-  const z = clamp$3(zoom, 1, MAX_CROP_ZOOM);
+  // Any number is allowed. 100% = normal, >100% zooms in, below 100% / negative shows more.
+  const pct = (Number.isFinite(zoom) ? zoom : 1) * 100;
+  const z = pct >= 100 ? pct / 100 : pct > 0 ? 0.5 + pct / 200 : 0.5 / (1 + Math.abs(pct) / 100);
   const w = clamp$3(coverW / z, 0.02, 1);
   const h = clamp$3(coverH / z, 0.02, 1);
   const cx = clamp$3(x, w / 2, 1 - w / 2);
@@ -17639,7 +17641,7 @@ function cropRect(box, srcAspect, dstAspect) {
 }
 function settleCrop(box, srcAspect, dstAspect) {
   const rect = cropRect(box, srcAspect, dstAspect);
-  return { zoom: clamp$3(box.zoom, 1, MAX_CROP_ZOOM), x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 };
+  return { zoom: Number.isFinite(box.zoom) ? box.zoom : 1, x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 };
 }
 function isCentred(box) {
   if (!box) return true;
@@ -17682,7 +17684,7 @@ function FramePicker({ poster, aspect, crop, onChange, height = 300 }) {
   );
   const zoomBy = reactExports.useCallback(
     (factor) => {
-      const next = Math.min(MAX_CROP_ZOOM, Math.max(1, cropRef.current.zoom * factor));
+      const next = (Number.isFinite(cropRef.current.zoom) ? cropRef.current.zoom : 1) * factor;
       onChange(settleCrop({ ...cropRef.current, zoom: next }, srcAspect, ratio));
     },
     [onChange, ratio, srcAspect]
@@ -17771,7 +17773,7 @@ function FramePicker({ poster, aspect, crop, onChange, height = 300 }) {
               alt: "",
               draggable: false,
               className: "absolute max-w-none pointer-events-none",
-              style: { ...cropStyle(crop, srcAspect, ratio), objectFit: "fill" }
+              style: { ...cropStyle(crop, srcAspect, ratio), objectFit: crop.zoom < 1 ? "contain" : "fill" }
             }
           ),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "absolute inset-0 pointer-events-none", style: { opacity: dragging ? 0.85 : 0.4 }, children: [
@@ -17782,13 +17784,14 @@ function FramePicker({ poster, aspect, crop, onChange, height = 300 }) {
       }
     ),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 justify-center", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "btn btn-ghost px-2 py-1", onClick: () => zoomBy(1 / 1.15), disabled: !poster || crop.zoom <= 1, title: "Show more", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Minus, { size: 14 }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "btn btn-ghost px-2 py-1", onClick: () => zoomBy(1 / 1.15), disabled: !poster, title: "Show more", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Minus, { size: 14 }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         "input",
         {
           type: "range",
-          min: 100,
-          max: MAX_CROP_ZOOM * 100,
+          min: -400,
+          max: 2000,
+          step: 1,
           value: zoomPercent,
           disabled: !poster,
           onChange: (e) => onChange(settleCrop({ ...crop, zoom: Number(e.target.value) / 100 }, srcAspect, ratio)),
@@ -17796,10 +17799,22 @@ function FramePicker({ poster, aspect, crop, onChange, height = 300 }) {
           "aria-label": "How far in"
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "btn btn-ghost px-2 py-1", onClick: () => zoomBy(1.15), disabled: !poster || crop.zoom >= MAX_CROP_ZOOM, title: "Go closer", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { size: 14 }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[11px] tabular-nums w-[42px]", style: { color: "var(--color-muted)" }, children: [
-        zoomPercent,
-        "%"
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "btn btn-ghost px-2 py-1", onClick: () => zoomBy(1.15), disabled: !poster, title: "Go closer", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { size: 14 }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("input", {
+          type: "number",
+          className: "w-[68px] rounded-md px-1 py-0.5 text-[11px] tabular-nums outline-none",
+          style: { border: "1px solid var(--color-line)", background: "var(--color-bg-2)", color: "var(--color-text)" },
+          value: zoomPercent,
+          disabled: !poster,
+          "aria-label": "Zoom percent",
+          title: "Any value: 100% is normal, more zooms in, less or negative shows more",
+          onChange: (e) => {
+            const p = e.target.value === "" ? 100 : Number(e.target.value);
+            onChange(settleCrop({ ...crop, zoom: (Number.isFinite(p) ? p : 100) / 100 }, srcAspect, ratio));
+          }
+        }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[11px]", style: { color: "var(--color-muted)" }, children: "%" })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs(
         "button",
@@ -18705,11 +18720,30 @@ function StackPreview({ poster, stack, noCam }) {
   if (plan.camBelow) parts.reverse();
   return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute inset-0 flex flex-col", children: parts });
 }
-function PhonePreview({ poster, loading, aspect, layout, crop, stack, noCam, captionStyle, captionColor, captionTextColor, captionFont, captionSize, captionPos, topText, hook, onCaptionPos, onTopPos, texts, onTextPos, selectedTextId, onSelectText, logo, onLogo, words: words2, videoUrl, note, height = 420 }) {
+function PhonePreview({ poster, loading, aspect, layout, crop, stack, noCam, captionStyle, captionColor, captionTextColor, captionFont, captionSize, captionPos, topText, hook, onCaptionPos, onTopPos, texts, onTextPos, selectedTextId, onSelectText, logo, onLogo, words: words2, videoUrl, editPreset, note, height = 420 }) {
   const placedLogo = resolveLogo(logo);
   const cards = useTextCards(texts, textFontFor(captionStyle, captionFont));
   const ratio = RATIO[aspect];
   const portrait = ratio.h > ratio.w;
+  const ep = reactExports.useMemo(() => nzlNorm(editPreset), [editPreset]);
+  const mediaTransform = [
+    ep.rotate.enabled && ep.rotate.degrees ? `rotate(${ep.rotate.degrees}deg)` : "",
+    ep.mirror.enabled && ep.mirror.h ? "scaleX(-1)" : "",
+    ep.mirror.enabled && ep.mirror.v ? "scaleY(-1)" : ""
+  ].filter(Boolean).join(" ") || void 0;
+  const mediaFilter = reactExports.useMemo(() => {
+    if (!ep.color.enabled) return void 0;
+    const c = ep.color.preset !== "natural" && NZL_PRESETS[ep.color.preset] && nzlNeutral(ep.color)
+      ? { ...ep.color, ...NZL_PRESETS[ep.color.preset] } : ep.color;
+    const f = [];
+    if (c.brightness) f.push(`brightness(${1 + c.brightness})`);
+    if (c.contrast !== 1) f.push(`contrast(${c.contrast})`);
+    if (c.saturation !== 1) f.push(`saturate(${c.saturation})`);
+    if (c.hue) f.push(`hue-rotate(${c.hue}deg)`);
+    if (c.temperature > 0) f.push(`sepia(${Math.min(1, c.temperature)})`);
+    else if (c.temperature < 0) f.push(`hue-rotate(${Math.round(c.temperature * 25)}deg)`);
+    return f.join(" ") || void 0;
+  }, [ep.color]);
   const preset = reactExports.useMemo(
     () => resolveCaptionPreset(captionStyle, { color: captionColor, textColor: captionTextColor, font: captionFont, sizeScale: captionSize, pos: captionPos }),
     [captionStyle, captionColor, captionTextColor, captionFont, captionSize, captionPos]
@@ -18749,7 +18783,7 @@ function PhonePreview({ poster, loading, aspect, layout, crop, stack, noCam, cap
   const chromeScale = portrait ? height : Math.round(height * 0.86 * (ratio.h / ratio.w));
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-center gap-3", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(DeviceShell, { kind, height: chromeScale, screenStyle: frameStyle, bare: Boolean(videoUrl), children: /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-      videoUrl ? /* @__PURE__ */ jsxRuntimeExports.jsx("video", { src: videoUrl, controls: true, className: "h-full w-full object-contain" }, videoUrl) : poster ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute inset-0", style: videoUrl ? void 0 : { transform: mediaTransform, filter: mediaFilter }, children: videoUrl ? /* @__PURE__ */ jsxRuntimeExports.jsx("video", { src: videoUrl, controls: true, className: "h-full w-full object-contain" }, videoUrl) : poster ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
         layout === "fit-blur" && /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: poster.url, alt: "", className: "absolute inset-0 h-full w-full object-cover", style: { filter: "blur(18px) brightness(0.82)", transform: "scale(1.12)" } }),
         layout === "stack" ? /* @__PURE__ */ jsxRuntimeExports.jsx(StackPreview, { poster, stack, noCam }) : layout === "manual" ? (
           // The chosen rectangle is scaled up until it fills the screen, which is
@@ -18760,7 +18794,7 @@ function PhonePreview({ poster, loading, aspect, layout, crop, stack, noCam, cap
               src: poster.url,
               alt: "",
               className: "absolute max-w-none",
-              style: { ...cropStyle(crop, poster.width / poster.height, ratio.w / ratio.h), objectFit: "fill" }
+              style: { ...cropStyle(crop, poster.width / poster.height, ratio.w / ratio.h), objectFit: crop.zoom < 1 ? "contain" : "fill" }
             }
           )
         ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -18775,7 +18809,8 @@ function PhonePreview({ poster, loading, aspect, layout, crop, stack, noCam, cap
       ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute inset-0 grid place-items-center", style: { background: "linear-gradient(150deg,#222a38,#141922)" }, children: loading ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { size: 22, className: "animate-spin", style: { color: "var(--color-muted)" } }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-center gap-2 px-6 text-center", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(Film, { size: 22, style: { color: "var(--color-line-2)" } }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[11px]", style: { color: "var(--color-muted)" }, children: "Your video appears here" })
-      ] }) }),
+      ] }) }) }),
+      !videoUrl && ep.speed.enabled && ep.speed.value !== 1 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute bottom-2 right-2 rounded-md px-2 py-1 text-[11px] tabular-nums pointer-events-none", style: { background: "rgba(0,0,0,.55)", color: "#fff", border: "1px solid rgba(255,255,255,.18)" }, children: `${ep.speed.value}× speed` }),
       !videoUrl && (texts ?? []).map(
         (t) => cards[t.id] ? /* @__PURE__ */ jsxRuntimeExports.jsx(
           PlacedText,
@@ -19897,6 +19932,7 @@ function CreateWizard() {
           aspect: opts.aspect,
           layout: opts.layout,
           crop: opts.crop,
+          editPreset: opts.editPreset,
           noCam: opts.facecam === "none",
           captionStyle: opts.captionStyle,
           captionColor: opts.captionColor,
@@ -20389,6 +20425,169 @@ function SaveClipsTo() {
   ] });
 }
 const MAX_CLIPS = 30;
+/* ---- nzl: Look & effects ---------------------------------------------- */
+const DEFAULT_EDIT_PRESET = {
+  color: { enabled: false, preset: "natural", brightness: 0, contrast: 1, saturation: 1, hue: 0, temperature: 0 },
+  rotate: { enabled: false, degrees: 0 },
+  mirror: { enabled: false, h: false, v: false },
+  speed: { enabled: false, value: 1 }
+};
+const NZL_PRESETS = {
+  natural: { brightness: 0, contrast: 1, saturation: 1, hue: 0, temperature: 0 },
+  punch: { brightness: .04, contrast: 1.18, saturation: 1.22, hue: 0, temperature: .02 },
+  cinematic: { brightness: -.04, contrast: 1.14, saturation: .86, hue: 4, temperature: -.08 },
+  moody: { brightness: -.08, contrast: 1.1, saturation: .72, hue: -4, temperature: -.12 },
+  warm: { brightness: .03, contrast: 1.05, saturation: 1.08, hue: 0, temperature: .24 },
+  bw: { brightness: 0, contrast: 1.12, saturation: 0, hue: 0, temperature: 0 },
+  vintage: { brightness: -.02, contrast: .94, saturation: .78, hue: 6, temperature: .14 }
+};
+const NZL_PRESET_LIST = [["natural", "Natural"], ["punch", "Punch"], ["cinematic", "Cinematic"], ["moody", "Moody"], ["warm", "Warm"], ["bw", "B&W"], ["vintage", "Vintage"], ["custom", "Custom"]];
+const NZL_PRESET_NAME = Object.fromEntries(NZL_PRESET_LIST);
+const NZL_SLIDERS = [
+  { key: "brightness", label: "Brightness", min: -1, max: 1, step: .01, fmt: (v) => `${v > 0 ? "+" : ""}${v.toFixed(2)}` },
+  { key: "contrast", label: "Contrast", min: 0, max: 2, step: .01, fmt: (v) => `${v.toFixed(2)}×` },
+  { key: "saturation", label: "Saturation", min: 0, max: 2, step: .01, fmt: (v) => `${v.toFixed(2)}×` },
+  { key: "hue", label: "Hue", min: -180, max: 180, step: 1, fmt: (v) => `${v > 0 ? "+" : ""}${Math.round(v)}°` },
+  { key: "temperature", label: "Temperature", min: -1, max: 1, step: .01, fmt: (v) => `${v > 0 ? "+" : ""}${v.toFixed(2)}` }
+];
+const NZL_SPEEDS = [.5, 1, 1.5, 2, 3];
+const nzlClamp = (n, lo, hi, fallback) => Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : fallback;
+const nzlPart = (x, k) => x[k] && typeof x[k] === "object" ? x[k] : {};
+const nzlNorm = (raw) => {
+  const x = raw && typeof raw === "object" ? raw : {};
+  const c = nzlPart(x, "color"), r = nzlPart(x, "rotate"), m = nzlPart(x, "mirror"), s = nzlPart(x, "speed");
+  return {
+    color: {
+      enabled: c.enabled === true,
+      preset: (NZL_PRESETS[c.preset] || c.preset === "custom") ? c.preset : "natural",
+      brightness: nzlClamp(c.brightness, -1, 1, 0),
+      contrast: nzlClamp(c.contrast, 0, 2, 1),
+      saturation: nzlClamp(c.saturation, 0, 2, 1),
+      hue: nzlClamp(c.hue, -180, 180, 0),
+      temperature: nzlClamp(c.temperature, -1, 1, 0)
+    },
+    rotate: { enabled: r.enabled === true, degrees: [0, 90, 180, 270].includes(r.degrees) ? r.degrees : 0 },
+    mirror: { enabled: m.enabled === true, h: m.h === true, v: m.v === true },
+    speed: { enabled: s.enabled === true, value: Math.round(nzlClamp(s.value, .5, 3, 1) * 100) / 100 }
+  };
+};
+const nzlNeutral = (c) => c.preset === "natural" && c.brightness === 0 && c.contrast === 1 && c.saturation === 1 && c.hue === 0 && c.temperature === 0;
+const nzlTime = (sec) => { const t = Math.max(0, Math.round(sec)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`; };
+
+function LookEffects({ value, onChange, duration = 0, compact = false }) {
+  const ep = nzlNorm(value);
+  const [open, setOpen] = reactExports.useState(false);
+  const patch = (part) => onChange({ ...ep, ...part });
+  const setColor = (part) => patch({ color: { ...ep.color, ...part } });
+  const onCount = [ep.color.enabled, ep.rotate.enabled, ep.mirror.enabled, ep.speed.enabled].filter(Boolean).length;
+  const chips = [];
+  if (ep.color.enabled && !nzlNeutral(ep.color)) chips.push(`Color · ${NZL_PRESET_NAME[ep.color.preset]}`);
+  if (ep.rotate.enabled && ep.rotate.degrees) chips.push(`Rotate ${ep.rotate.degrees}°`);
+  if (ep.mirror.enabled && (ep.mirror.h || ep.mirror.v)) chips.push(`Mirror ${ep.mirror.h && ep.mirror.v ? "H+V" : ep.mirror.h ? "H" : "V"}`);
+  if (ep.speed.enabled && ep.speed.value !== 1) chips.push(`Speed ${ep.speed.value}×`);
+  const head = [
+    jsxRuntimeExports.jsx("span", { className: "nzl-head__mark", "aria-hidden": "true" }),
+    jsxRuntimeExports.jsxs("span", { className: "nzl-head__text", children: [
+      jsxRuntimeExports.jsx("span", { className: "nzl-head__title", children: "Look & effects" }),
+      jsxRuntimeExports.jsx("span", { className: "nzl-head__sub", children: compact ? "For this clip only. Starts from the project look." : "Small changes. Nothing is applied until you switch it on." })
+    ] })
+  ];
+  const headEl = compact
+    ? jsxRuntimeExports.jsxs("button", { type: "button", className: "nzl-head nzl-head--toggle", "aria-expanded": open, onClick: () => setOpen(!open), children: [
+        ...head,
+        onCount ? jsxRuntimeExports.jsx("span", { className: "nzl-head__badge", children: `${onCount} on` }) : null,
+        jsxRuntimeExports.jsx("span", { className: "nzl-head__chev", "aria-hidden": "true" })
+      ] })
+    : jsxRuntimeExports.jsx("div", { className: "nzl-head", children: head });
+  const rowHead = (title, sub, checked, onToggle) => jsxRuntimeExports.jsxs("div", { className: "nzl-row__head", children: [
+    jsxRuntimeExports.jsxs("div", { className: "nzl-row__text", children: [
+      jsxRuntimeExports.jsx("span", { className: "nzl-row__title", children: title }),
+      jsxRuntimeExports.jsx("span", { className: "nzl-row__sub", children: sub })
+    ] }),
+    jsxRuntimeExports.jsxs("button", { type: "button", role: "switch", "aria-checked": checked, "aria-label": title, className: "nzl-switch", onClick: onToggle, children: [
+      jsxRuntimeExports.jsx("span", { className: "nzl-switch__label", children: checked ? "On" : "Off" }),
+      jsxRuntimeExports.jsx("span", { className: "nzl-switch__track", "aria-hidden": "true" })
+    ] })
+  ] });
+  return jsxRuntimeExports.jsxs("section", { className: `card nzl-card${compact ? " nzl-card--compact" : ""}`, "data-testid": "look-effects", children: [
+    headEl,
+    jsxRuntimeExports.jsxs("div", { className: "nzl-summary", role: "status", "aria-live": "polite", children: [
+      jsxRuntimeExports.jsx("span", { className: "nzl-summary__key", children: compact ? "On this clip" : "Applied to every clip" }),
+      chips.length
+        ? jsxRuntimeExports.jsx("span", { className: "nzl-chips", children: chips.map((c, i) => jsxRuntimeExports.jsx("span", { className: "nzl-chip", children: [i ? " · " : "", c] }, c)) })
+        : jsxRuntimeExports.jsx("span", { className: "nzl-summary__empty", children: onCount ? "On, but nothing changed yet" : "Nothing applied" })
+    ] }),
+    (!compact || open) && jsxRuntimeExports.jsxs("div", { className: "nzl-body", children: [
+      jsxRuntimeExports.jsxs("div", { className: `nzl-row${ep.color.enabled ? " nzl-row--on" : ""}`, children: [
+        rowHead("Color grade", "One look for every clip", ep.color.enabled, () => patch({ color: { ...ep.color, enabled: !ep.color.enabled } })),
+        jsxRuntimeExports.jsxs("fieldset", { disabled: !ep.color.enabled, className: "nzl-panel", children: [
+          jsxRuntimeExports.jsx("span", { className: "nzl-micro", children: "Preset" }),
+          jsxRuntimeExports.jsx("div", { className: "seg nzl-seg--wrap", role: "group", "aria-label": "Color preset", children: NZL_PRESET_LIST.map(([id, label]) => jsxRuntimeExports.jsx("button", {
+            type: "button",
+            className: ep.color.preset === id ? "active" : "",
+            "aria-pressed": ep.color.preset === id,
+            onClick: () => setColor(id === "custom" ? { preset: "custom" } : { preset: id, ...NZL_PRESETS[id] }),
+            children: label
+          }, id)) }),
+          jsxRuntimeExports.jsx("div", { className: "nzl-sliders", children: NZL_SLIDERS.map((sl) => jsxRuntimeExports.jsxs("label", { className: "nzl-slider", children: [
+            jsxRuntimeExports.jsxs("span", { className: "nzl-slider__top", children: [
+              jsxRuntimeExports.jsx("span", { children: sl.label }),
+              jsxRuntimeExports.jsx("output", { className: "nzl-slider__val", children: sl.fmt(ep.color[sl.key]) })
+            ] }),
+            jsxRuntimeExports.jsx("input", { type: "range", min: sl.min, max: sl.max, step: sl.step, value: ep.color[sl.key], "aria-label": sl.label, onChange: (e) => setColor({ preset: "custom", [sl.key]: Number(e.target.value) }) })
+          ] }, sl.key)) })
+        ] })
+      ] }),
+      jsxRuntimeExports.jsxs("div", { className: `nzl-row${ep.rotate.enabled ? " nzl-row--on" : ""}`, children: [
+        rowHead("Rotate", "Turn every clip upright or upside down", ep.rotate.enabled, () => patch({ rotate: { ...ep.rotate, enabled: !ep.rotate.enabled } })),
+        jsxRuntimeExports.jsx("fieldset", { disabled: !ep.rotate.enabled, className: "nzl-panel", children: jsxRuntimeExports.jsx("div", { className: "seg nzl-seg--tight", role: "group", "aria-label": "Rotation", children: [0, 90, 180, 270].map((d) => jsxRuntimeExports.jsx("button", {
+          type: "button",
+          className: ep.rotate.degrees === d ? "active" : "",
+          "aria-pressed": ep.rotate.degrees === d,
+          onClick: () => patch({ rotate: { ...ep.rotate, degrees: d } }),
+          children: `${d}°`
+        }, d)) }) })
+      ] }),
+      jsxRuntimeExports.jsxs("div", { className: `nzl-row${ep.mirror.enabled ? " nzl-row--on" : ""}`, children: [
+        rowHead("Mirror", "Flip the picture, sound stays in place", ep.mirror.enabled, () => patch({ mirror: { ...ep.mirror, enabled: !ep.mirror.enabled } })),
+        jsxRuntimeExports.jsxs("fieldset", { disabled: !ep.mirror.enabled, className: "nzl-panel nzl-panel--row", children: [
+          jsxRuntimeExports.jsxs("button", { type: "button", role: "switch", "aria-checked": ep.mirror.h, "aria-label": "Horizontal flip", className: "nzl-switch nzl-switch--mini", onClick: () => patch({ mirror: { ...ep.mirror, h: !ep.mirror.h } }), children: [
+            jsxRuntimeExports.jsx("span", { className: "nzl-switch__label", children: "Horizontal" }),
+            jsxRuntimeExports.jsx("span", { className: "nzl-switch__track", "aria-hidden": "true" })
+          ] }),
+          jsxRuntimeExports.jsxs("button", { type: "button", role: "switch", "aria-checked": ep.mirror.v, "aria-label": "Vertical flip", className: "nzl-switch nzl-switch--mini", onClick: () => patch({ mirror: { ...ep.mirror, v: !ep.mirror.v } }), children: [
+            jsxRuntimeExports.jsx("span", { className: "nzl-switch__label", children: "Vertical" }),
+            jsxRuntimeExports.jsx("span", { className: "nzl-switch__track", "aria-hidden": "true" })
+          ] })
+        ] })
+      ] }),
+      jsxRuntimeExports.jsxs("div", { className: `nzl-row${ep.speed.enabled ? " nzl-row--on" : ""}`, children: [
+        rowHead("Speed", "Slow down or speed up every clip", ep.speed.enabled, () => patch({ speed: { ...ep.speed, enabled: !ep.speed.enabled } })),
+        jsxRuntimeExports.jsxs("fieldset", { disabled: !ep.speed.enabled, className: "nzl-panel", children: [
+          jsxRuntimeExports.jsxs("label", { className: "nzl-slider", children: [
+            jsxRuntimeExports.jsxs("span", { className: "nzl-slider__top", children: [
+              jsxRuntimeExports.jsx("span", { children: "Playback speed" }),
+              jsxRuntimeExports.jsx("output", { className: "nzl-slider__val", children: `${ep.speed.value}×` })
+            ] }),
+            jsxRuntimeExports.jsx("input", { type: "range", min: .5, max: 3, step: .05, value: ep.speed.value, "aria-label": "Playback speed", onChange: (e) => patch({ speed: { ...ep.speed, value: Number(e.target.value) } }) })
+          ] }),
+          jsxRuntimeExports.jsx("div", { className: "nzl-chips nzl-chips--speed", role: "group", "aria-label": "Quick speeds", children: NZL_SPEEDS.map((v) => jsxRuntimeExports.jsx("button", {
+            type: "button",
+            className: `nzl-chip-btn${ep.speed.value === v ? " nzl-chip-btn--on" : ""}`,
+            "aria-pressed": ep.speed.value === v,
+            onClick: () => patch({ speed: { ...ep.speed, value: v } }),
+            children: `${v}×`
+          }, v)) }),
+          ep.speed.enabled && duration > 0 && jsxRuntimeExports.jsxs("div", { className: "nzl-hint", children: [
+            "About ", jsxRuntimeExports.jsx("strong", { children: nzlTime(duration / ep.speed.value) }), " of video at ",
+            jsxRuntimeExports.jsx("strong", { children: `${ep.speed.value}×` }), ", before the clips are cut."
+          ] })
+        ] })
+      ] })
+    ] })
+  ] });
+}
+
 function StepDetails() {
   const { draft, setDraft, setDraftOpts, settings } = useStoreKeys("draft", "setDraft", "setDraftOpts", "settings");
   const opts = draft.opts;
@@ -20558,7 +20757,8 @@ function StepDetails() {
         settings?.outputDir
       ] })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(SetupNotes, {})
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SetupNotes, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(LookEffects, { value: opts.editPreset ?? DEFAULT_EDIT_PRESET, onChange: (editPreset) => setDraftOpts({ editPreset }), duration: sourceDuration })
   ] });
 }
 function MoreOptions({ open: startOpen, children }) {
@@ -22299,6 +22499,7 @@ function ClipsTab({ project }) {
     layout: project.options.layout,
     captionStyle: project.options.captionStyle,
     tightenSilences: project.options.tightenSilences,
+    ...project.options.editPreset ? { editPreset: project.options.editPreset } : {},
     captionColor: project.options.captionColor,
     captionTextColor: project.options.captionTextColor,
     captionFont: project.options.captionFont,
@@ -22344,6 +22545,7 @@ function ClipsTab({ project }) {
           aspect: current.aspect,
           layout: current.layout,
           crop: current.crop,
+          editPreset: current.editPreset,
           stack: current.stack,
           captionStyle: current.captionStyle,
           captionColor: current.captionColor,
@@ -22418,7 +22620,7 @@ function ClipsTab({ project }) {
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs mt-0.5 mb-3", style: { color: "var(--color-muted)" }, children: "Changes apply to this clip only." }),
         project.sourceRemoved && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "notice mb-3 text-xs", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "The downloaded video was deleted to save space. Applying a change downloads it again." }) }),
         clip.musicNote && !draft && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "notice mb-3 text-xs", "data-testid": "music-note", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: clip.musicNote }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex gap-1 rounded-xl p-1 mb-4", style: { background: "var(--color-bg-3)" }, "data-testid": "look-tabs", children: [["frame", "Frame"], ["captions", "Captions"], ["line", "Line over the clip"], ["extras", "Text & logo"], ["music", "Music"]].map(([id, label]) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex gap-1 rounded-xl p-1 mb-4", style: { background: "var(--color-bg-3)" }, "data-testid": "look-tabs", children: [["frame", "Frame"], ["captions", "Captions"], ["line", "Line over the clip"], ["extras", "Text & logo"], ["effects", "Effects"], ["music", "Music"]].map(([id, label]) => /* @__PURE__ */ jsxRuntimeExports.jsx(
           "button",
           {
             onClick: () => setLookTab(id),
@@ -22556,6 +22758,15 @@ function ClipsTab({ project }) {
           ) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx(LogoEditor, { value: current.logo, onChange: (logo) => setClipDraft(project.id, clip.highlightId, { logo }) }) })
         ] }),
+        lookTab === "effects" && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          LookEffects,
+          {
+            compact: true,
+            value: current.editPreset ?? DEFAULT_EDIT_PRESET,
+            duration: clip.duration,
+            onChange: (editPreset) => setClipDraft(project.id, clip.highlightId, { editPreset })
+          }
+        ) }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-4 pt-4", style: { borderTop: "1px solid var(--color-line)" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
           ResolutionPicker,
           {
@@ -26129,4 +26340,946 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 
     boot();
   } catch (_) { /* Backup UI must never break app boot. */ }
+})();
+
+/* ==========================================================================
+   SNU CLIPPER — COVER / THUMBNAIL GENERATOR  ·  nzy- prefixed.
+   Append VERBATIM to the END of out/renderer/assets/index-DBbn4Tny.js.
+   Pure ES2020+, no imports. Guard: window.__nzyCoverBooted.
+   ========================================================================== */
+(function () {
+  "use strict";
+  try {
+    if (window.__nzyCoverBooted) return;
+    window.__nzyCoverBooted = true;
+
+    var HEX =
+      '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M12 2 21 7v10l-9 5-9-5V7z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>' +
+        '<path d="M12 7.5 16.5 10v4L12 16.5 7.5 14v-4z" fill="currentColor" opacity=".28"/>' +
+      '</svg>';
+    var ICON = {
+      down: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4-4m4 4 4-4"/><path d="M4 17v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1"/></svg>',
+      folder: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+      check: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7"/></svg>',
+      alert: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 8v5m0 3h.01"/><path d="M10.3 4.3 2.8 17.2A2 2 0 0 0 4.5 20h15a2 2 0 0 0 1.7-2.8L13.7 4.3a2 2 0 0 0-3.4 0Z"/></svg>',
+      copy: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>'
+    };
+    var FONT = 'Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+    var PRESETS = [
+      { key: "16x9", label: "16:9", w: 1280, h: 720 },
+      { key: "9x16", label: "9:16", w: 1080, h: 1920 },
+      { key: "1x1", label: "1:1", w: 1080, h: 1080 }
+    ];
+
+    var panel = null, trigger = null, ui = {}, syncing = false, previousFocus = null;
+    var state = {
+      projects: [], projectId: "", clipId: "", loading: false, loadError: "",
+      aspect: 0, bg: "gradient", logo: true, wordmark: true,
+      headline: "", subtitle: "", headlineTouched: false, subtitleTouched: false,
+      busy: "", result: null, status: "Choose a clip to start.", tone: "",
+      thumbImg: null, thumbState: "none", thumbTainted: false, thumbToken: 0,
+      fontsReady: false, renderTimer: 0
+    };
+
+    /* ---------- helpers ---------- */
+    function bridge() { try { return window.clipie || null; } catch (_) { return null; } }
+    function projectsApi() { var b = bridge(); return b && b.projects ? b.projects : null; }
+    function filesApi() { var b = bridge(); return b && b.files ? b.files : null; }
+    function micro(fn) { try { queueMicrotask(fn); } catch (_) { Promise.resolve().then(fn); } }
+    function canSave() { var f = filesApi(); return !!(f && typeof f.saveCover === "function"); }
+
+    function esc(s) {
+      return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+      });
+    }
+    function cleanError(err) {
+      var m = err && err.message ? String(err.message) : String(err == null ? "" : err);
+      m = m.replace(/^Error:\s*/i, "").trim();
+      if (!m || m === "[object Object]") return "";
+      return m.slice(0, 180);
+    }
+    function basename(p) {
+      var m = String(p || "").match(/[^\\/]+$/);
+      return m ? m[0] : String(p || "");
+    }
+    function slug(s) {
+      return String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "cover";
+    }
+    function setStatus(text, tone) {
+      state.status = String(text || "");
+      state.tone = tone || "";
+      if (!ui.status) return;
+      try {
+        ui.status.textContent = state.status;
+        if (state.tone) ui.status.setAttribute("data-tone", state.tone);
+        else ui.status.removeAttribute("data-tone");
+      } catch (_) {}
+    }
+    function toast(msg, tone) {
+      try {
+        var fn = window.nizamToast || window.snuToast || window.snuClipperToast;
+        if (typeof fn === "function") { fn(msg, tone || "info"); return; }
+      } catch (_) {}
+      setStatus(msg, tone);
+    }
+
+    /* ---------- data selection ---------- */
+    function selectedProject() {
+      for (var i = 0; i < state.projects.length; i++) {
+        if (String(state.projects[i] && state.projects[i].id) === String(state.projectId)) return state.projects[i];
+      }
+      return null;
+    }
+    function clipsOf(p) { return p && Array.isArray(p.clips) ? p.clips.filter(Boolean) : []; }
+    function clipKey(c, i) { return String((c && c.id != null) ? c.id : ((c && c.filePath) || i)); }
+    function selectedClip() {
+      var cs = clipsOf(selectedProject());
+      for (var i = 0; i < cs.length; i++) if (clipKey(cs[i], i) === String(state.clipId)) return cs[i];
+      return null;
+    }
+    function highlightOf(clip) {
+      var p = selectedProject();
+      if (!p) return null;
+      var list = p.analysis && Array.isArray(p.analysis.highlights) ? p.analysis.highlights : [];
+      if (!list.length) return null;
+      var hid = clip && clip.highlightId;
+      if (hid != null) {
+        for (var i = 0; i < list.length; i++) {
+          var h = list[i];
+          if (String(h && (h.id != null ? h.id : h.highlightId)) === String(hid)) return h;
+        }
+      }
+      return list.length === 1 ? list[0] : null;
+    }
+    function firstSentence(s, max) {
+      var t = String(s || "").replace(/\s+/g, " ").trim();
+      if (!t) return "";
+      var m = t.match(/^[\s\S]*?[.!?](?=\s|$)/);
+      if (m && m[0]) t = m[0];
+      if (t.length > max) {
+        t = t.slice(0, max - 1).replace(/\s+\S*$/, "");
+        t += "\u2026";
+      }
+      return t;
+    }
+    function prefill() {
+      var p = selectedProject(), c = selectedClip(), h = highlightOf(c);
+      var head = (h && (h.hook || h.title)) || (c && (c.title || c.name)) || (p && p.name) || "";
+      head = String(head).replace(/\s+/g, " ").trim().split(/\s+/).filter(Boolean).slice(0, 8).join(" ");
+      var sub = "";
+      if (h) {
+        sub = firstSentence(h.description, 110);
+        if (!sub && h.title) sub = String(h.title);
+        if (!sub && Array.isArray(h.hashtags) && h.hashtags.length) {
+          sub = h.hashtags.slice(0, 4).map(function (t) { return "#" + String(t).replace(/^#/, ""); }).join(" ");
+        }
+      }
+      if (!sub && c) sub = String(c.title || c.name || "");
+      state.headline = head.slice(0, 80);
+      state.subtitle = String(sub).slice(0, 120);
+      state.headlineTouched = false;
+      state.subtitleTouched = false;
+      syncInputs();
+      scheduleRender();
+    }
+
+    /* ---------- thumbnail ---------- */
+    function loadThumb(clip) {
+      state.thumbToken++;
+      state.thumbImg = null;
+      state.thumbTainted = false;
+      var path = clip && clip.thumbnailPath;
+      var f = filesApi();
+      if (!path || !f || typeof f.mediaUrl !== "function") {
+        state.thumbState = path ? "error" : "none";
+        scheduleRender();
+        return;
+      }
+      state.thumbState = "loading";
+      var token = state.thumbToken;
+      var url = "";
+      try { url = f.mediaUrl(path); } catch (_) { state.thumbState = "error"; scheduleRender(); return; }
+      if (!url) { state.thumbState = "error"; scheduleRender(); return; }
+
+      function attach(cors) {
+        var img = new Image();
+        try { if (cors) img.crossOrigin = "anonymous"; } catch (_) {}
+        img.onload = function () {
+          if (token !== state.thumbToken) return;
+          state.thumbImg = img;
+          state.thumbTainted = !cors;
+          state.thumbState = "ready";
+          scheduleRender();
+        };
+        img.onerror = function () {
+          if (token !== state.thumbToken) return;
+          if (cors) { attach(false); return; }   /* retry without CORS; export may then be blocked */
+          state.thumbState = "error";
+          scheduleRender();
+        };
+        try { img.src = url; } catch (_) { state.thumbState = "error"; scheduleRender(); }
+      }
+      attach(true);
+    }
+
+    /* ---------- markup ---------- */
+    function markup() {
+      return '' +
+        '<div class="nzy-card">' +
+          '<div class="nzy-head">' +
+            '<span class="nzy-head__brand">' + HEX + '</span>' +
+            '<span class="nzy-head__txt">' +
+              '<span class="nzy-head__title">Cover generator</span>' +
+              '<span class="nzy-head__sub">Turn a clip highlight into a thumbnail</span>' +
+            '</span>' +
+            '<button type="button" class="nzy-close" data-act="close" aria-label="Close cover generator">&times;</button>' +
+          '</div>' +
+          '<div class="nzy-body">' +
+            '<label class="nzy-label" for="nzy-project">Project <button type="button" class="nzy-link" data-act="refresh">Refresh</button></label>' +
+            '<select id="nzy-project" class="nzy-select" aria-label="Project"></select>' +
+
+            '<label class="nzy-label" for="nzy-clip">Clip <span id="nzy-clip-count">&mdash;</span></label>' +
+            '<select id="nzy-clip" class="nzy-select" aria-label="Clip"></select>' +
+
+            '<div class="nzy-label" id="nzy-aspect-label">Aspect</div>' +
+            '<div class="nzy-seg" role="radiogroup" aria-labelledby="nzy-aspect-label">' +
+              '<button type="button" class="nzy-seg__btn" role="radio" data-act="aspect" data-index="0" aria-checked="true">16:9</button>' +
+              '<button type="button" class="nzy-seg__btn" role="radio" data-act="aspect" data-index="1" aria-checked="false">9:16</button>' +
+              '<button type="button" class="nzy-seg__btn" role="radio" data-act="aspect" data-index="2" aria-checked="false">1:1</button>' +
+            '</div>' +
+
+            '<label class="nzy-label" for="nzy-headline">Headline <button type="button" class="nzy-link" data-act="reset-text">Use highlight</button></label>' +
+            '<input id="nzy-headline" class="nzy-input" type="text" maxlength="80" autocomplete="off" spellcheck="false" placeholder="A short, punchy hook">' +
+            '<div class="nzy-label" style="margin:5px 0 0"><span id="nzy-headline-hint" style="margin-left:0">0 words · 0/80</span></div>' +
+
+            '<label class="nzy-label" for="nzy-subtitle">Subtitle</label>' +
+            '<input id="nzy-subtitle" class="nzy-input" type="text" maxlength="120" autocomplete="off" spellcheck="false" placeholder="One line of context">' +
+
+            '<div class="nzy-control-row">' +
+              '<div>' +
+                '<div class="nzy-label" id="nzy-bg-label">Background</div>' +
+                '<div class="nzy-seg nzy-seg--sm" role="radiogroup" aria-labelledby="nzy-bg-label">' +
+                  '<button type="button" class="nzy-seg__btn" role="radio" data-act="bg" data-bg="frame" aria-checked="false">Frame</button>' +
+                  '<button type="button" class="nzy-seg__btn" role="radio" data-act="bg" data-bg="gradient" aria-checked="true">Gradient</button>' +
+                '</div>' +
+              '</div>' +
+              '<div class="nzy-switches">' +
+                '<button type="button" class="nzy-switch" role="switch" data-act="logo" aria-checked="true" aria-label="Show SNU hexagon logo"><span class="nzy-switch__track" aria-hidden="true"></span>Logo</button>' +
+                '<button type="button" class="nzy-switch" role="switch" data-act="wordmark" aria-checked="true" aria-label="Show SNU Clipper wordmark"><span class="nzy-switch__track" aria-hidden="true"></span>Wordmark</button>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="nzy-preview">' +
+              '<div class="nzy-preview__top">' +
+                '<span class="nzy-label">Preview</span>' +
+                '<span class="nzy-preview__meta" id="nzy-preview-meta">16:9 · 1280×720</span>' +
+              '</div>' +
+              '<div class="nzy-preview__frame">' +
+                '<canvas id="nzy-canvas" width="1280" height="720" role="img" aria-label="Cover preview"></canvas>' +
+                '<div class="nzy-preview__empty" id="nzy-empty" hidden>' +
+                  '<strong id="nzy-empty-title">Choose a clip to start</strong>' +
+                  '<span id="nzy-empty-sub">Pick a project and a clip above.</span>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+
+            '<div id="nzy-result" class="nzy-result" role="status" aria-live="polite" hidden></div>' +
+          '</div>' +
+          '<div class="nzy-foot">' +
+            '<span id="nzy-status" class="nzy-status" role="status" aria-live="polite">Choose a clip to start.</span>' +
+            '<span class="nzy-actions">' +
+              '<button type="button" class="nzy-btn nzy-btn--ghost nzy-btn--sm" id="nzy-open" data-act="open" disabled>' + ICON.folder + 'Open folder</button>' +
+              '<button type="button" class="nzy-btn nzy-btn--primary nzy-btn--sm" id="nzy-download" data-act="download">' + ICON.down + 'Download PNG</button>' +
+            '</span>' +
+            '<span class="nzy-tag">' + HEX + 'SNU Clipper</span>' +
+          '</div>' +
+        '</div>';
+    }
+
+    /* ---------- rendering ---------- */
+    function renderProjects() {
+      if (!ui.project) return;
+      var opts = "";
+      if (!state.projects.length) {
+        opts = '<option value="">' + (state.loading ? "Loading projects\u2026" : (state.loadError ? "Could not load projects" : "No projects yet")) + '</option>';
+      } else {
+        opts = '<option value="">Choose a project</option>' + state.projects.map(function (p, i) {
+          var id = esc(String((p && p.id != null) ? p.id : i));
+          var name = String((p && p.name) || "Untitled project");
+          var n = clipsOf(p).length;
+          return '<option value="' + id + '">' + esc(name) + ' — ' + n + (n === 1 ? " clip" : " clips") + '</option>';
+        }).join("");
+      }
+      ui.project.innerHTML = opts;
+      ui.project.value = state.projectId;
+    }
+
+    function renderClips() {
+      if (!ui.clip) return;
+      var p = selectedProject();
+      var cs = clipsOf(p);
+      var opts = "";
+      if (!cs.length) {
+        opts = '<option value="">' + (p ? "No clips in this project" : "Choose a project first") + '</option>';
+      } else {
+        opts = cs.map(function (c, i) {
+          var k = esc(clipKey(c, i));
+          var label = String((c && (c.title || c.name)) || ("Clip " + (i + 1)));
+          var h = highlightOf(c);
+          if (h && h.hook) label += " — " + String(h.hook);
+          return '<option value="' + k + '">' + esc(label) + '</option>';
+        }).join("");
+      }
+      ui.clip.innerHTML = opts;
+      ui.clip.value = state.clipId;
+      ui.clip.disabled = !cs.length;
+      try { ui.clipCount.textContent = cs.length ? (cs.length + (cs.length === 1 ? " clip" : " clips")) : "\u2014"; } catch (_) {}
+    }
+
+    function syncInputs() {
+      if (ui.headline && document.activeElement !== ui.headline && ui.headline.value !== state.headline) ui.headline.value = state.headline;
+      if (ui.subtitle && document.activeElement !== ui.subtitle && ui.subtitle.value !== state.subtitle) ui.subtitle.value = state.subtitle;
+      try {
+        var n = state.headline.trim().split(/\s+/).filter(Boolean).length;
+        ui.headlineHint.textContent = n + (n === 1 ? " word" : " words") + " · " + state.headline.length + "/80";
+      } catch (_) {}
+    }
+
+    function renderResult() {
+      if (!ui.result) return;
+      var r = state.result;
+      if (!r) { ui.result.hidden = true; ui.result.innerHTML = ""; return; }
+      var ok = r.kind === "success";
+      var pathRow = r.path
+        ? '<div class="nzy-result__path"><code title="' + esc(r.path) + '">' + esc(r.path) + '</code><button type="button" class="nzy-copy" data-act="copy" aria-label="Copy cover path" title="Copy path">' + ICON.copy + '</button></div>'
+        : "";
+      ui.result.className = "nzy-result nzy-result--" + (ok ? "success" : "error");
+      ui.result.innerHTML =
+        '<div class="nzy-result__top">' +
+          '<span class="nzy-result__mark">' + (ok ? ICON.check : ICON.alert) + '</span>' +
+          '<span class="nzy-result__body">' +
+            '<strong class="nzy-result__title">' + esc(r.title || "") + '</strong>' +
+            '<span class="nzy-result__line">' + esc(r.line || "") + '</span>' +
+            (r.hint ? '<span class="nzy-result__hint">' + esc(r.hint) + '</span>' : "") +
+          '</span>' +
+        '</div>' + pathRow +
+        '<div class="nzy-result__acts">' +
+          '<button type="button" class="nzy-btn nzy-btn--primary nzy-btn--sm" data-act="open-result">' + esc(r.action || (ok ? "Open folder" : "Dismiss")) + '</button>' +
+          '<button type="button" class="nzy-btn nzy-btn--ghost nzy-btn--sm" data-act="dismiss-result">' + (ok ? "Done" : "Close") + '</button>' +
+        '</div>';
+      ui.result.hidden = false;
+    }
+
+    function render() {
+      if (!ui.status) return;
+      try { ui.project.value = state.projectId; } catch (_) {}
+      try { if (ui.clip.value !== state.clipId) ui.clip.value = state.clipId; } catch (_) {}
+      syncInputs();
+
+      for (var i = 0; i < ui.aspectBtns.length; i++) {
+        var onA = Number(ui.aspectBtns[i].getAttribute("data-index")) === state.aspect;
+        ui.aspectBtns[i].setAttribute("aria-checked", String(onA));
+        ui.aspectBtns[i].classList.toggle("is-active", onA);
+      }
+      for (var j = 0; j < ui.bgBtns.length; j++) {
+        var onB = ui.bgBtns[j].getAttribute("data-bg") === state.bg;
+        ui.bgBtns[j].setAttribute("aria-checked", String(onB));
+        ui.bgBtns[j].classList.toggle("is-active", onB);
+      }
+      try { ui.logoSwitch.setAttribute("aria-checked", String(!!state.logo)); } catch (_) {}
+      try { ui.wordmarkSwitch.setAttribute("aria-checked", String(!!state.wordmark)); } catch (_) {}
+
+      try {
+        ui.download.disabled = !!state.busy || !state.projectId;
+        ui.download.title = !canSave() ? "Saving needs a newer app build" : (!state.projectId ? "Choose a project first" : "Save this cover as a PNG");
+        ui.download.innerHTML = ICON.down + (state.busy === "save" ? "Saving\u2026" : "Download PNG");
+        ui.open.disabled = !(state.result && state.result.path);
+      } catch (_) {}
+
+      renderResult();
+      updatePreviewMeta();
+      updateEmpty();
+      setStatus(state.status, state.tone);
+    }
+
+    function updatePreviewMeta() {
+      if (!ui.previewMeta) return;
+      var p = PRESETS[state.aspect] || PRESETS[0];
+      var bits = [p.label + " · " + p.w + "\u00d7" + p.h];
+      if (state.bg === "frame") {
+        bits.push(
+          state.thumbState === "ready" ? "Clip frame" :
+          state.thumbState === "loading" ? "Loading frame\u2026" :
+          "No frame \u2192 gradient"
+        );
+      } else {
+        bits.push("Gradient");
+      }
+      ui.previewMeta.textContent = bits.join(" · ");
+    }
+
+    function updateEmpty() {
+      if (!ui.empty) return;
+      var p = selectedProject();
+      var cs = clipsOf(p);
+      var c = selectedClip();
+      var reason = "";
+      if (!p) {
+        reason = state.loading ? "Loading your projects\u2026" : (state.loadError ? "Your project list could not be loaded." : "Make a clip first, then come back here.");
+      } else if (!cs.length) {
+        reason = "This project has no clips yet.";
+      } else if (!c && !state.headline.trim()) {
+        reason = "Choose a clip to start.";
+      }
+      if (reason) {
+        ui.emptyTitle.textContent = !p ? (state.loadError ? "Couldn't load projects" : "No projects yet") : (!cs.length ? "No clips yet" : "Ready when you are");
+        ui.emptySub.textContent = reason;
+        ui.empty.hidden = false;
+      } else {
+        ui.empty.hidden = true;
+      }
+    }
+
+    /* ---------- canvas drawing ---------- */
+    function hexPath(g, cx, cy, r) {
+      g.beginPath();
+      for (var i = 0; i < 6; i++) {
+        var a = -Math.PI / 2 + i * Math.PI / 3;
+        var x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+        if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+      }
+      g.closePath();
+    }
+    function drawGradient(g, w, h, unit) {
+      g.fillStyle = "#08080A";
+      g.fillRect(0, 0, w, h);
+      var a = g.createRadialGradient(w * .12, h * .08, 0, w * .12, h * .08, Math.max(w, h) * .85);
+      a.addColorStop(0, "rgba(229,185,76,.55)");
+      a.addColorStop(.45, "rgba(204,43,55,.18)");
+      a.addColorStop(1, "rgba(8,8,10,0)");
+      g.fillStyle = a; g.fillRect(0, 0, w, h);
+      var b = g.createRadialGradient(w * .92, h * .95, 0, w * .92, h * .95, Math.max(w, h) * .7);
+      b.addColorStop(0, "rgba(214,50,63,.42)");
+      b.addColorStop(1, "rgba(8,8,10,0)");
+      g.fillStyle = b; g.fillRect(0, 0, w, h);
+      g.save();
+      g.globalAlpha = .055;
+      g.strokeStyle = "#F4D06A";
+      g.lineWidth = Math.max(1, unit * .002);
+      for (var x = -h; x < w; x += unit * .11) {
+        g.beginPath(); g.moveTo(x, 0); g.lineTo(x + h, h); g.stroke();
+      }
+      g.restore();
+    }
+    function drawCoverImage(g, img, w, h) {
+      var iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+      if (!iw || !ih) return false;
+      var s = Math.max(w / iw, h / ih);
+      var dw = iw * s, dh = ih * s;
+      g.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+      return true;
+    }
+    function vignette(g, w, h) {
+      var v = g.createRadialGradient(w / 2, h / 2, Math.min(w, h) * .22, w / 2, h / 2, Math.max(w, h) * .72);
+      v.addColorStop(0, "rgba(0,0,0,0)");
+      v.addColorStop(1, "rgba(0,0,0,.55)");
+      g.fillStyle = v; g.fillRect(0, 0, w, h);
+    }
+    function drawLogo(g, unit, w, h) {
+      var r = Math.max(10, Math.round(unit * .048));
+      var cx = Math.round(w / 2), cy = Math.round(h * (h > w ? .075 : .11));
+      var fill = g.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
+      fill.addColorStop(0, "#E5B94C"); fill.addColorStop(1, "#F4D06A");
+      g.save();
+      g.lineWidth = Math.max(1.5, unit * .004);
+      g.strokeStyle = fill;
+      hexPath(g, cx, cy, r); g.stroke();
+      g.globalAlpha = .26; g.fillStyle = fill;
+      hexPath(g, cx, cy, r * .62); g.fill();
+      g.restore();
+    }
+    function ellipsize(g, text, maxW) {
+      var t = String(text || "");
+      if (g.measureText(t).width <= maxW) return t;
+      while (t.length > 1 && g.measureText(t + "\u2026").width > maxW) t = t.slice(0, -1);
+      return t + "\u2026";
+    }
+    function wrapLines(g, text, maxW, limit) {
+      var words = String(text || "").replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
+      if (!words.length) return [""];
+      var lines = [], line = "";
+      for (var i = 0; i < words.length; i++) {
+        var word = g.measureText(words[i]).width > maxW ? ellipsize(g, words[i], maxW) : words[i];
+        var next = line ? line + " " + word : word;
+        if (line && g.measureText(next).width > maxW) { lines.push(line); line = word; }
+        else line = next;
+      }
+      if (line) lines.push(line);
+      if (lines.length > limit) {
+        lines = lines.slice(0, limit);
+        lines[limit - 1] = ellipsize(g, lines[limit - 1], maxW);
+      }
+      return lines;
+    }
+    function drawTracked(g, text, cx, y, size, weight, color, spacing) {
+      if (/[\u0900-\u097F\u0600-\u06FF\u0980-\u0DFF]/.test(String(text || ""))) {
+        g.save();
+        g.font = weight + " " + size + "px " + FONT;
+        g.textAlign = "center"; g.textBaseline = "top"; g.fillStyle = color;
+        g.fillText(String(text || ""), cx, y);
+        g.restore();
+        return;
+      }
+      g.save();
+      g.font = weight + " " + size + "px " + FONT;
+      g.textAlign = "left"; g.textBaseline = "top"; g.fillStyle = color;
+      var chars = Array.from(String(text || ""));
+      var widths = chars.map(function (c) { return g.measureText(c).width; });
+      var total = widths.reduce(function (a, b) { return a + b; }, 0) + spacing * Math.max(0, chars.length - 1);
+      var x = cx - total / 2;
+      for (var i = 0; i < chars.length; i++) { g.fillText(chars[i], x, y); x += widths[i] + spacing; }
+      g.restore();
+    }
+    function drawHeadline(g, w, h, unit) {
+      var project = selectedProject();
+      var head = String(state.headline || ((project && project.name) || "SNU CLIPPER")).replace(/\s+/g, " ").trim();
+      var sub = String(state.subtitle || "").replace(/\s+/g, " ").trim();
+      var size = Math.max(30, Math.round(unit * .086));
+      var maxLines = h > w ? 4 : 3;
+      var maxW = w * .86;
+      var lines = [], tries = 0;
+      while (tries++ < 24) {
+        g.font = "900 " + size + "px " + FONT;
+        lines = wrapLines(g, head, maxW, maxLines + 1);
+        if (lines.length <= maxLines || size <= unit * .046) break;
+        size -= Math.max(2, Math.round(unit * .005));
+      }
+      if (lines.length > maxLines) {
+        lines = lines.slice(0, maxLines);
+        g.font = "900 " + size + "px " + FONT;
+        lines[maxLines - 1] = ellipsize(g, lines[maxLines - 1], maxW);
+      }
+      var lineH = Math.round(size * 1.14);
+      var blockH = lines.length * lineH;
+      var subSize = Math.max(12, Math.round(unit * .023));
+      var gap = Math.round(unit * .02);
+      var extra = sub ? subSize + gap * 2 : 0;
+      var top = Math.round(h * .52 - (blockH + extra) / 2);
+      if (sub) {
+        drawTracked(g, sub.toUpperCase(), w / 2, top, subSize, "700", "#F4D06A", Math.max(1, subSize * .16));
+        top += subSize + gap * 2;
+      }
+      g.save();
+      g.font = "900 " + size + "px " + FONT;
+      g.textAlign = "center"; g.textBaseline = "top"; g.fillStyle = "#FFFDF6";
+      g.shadowColor = "rgba(0,0,0,.55)"; g.shadowBlur = unit * .025; g.shadowOffsetY = unit * .008;
+      for (var i = 0; i < lines.length; i++) g.fillText(lines[i], w / 2, top + i * lineH);
+      g.restore();
+      var barW = Math.min(w * .18, Math.max(unit * .14, size * 1.4));
+      var barY = top + blockH + Math.round(unit * .018);
+      var bar = g.createLinearGradient(w / 2 - barW / 2, 0, w / 2 + barW / 2, 0);
+      bar.addColorStop(0, "#E5B94C"); bar.addColorStop(1, "#F4D06A");
+      g.fillStyle = bar;
+      g.fillRect(Math.round(w / 2 - barW / 2), barY, Math.round(barW), Math.max(2, Math.round(unit * .005)));
+    }
+    function drawWordmark(g, w, h, unit) {
+      var size = Math.max(11, Math.round(unit * .02));
+      drawTracked(g, "SNU CLIPPER", w / 2, h - Math.round(unit * .075), size, "700", "rgba(246,243,236,.82)", Math.max(1, size * .22));
+    }
+    function drawPreview() {
+      state.renderTimer = 0;
+      var cv = ui.canvas;
+      if (!cv) return;
+      var p = PRESETS[state.aspect] || PRESETS[0];
+      if (cv.width !== p.w) cv.width = p.w;
+      if (cv.height !== p.h) cv.height = p.h;
+      var g = cv.getContext("2d");
+      if (!g) return;
+      var w = cv.width, h = cv.height, unit = Math.min(w, h);
+      g.save();
+      g.clearRect(0, 0, w, h);
+      var framed = state.bg === "frame" && state.thumbState === "ready" && state.thumbImg;
+      if (!framed || !drawCoverImage(g, state.thumbImg, w, h)) drawGradient(g, w, h, unit);
+      var scrim = g.createLinearGradient(0, h * .12, 0, h);
+      scrim.addColorStop(0, "rgba(5,5,6,0)");
+      scrim.addColorStop(.42, "rgba(5,5,6,.40)");
+      scrim.addColorStop(1, "rgba(5,5,6,.88)");
+      g.fillStyle = scrim; g.fillRect(0, 0, w, h);
+      vignette(g, w, h);
+      if (state.logo) drawLogo(g, unit, w, h);
+      drawHeadline(g, w, h, unit);
+      if (state.wordmark) drawWordmark(g, w, h, unit);
+      g.restore();
+      updatePreviewMeta();
+      updateEmpty();
+    }
+    function scheduleRender() {
+      try { clearTimeout(state.renderTimer); } catch (_) {}
+      state.renderTimer = setTimeout(drawPreview, 45);
+    }
+    function ensureFonts() {
+      if (state.fontsReady) return;
+      state.fontsReady = true;
+      try {
+        if (document.fonts && typeof document.fonts.load === "function") {
+          Promise.all([
+            document.fonts.load('900 64px "Inter", sans-serif', "Cover").catch(function () {}),
+            document.fonts.load('700 18px "Inter", sans-serif', "SNU CLIPPER").catch(function () {})
+          ]).then(function () { scheduleRender(); }).catch(function () {});
+        }
+        if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === "function") {
+          document.fonts.ready.then(function () { scheduleRender(); }).catch(function () {});
+        }
+        if (document.fonts && typeof document.fonts.addEventListener === "function") {
+          document.fonts.addEventListener("loadingdone", function () { scheduleRender(); });
+        }
+      } catch (_) {}
+      scheduleRender();
+    }
+
+    /* ---------- data loading ---------- */
+    function applySelection(doPrefill) {
+      var cs = clipsOf(selectedProject());
+      var found = false;
+      for (var i = 0; i < cs.length; i++) if (clipKey(cs[i], i) === String(state.clipId)) { found = true; break; }
+      if (!found) state.clipId = cs.length ? clipKey(cs[0], 0) : "";
+      if (doPrefill) prefill();
+      loadThumb(selectedClip());
+      renderClips();
+      render();
+      setStatus(state.headline.trim() ? "Cover ready — download when you like." : "Choose a clip to start.", state.headline.trim() ? "success" : "");
+    }
+    function loadProjects() {
+      var api = projectsApi();
+      if (!api || typeof api.list !== "function") {
+        state.projects = []; state.projectId = ""; state.clipId = "";
+        state.loading = false;
+        state.loadError = "Project list isn\u2019t available in this build.";
+        renderProjects(); renderClips(); render();
+        return Promise.resolve([]);
+      }
+      state.loading = true; state.loadError = ""; render();
+      var req;
+      try { req = api.list(); }
+      catch (err) {
+        state.loading = false; state.loadError = cleanError(err);
+        renderProjects(); render();
+        return Promise.resolve([]);
+      }
+      return Promise.resolve(req).then(function (rows) {
+        state.projects = Array.isArray(rows) ? rows.filter(Boolean) : [];
+        var still = false;
+        for (var i = 0; i < state.projects.length; i++) {
+          if (String(state.projects[i] && state.projects[i].id) === String(state.projectId)) { still = true; break; }
+        }
+        var needPrefill = false;
+        if (!still) {
+          state.projectId = state.projects.length ? String(state.projects[0].id || "") : "";
+          state.clipId = "";
+          needPrefill = !!state.projectId;
+        }
+        state.loading = false;
+        renderProjects();
+        applySelection(needPrefill);
+        return state.projects;
+      }).catch(function (err) {
+        state.loading = false;
+        state.loadError = cleanError(err) || "Please try again.";
+        renderProjects(); render();
+        return [];
+      });
+    }
+
+    /* ---------- save / open ---------- */
+    function suggestedName() {
+      var p = selectedProject() || {}, c = selectedClip() || {};
+      var h = String(state.headline || "").trim().split(/\s+/).filter(Boolean).slice(0, 4).join(" ");
+      var preset = PRESETS[state.aspect] || PRESETS[0];
+      return slug(p.name || "cover") + "-" + slug(h || c.name || c.title || "cover") + "-" + preset.key + ".png";
+    }
+    function saveFailure(err) {
+      var msg = cleanError(err);
+      state.busy = "";
+      state.result = {
+        kind: "error",
+        title: "Couldn\u2019t save the cover",
+        line: msg || "The PNG was not written.",
+        hint: "Check that your output folder is writable, then try again."
+      };
+      setStatus("Save failed", "error");
+      render();
+      toast("Cover save failed" + (msg ? " — " + msg : ""), "error");
+    }
+    function doSave() {
+      if (state.busy) return;
+      var f = filesApi();
+      if (!f || typeof f.saveCover !== "function") {
+        toast("Saving covers isn\u2019t available in this build yet", "error");
+        setStatus("Saving needs a newer app build", "error");
+        return;
+      }
+      if (!state.projectId) { toast("Choose a project first", "warn"); return; }
+      state.busy = "save"; state.result = null;
+      setStatus("Preparing your cover\u2026", ""); render();
+
+      var dataUrl = "";
+      try {
+        scheduleRender();
+        try { clearTimeout(state.renderTimer); } catch (_) {}
+        drawPreview();                       /* force a fresh frame before export */
+        dataUrl = ui.canvas.toDataURL("image/png");
+      } catch (err) {
+        state.busy = "";
+        var msg = cleanError(err);
+        state.result = {
+          kind: "error",
+          title: "Couldn\u2019t export the cover",
+          line: msg || "The frame image cannot be exported from this canvas.",
+          hint: "Switch Background to Gradient, then save again."
+        };
+        setStatus("Export failed", "error");
+        render();
+        toast("Cover export failed — try the Gradient background", "error");
+        return;
+      }
+      var name = suggestedName();
+      var req;
+      try { req = f.saveCover(dataUrl, name); }
+      catch (err) { saveFailure(err); return; }
+      Promise.resolve(req).then(function (res) {
+        if (res && (res.canceled === true || res.cancelled === true)) {
+          state.busy = ""; state.result = null;
+          setStatus("Save cancelled", ""); render();
+          toast("Save cancelled", "info");
+          return;
+        }
+        if (!res || res.ok === false) throw new Error((res && (res.message || res.error)) || "The cover could not be saved");
+        var path = String((res && res.path) || "");
+        state.result = {
+          kind: "success",
+          title: "Cover ready",
+          line: path ? basename(path) : "Your cover is saved.",
+          path: path,
+          action: "Open folder"
+        };
+        state.busy = "";
+        setStatus(path ? ("Saved " + basename(path)) : "Cover saved", "success");
+        render();
+        toast("Cover saved" + (path ? " · " + basename(path) : ""), "success");
+      }).catch(function (err) { saveFailure(err); });
+    }
+    function doOpenFolder() {
+      var r = state.result;
+      var p = r && r.path;
+      var f = filesApi();
+      if (!p || !f) { toast("No saved cover to open yet", "warn"); return; }
+      var call = null;
+      try {
+        call = typeof f.showInFolder === "function" ? f.showInFolder(p)
+          : (typeof f.openPath === "function" ? f.openPath(p) : null);
+      } catch (_) { toast("Couldn\u2019t open the folder", "error"); return; }
+      if (!call) { toast("Open folder is unavailable in this build", "warn"); return; }
+      Promise.resolve(call).catch(function () { toast("Couldn\u2019t open the folder", "error"); });
+    }
+    function copyText(text) {
+      if (!text) return;
+      var p = null, usedBridge = false;
+      try {
+        var b = bridge();
+        if (b && b.clipboard && typeof b.clipboard.write === "function") { p = b.clipboard.write(text); usedBridge = true; }
+      } catch (_) {}
+      if (!p && navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+        try { p = navigator.clipboard.writeText(text); } catch (_) {}
+      }
+      if (!p) { toast("Copy isn\u2019t available here", "warn"); return; }
+      Promise.resolve(p).then(function () { if (!usedBridge) toast("Path copied", "success"); })
+        .catch(function () { toast("Couldn\u2019t copy the path", "error"); });
+    }
+
+    /* ---------- title-bar trigger + observer ---------- */
+    function makeTrigger() {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.id = "nzy-cover-btn";
+      b.className = "nzy-trigger no-drag";
+      b.title = "Cover / thumbnail generator";
+      b.setAttribute("aria-label", "Open cover generator panel");
+      b.setAttribute("aria-expanded", "false");
+      b.innerHTML = HEX + '<span class="nzy-trigger__label">Cover</span>';
+      b.addEventListener("click", function (ev) { try { ev.stopPropagation(); } catch (_) {} setOpen(); });
+      return b;
+    }
+    function syncTrigger() {
+      if (!trigger || !trigger.isConnected) trigger = makeTrigger();
+      var host = null;
+      try { host = document.querySelector("header.drag, .drag"); } catch (_) {}
+      if (host && host.isConnected) {
+        trigger.classList.remove("nzy-trigger--floating");
+        var ref = null;
+        try {
+          ref = host.querySelector("#nzx-backup-btn") ||
+                host.querySelector("#nzb-batch-btn") ||
+                host.querySelector("#nzq-shortcuts-btn");
+        } catch (_) {}
+        var needsMove = trigger.parentNode !== host ||
+          (ref ? trigger.previousElementSibling !== ref : host.firstElementChild !== trigger);
+        if (needsMove) {
+          try { host.insertBefore(trigger, ref ? ref.nextSibling : host.firstChild); }
+          catch (_) { try { host.appendChild(trigger); } catch (_2) {} }
+        }
+        return;
+      }
+      trigger.classList.add("nzy-trigger--floating");
+      if (trigger.parentNode !== document.body) { try { document.body.appendChild(trigger); } catch (_) {} }
+    }
+    function watchChrome() {
+      try {
+        var obs = new MutationObserver(function () {
+          if (syncing) return;
+          syncing = true;
+          micro(function () { syncing = false; try { syncTrigger(); } catch (_) {} });
+        });
+        obs.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      } catch (_) {
+        var tries = 0;
+        var id = setInterval(function () {
+          try { syncTrigger(); } catch (_) {}
+          if (++tries > 20) { try { clearInterval(id); } catch (_2) {} }
+        }, 250);
+      }
+    }
+
+    /* ---------- open / close / keyboard ---------- */
+    function setOpen(force) {
+      if (!panel) return;
+      var open = typeof force === "boolean" ? force : panel.hidden;
+      if (open) {
+        previousFocus = document.activeElement;
+        ensureFonts();
+        loadProjects();
+      } else {
+        try {
+          if (panel.contains(document.activeElement) && previousFocus && previousFocus.focus) {
+            previousFocus.focus({ preventScroll: true });
+          }
+        } catch (_) {}
+        try { clearTimeout(state.renderTimer); } catch (_) {}
+      }
+      panel.hidden = !open;
+      try { trigger.setAttribute("aria-expanded", String(open)); } catch (_) {}
+      if (open) { try { ui.close.focus({ preventScroll: true }); } catch (_) {} }
+    }
+    function onClick(ev) {
+      if (ev.target === panel) { setOpen(false); return; }
+      var el = ev.target && ev.target.closest ? ev.target.closest("[data-act]") : null;
+      if (!el) return;
+      try { ev.stopPropagation(); } catch (_) {}
+      var act = el.getAttribute("data-act");
+      if (act === "close") setOpen(false);
+      else if (act === "refresh") loadProjects();
+      else if (act === "aspect") { state.aspect = Number(el.getAttribute("data-index")) || 0; render(); scheduleRender(); }
+      else if (act === "bg") { state.bg = el.getAttribute("data-bg") === "frame" ? "frame" : "gradient"; render(); scheduleRender(); }
+      else if (act === "logo") { state.logo = !state.logo; render(); scheduleRender(); }
+      else if (act === "wordmark") { state.wordmark = !state.wordmark; render(); scheduleRender(); }
+      else if (act === "reset-text") { prefill(); render(); }
+      else if (act === "download") doSave();
+      else if (act === "open" || act === "open-result") doOpenFolder();
+      else if (act === "copy") copyText(state.result && state.result.path);
+      else if (act === "dismiss-result") { state.result = null; renderResult(); render(); }
+    }
+    function onKey(ev) {
+      var key = String((ev && ev.key) || "");
+      if (key === "Escape") {
+        if (panel && !panel.hidden) { try { ev.preventDefault(); } catch (_) {} setOpen(false); }
+        return;
+      }
+      if (key !== "Tab" || !panel || panel.hidden) return;
+      var nodes = [];
+      try {
+        nodes = Array.prototype.slice.call(
+          panel.querySelectorAll("button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex='-1'])")
+        ).filter(function (el) { return el.getClientRects().length > 0; });
+      } catch (_) { return; }
+      if (!nodes.length) return;
+      var first = nodes[0], last = nodes[nodes.length - 1];
+      if (ev.shiftKey && document.activeElement === first) { try { ev.preventDefault(); } catch (_) {} last.focus(); }
+      else if (!ev.shiftKey && document.activeElement === last) { try { ev.preventDefault(); } catch (_) {} first.focus(); }
+    }
+
+    /* ---------- boot ---------- */
+    function boot() {
+      var body = document.body || document.documentElement;
+      if (!body) { document.addEventListener("DOMContentLoaded", boot, { once: true }); return; }
+
+      panel = document.createElement("div");
+      panel.id = "nzy-panel";
+      panel.className = "nzy-panel no-drag";
+      panel.hidden = true;
+      panel.setAttribute("role", "dialog");
+      panel.setAttribute("aria-modal", "true");
+      panel.setAttribute("aria-labelledby", "nzy-title");
+      panel.innerHTML = markup();
+      try { panel.querySelector(".nzy-head__title").id = "nzy-title"; } catch (_) {}
+      body.appendChild(panel);
+
+      ui = {
+        panel: panel,
+        close: panel.querySelector(".nzy-close"),
+        project: panel.querySelector("#nzy-project"),
+        clip: panel.querySelector("#nzy-clip"),
+        clipCount: panel.querySelector("#nzy-clip-count"),
+        headline: panel.querySelector("#nzy-headline"),
+        subtitle: panel.querySelector("#nzy-subtitle"),
+        headlineHint: panel.querySelector("#nzy-headline-hint"),
+        aspectBtns: Array.prototype.slice.call(panel.querySelectorAll('[data-act="aspect"]')),
+        bgBtns: Array.prototype.slice.call(panel.querySelectorAll('[data-act="bg"]')),
+        logoSwitch: panel.querySelector('[data-act="logo"]'),
+        wordmarkSwitch: panel.querySelector('[data-act="wordmark"]'),
+        canvas: panel.querySelector("#nzy-canvas"),
+        previewMeta: panel.querySelector("#nzy-preview-meta"),
+        empty: panel.querySelector("#nzy-empty"),
+        emptyTitle: panel.querySelector("#nzy-empty-title"),
+        emptySub: panel.querySelector("#nzy-empty-sub"),
+        result: panel.querySelector("#nzy-result"),
+        download: panel.querySelector("#nzy-download"),
+        open: panel.querySelector("#nzy-open"),
+        status: panel.querySelector("#nzy-status")
+      };
+
+      panel.addEventListener("click", onClick);
+      ui.project.addEventListener("change", function () {
+        state.projectId = ui.project.value || "";
+        state.clipId = "";
+        applySelection(true);
+      });
+      ui.clip.addEventListener("change", function () {
+        state.clipId = ui.clip.value || "";
+        applySelection(true);
+      });
+      ui.headline.addEventListener("input", function () {
+        state.headline = ui.headline.value || "";
+        state.headlineTouched = true;
+        syncInputs(); scheduleRender();
+      });
+      ui.subtitle.addEventListener("input", function () {
+        state.subtitle = ui.subtitle.value || "";
+        state.subtitleTouched = true;
+        scheduleRender();
+      });
+      document.addEventListener("keydown", onKey, false);
+
+      trigger = makeTrigger();
+      syncTrigger();
+      watchChrome();
+      renderProjects();
+      renderClips();
+      render();
+      ensureFonts();
+      scheduleRender();
+    }
+
+    boot();
+  } catch (_) { /* Cover UI must never break app boot. */ }
 })();
