@@ -24933,3 +24933,687 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     }
   } catch (_) { /* Never let onboarding break app boot. */ }
 })();
+
+/* ==========================================================================
+   SNU CLIPPER — BATCH MODE  ·  nzb- prefixed. Pure ES2020+, no imports.
+   ========================================================================== */
+(function () {
+  "use strict";
+  try {
+    if (window.__nzbBatchBooted) return;
+    window.__nzbBatchBooted = true;
+
+    var REDUCED = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    var VIDEO_RE = /\.(mp4|mov|mkv|webm)$/i;
+    var ACCEPT = ".mp4,.mov,.mkv,.webm,video/mp4,video/quicktime,video/webm";
+    var LABEL = { queued: "Queued", running: "Running", done: "Done", failed: "Failed", cancelled: "Stopped" };
+
+    var HEX =
+      '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M12 2 21 7v10l-9 5-9-5V7z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>' +
+        '<path d="M12 7.5 16.5 10v4L12 16.5 7.5 14v-4z" fill="currentColor" opacity=".28"/>' +
+      "</svg>";
+    var UPLOAD =
+      '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M12 16V4m0 0L8 8m4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>' +
+      "</svg>";
+
+    /* jobs:start in main accepts a FLAT object: { ...settings.defaults,
+       inputPath, sourceUrl, projectName }. Local files set inputPath only;
+       links set sourceUrl only. Per-project texts/transcript/music/range are
+       deliberately stripped — they are UI-draft data, not reusable settings. */
+    var NB_OPTS = Object.freeze({
+      useDefaults: true,
+      inputPathKey: "inputPath",
+      sourceUrlKey: "sourceUrl",
+      projectNameKey: "projectName",
+      stripFromDefaults: ["texts", "transcript", "music", "rangeStart", "rangeEnd"]
+    });
+
+    function bridge() { try { return window.clipie || null; } catch (_) { return null; } }
+    function jobsApi() { var b = bridge(); return b && b.jobs ? b.jobs : null; }
+    function filesApi() { var b = bridge(); return b && b.files ? b.files : null; }
+    function micro(fn) { try { queueMicrotask(fn); } catch (_) { Promise.resolve().then(fn); } }
+    function esc(s) {
+      return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+      });
+    }
+    function cleanError(err) {
+      var m = err && err.message ? String(err.message) : String(err || "Something went wrong");
+      return m.replace(/^Error:\s*/i, "").slice(0, 180);
+    }
+    function captionLabel(id) {
+      var map = { "hormozi-yellow": "Hormozi Yellow", "pro-beast": "Beast Mode", pop: "Pop", none: "No captions" };
+      if (!id) return "—";
+      if (map[id]) return map[id];
+      return String(id).replace(/^pro-/, "").replace(/-/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+    }
+    function languageLabel(id) {
+      var map = { auto: "Auto detect", en: "English", ur: "Urdu", hi: "Hindi", ar: "Arabic", es: "Spanish", fr: "French", de: "German", pt: "Portuguese", tr: "Turkish", id: "Indonesian", ja: "Japanese", ko: "Korean" };
+      return (id && map[id]) || id || "—";
+    }
+    function youtubeName(url) {
+      var m = String(url).match(/(?:v=|youtu\.be\/|shorts\/|embed\/|live\/)([\w-]{6,})/);
+      if (m) return "YouTube · " + m[1].slice(0, 10);
+      try { return new URL(url).hostname.replace(/^www\./, "") + " link"; } catch (_) { return "Video link"; }
+    }
+
+    var items = [];
+    var seq = 0;
+    var state = {
+      running: false,
+      cancelRequested: false,
+      finalCancelled: false,
+      currentUid: null,
+      defaults: {},
+      defaultsPromise: Promise.resolve({}),
+      outputDir: "",
+      lastOutputDir: "",
+      finished: false,
+      cancelTimer: null
+    };
+    var panel = null, batchBtn = null, ui = null, syncing = false, renderQueued = false;
+    var previousFocus = null;
+
+    function uid() { return "nzb-" + Date.now().toString(36) + "-" + (++seq); }
+    function makeItem(name, kind, ref) {
+      return {
+        uid: uid(), name: String(name || "Video"), kind: kind,
+        path: kind === "file" ? ref : "", url: kind === "url" ? ref : "",
+        status: "queued", percent: 0, stage: "Queued", projectId: null,
+        done: false, error: "", outputDir: ""
+      };
+    }
+    function setStatus(text, tone) {
+      if (!ui || !ui.status) return;
+      try {
+        ui.status.textContent = String(text || "");
+        if (tone) ui.status.setAttribute("data-tone", tone);
+        else ui.status.removeAttribute("data-tone");
+      } catch (_) {}
+    }
+    function toast(msg, tone) {
+      try {
+        var fn = window.nizamToast || window.snuToast || window.snuClipperToast;
+        if (typeof fn === "function") { fn(msg, tone || "info"); return; }
+      } catch (_) {}
+      setStatus(msg, tone);
+    }
+
+    function chip(label, id) {
+      return '<span class="nzb-chip"><span class="nzb-chip__k">' + label + '</span><span class="nzb-chip__v" id="' + id + '">—</span></span>';
+    }
+    function markup() {
+      return '' +
+        '<div class="nzb-card">' +
+          '<div class="nzb-head">' +
+            '<span class="nzb-head__brand">' + HEX + '</span>' +
+            '<span class="nzb-head__txt">' +
+              '<span class="nzb-head__title" id="nzb-title">Batch queue</span>' +
+              '<span class="nzb-head__sub">Run videos one after another with your current settings</span>' +
+            '</span>' +
+            '<button type="button" class="nzb-close" id="nzb-close" aria-label="Close batch panel">&times;</button>' +
+          '</div>' +
+          '<div class="nzb-body">' +
+            '<div class="nzb-settings" aria-label="Shared settings">' +
+              chip("Aspect", "nzb-s-aspect") + chip("Captions", "nzb-s-caption") +
+              chip("Language", "nzb-s-lang") + chip("Clips", "nzb-s-clips") +
+            '</div>' +
+            '<p class="nzb-settings__note" id="nzb-settings-note">Reading your draft settings…</p>' +
+            '<div class="nzb-label">Videos <span id="nzb-count">No videos queued</span></div>' +
+            '<div class="nzb-drop" id="nzb-drop" tabindex="0" role="group" aria-label="Choose videos or drop them here">' +
+              '<span class="nzb-drop__ico">' + UPLOAD + '</span>' +
+              '<span class="nzb-drop__text">' +
+                '<span class="nzb-drop__title">Drop videos here</span>' +
+                '<span class="nzb-drop__sub">MP4 &middot; MOV &middot; MKV &middot; WEBM &nbsp;—&nbsp; multiple files at once</span>' +
+              '</span>' +
+              '<button type="button" class="nzb-pick" id="nzb-pick">Choose videos</button>' +
+            '</div>' +
+            '<input class="nzb-file-input" id="nzb-files" type="file" multiple accept="' + ACCEPT + '">' +
+            '<div class="nzb-label">Or add links <span>one per line</span></div>' +
+            '<textarea class="nzb-urls" id="nzb-urls" rows="3" spellcheck="false" placeholder="https://www.youtube.com/watch?v=…"></textarea>' +
+            '<div class="nzb-add-row">' +
+              '<button type="button" class="nzb-link-btn" id="nzb-add-urls">+ Add links to queue</button>' +
+              '<span class="nzb-count">Links follow local files in the queue</span>' +
+            '</div>' +
+            '<ul class="nzb-list" id="nzb-list" aria-live="polite"></ul>' +
+            '<div class="nzb-summary" id="nzb-summary" hidden>' +
+              '<div class="nzb-summary__top">' +
+                '<span class="nzb-summary__mark">' + HEX + '</span>' +
+                '<span class="nzb-summary__text">' +
+                  '<strong class="nzb-summary__title" id="nzb-summary-title">Batch complete</strong>' +
+                  '<span class="nzb-summary__line" id="nzb-summary-line"></span>' +
+                '</span>' +
+              '</div>' +
+              '<div class="nzb-summary__actions">' +
+                '<button type="button" class="nzb-btn nzb-btn--ghost" id="nzb-open">Open folder</button>' +
+                '<button type="button" class="nzb-btn nzb-btn--ghost" id="nzb-reset">Reset queue</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="nzb-foot">' +
+            '<span class="nzb-status" id="nzb-status" role="status" aria-live="polite">Ready</span>' +
+            '<span class="nzb-actions">' +
+              '<button type="button" class="nzb-btn nzb-btn--danger" id="nzb-cancel">Cancel</button>' +
+              '<button type="button" class="nzb-btn nzb-btn--primary" id="nzb-start">Start batch</button>' +
+            '</span>' +
+          '</div>' +
+        '</div>';
+    }
+
+    function loadDefaults() {
+      var p = null;
+      try { var b = bridge(); p = b && b.settings ? b.settings.get() : null; } catch (_) {}
+      state.defaultsPromise = Promise.resolve(p).then(function (s) {
+        state.defaults = (s && s.defaults) || {};
+        if (s && s.outputDir) state.outputDir = String(s.outputDir);
+        renderSettings();
+        return state.defaults;
+      }).catch(function () { renderSettings(); return {}; });
+      return state.defaultsPromise;
+    }
+    function renderSettings() {
+      if (!ui) return;
+      var d = state.defaults || {};
+      try {
+        ui.sAspect.textContent = d.aspect || "9:16";
+        ui.sCaption.textContent = captionLabel(d.captionStyle);
+        ui.sLang.textContent = languageLabel(d.language);
+        ui.sClips.textContent = d.clipCount == null ? "—" : String(d.clipCount);
+        ui.settingsNote.textContent = Object.keys(d).length ? "Using the settings from your current draft" : "Using app defaults";
+      } catch (_) {}
+    }
+
+    function rowHtml(item, i) {
+      var meta = item.kind === "file" ? item.path : item.url;
+      var showBar = item.status === "running" || item.status === "done";
+      var pct = item.status === "done" ? 100 : item.percent;
+      var metaText = item.error
+        ? item.error
+        : item.status === "running"
+          ? ((item.stage || "Working") + (showBar ? " · " + Math.round(pct) + "%" : ""))
+          : meta;
+      return '<li class="nzb-item nzb-item--' + item.status + '" data-uid="' + esc(item.uid) + '">' +
+        '<span class="nzb-item__idx">' + String(i + 1).padStart(2, "0") + '</span>' +
+        '<span class="nzb-item__body">' +
+          '<span class="nzb-item__name" title="' + esc(meta) + '">' + esc(item.name) + '</span>' +
+          '<span class="nzb-item__meta">' + esc(metaText) + '</span>' +
+          (showBar ? '<span class="nzb-item__bar"><i style="width:' + Math.max(0, Math.min(100, pct)) + '%"></i></span>' : '') +
+        '</span>' +
+        '<span class="nzb-pill nzb-pill--' + item.status + '">' + LABEL[item.status] + '</span>' +
+        '<button type="button" class="nzb-item__x" data-remove="' + esc(item.uid) + '" aria-label="Remove ' + esc(item.name) + '"' + (item.status === "running" ? " disabled" : "") + '>&times;</button>' +
+      '</li>';
+    }
+    function count(status) {
+      var n = 0;
+      for (var i = 0; i < items.length; i++) if (items[i].status === status) n++;
+      return n;
+    }
+    function renderSummary() {
+      if (!ui) return;
+      var allTerminal = items.length > 0 && items.every(function (it) { return it.done; });
+      if (!state.finished || !allTerminal) { ui.summary.hidden = true; return; }
+      var done = count("done"), failed = count("failed"), skipped = count("cancelled");
+      ui.summaryTitle.textContent = state.finalCancelled ? "Batch stopped" : (failed ? "Batch finished with issues" : "Batch complete");
+      ui.summaryLine.innerHTML =
+        '<b class="nzb-summary__ok">' + done + ' done</b>' +
+        (failed ? ' &nbsp;·&nbsp; <b class="nzb-summary__bad">' + failed + ' failed</b>' : '') +
+        (skipped ? ' &nbsp;·&nbsp; ' + skipped + ' stopped' : '');
+      ui.open.disabled = !(state.lastOutputDir || state.outputDir);
+      ui.summary.hidden = false;
+    }
+    function render() {
+      if (!ui) return;
+      var queued = 0;
+      for (var i = 0; i < items.length; i++) if (!items[i].done && items[i].status === "queued") queued++;
+      ui.count.textContent = items.length ? items.length + (items.length === 1 ? " video" : " videos") : "No videos queued";
+      ui.start.disabled = state.running || queued === 0;
+      ui.cancel.disabled = !state.running && items.length === 0;
+      ui.cancel.title = state.running ? "Cancel the running batch" : "Clear the queue";
+      ui.start.textContent = state.running ? "Running…" : "Start batch";
+      ui.list.innerHTML = items.length
+        ? items.map(rowHtml).join("")
+        : '<li class="nzb-empty">Nothing queued yet. Drop videos or paste links above.</li>';
+      renderSummary();
+    }
+    function scheduleRender() {
+      if (renderQueued) return;
+      renderQueued = true;
+      var run = function () { renderQueued = false; try { render(); } catch (_) {} };
+      if (REDUCED) micro(run);
+      else if (typeof requestAnimationFrame === "function") requestAnimationFrame(run);
+      else micro(run);
+    }
+
+    function makeBatchButton() {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.id = "nzb-batch-btn";
+      b.className = "nzb-batch-btn no-drag";
+      b.title = "Batch queue";
+      b.setAttribute("aria-label", "Open batch queue");
+      b.setAttribute("aria-expanded", "false");
+      b.innerHTML = HEX + '<span class="nzb-batch-btn__label">Batch</span><i class="nzb-batch-btn__dot" aria-hidden="true"></i>';
+      b.addEventListener("click", function (ev) { try { ev.stopPropagation(); } catch (_) {} setOpen(); });
+      return b;
+    }
+    function syncBatchButton() {
+      if (!batchBtn || !batchBtn.isConnected) batchBtn = makeBatchButton();
+      var host = null;
+      try { host = document.querySelector("header.drag, .drag"); } catch (_) {}
+      if (host && host.isConnected) {
+        batchBtn.classList.remove("nzb-batch-btn--floating");
+        if (batchBtn.parentNode !== host) {
+          var ref = null;
+          try { ref = host.querySelector("#nzq-shortcuts-btn"); } catch (_) {}
+          try { host.insertBefore(batchBtn, ref ? ref.nextSibling : host.firstChild); }
+          catch (_) { try { host.appendChild(batchBtn); } catch (_2) {} }
+        }
+      } else {
+        batchBtn.classList.add("nzb-batch-btn--floating");
+        if (batchBtn.parentNode !== document.body) { try { document.body.appendChild(batchBtn); } catch (_) {} }
+      }
+    }
+    function watchChrome() {
+      try {
+        var obs = new MutationObserver(function () {
+          if (syncing) return;
+          syncing = true;
+          micro(function () { syncing = false; try { syncBatchButton(); } catch (_) {} });
+        });
+        obs.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      } catch (_) {
+        var tries = 0;
+        var id = setInterval(function () {
+          try { syncBatchButton(); } catch (_) {}
+          if (++tries > 20) { try { clearInterval(id); } catch (_2) {} }
+        }, 250);
+      }
+    }
+    function setOpen(force) {
+      if (!panel) return;
+      var open = typeof force === "boolean" ? force : panel.hidden;
+      if (open) previousFocus = document.activeElement;
+      panel.hidden = !open;
+      try { if (batchBtn) batchBtn.setAttribute("aria-expanded", String(open)); } catch (_) {}
+      if (open) {
+        loadDefaults();
+        try { ui.close.focus({ preventScroll: true }); } catch (_) { try { ui.close.focus(); } catch (_2) {} }
+      } else {
+        try { if (panel.contains(document.activeElement) && previousFocus && previousFocus.focus) previousFocus.focus({ preventScroll: true }); } catch (_) {}
+      }
+    }
+    function onKey(ev) {
+      var key = String((ev && ev.key) || "");
+      if (key === "Escape") {
+        if (panel && !panel.hidden) { try { ev.preventDefault(); } catch (_) {} setOpen(false); }
+        return;
+      }
+      if (key !== "Tab" || !panel || panel.hidden) return;
+      var nodes = [];
+      try {
+        nodes = Array.prototype.slice.call(panel.querySelectorAll("button:not([disabled]), textarea, [tabindex]:not([tabindex='-1'])"))
+          .filter(function (el) { return el.getClientRects().length > 0; });
+      } catch (_) { return; }
+      if (!nodes.length) return;
+      var first = nodes[0], last = nodes[nodes.length - 1];
+      if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+      else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+    }
+
+    function addFiles(list) {
+      if (!list || !list.length) return;
+      var fapi = filesApi();
+      var added = 0, rejected = 0;
+      for (var i = 0; i < list.length; i++) {
+        var f = list[i];
+        if (!f || !VIDEO_RE.test(f.name || "")) { rejected++; continue; }
+        var p = "";
+        try { p = fapi && typeof fapi.pathForFile === "function" ? fapi.pathForFile(f) : (f.path || ""); } catch (_) {}
+        p = p ? String(p) : "";
+        if (!p) { rejected++; continue; }
+        var dupe = false;
+        for (var j = 0; j < items.length; j++) if (items[j].path === p) { dupe = true; break; }
+        if (dupe) continue;
+        items.push(makeItem(f.name, "file", p));
+        added++;
+      }
+      scheduleRender();
+      if (added) toast(added + " video" + (added === 1 ? "" : "s") + " added to the batch", "success");
+      if (rejected) toast(rejected + " file" + (rejected === 1 ? " was" : "s were") + " skipped — unsupported type or no file path", "warn");
+    }
+    function pickSingleViaBridge() {
+      var fapi = filesApi();
+      var p = null;
+      try { p = fapi && typeof fapi.pickVideo === "function" ? fapi.pickVideo() : null; } catch (_) {}
+      Promise.resolve(p).then(function (d) {
+        if (!d) return;
+        var path = d.path || d.filePath || "";
+        var name = d.name || (path ? String(path).split(/[\\/]/).pop() : "Video");
+        if (!path || !VIDEO_RE.test(name)) { toast("Choose an MP4, MOV, MKV or WEBM file", "warn"); return; }
+        for (var i = 0; i < items.length; i++) if (items[i].path === path) return;
+        items.push(makeItem(name, "file", path));
+        scheduleRender();
+      }).catch(function () { toast("Could not open the file picker", "error"); });
+    }
+    function pickFiles() {
+      var fapi = filesApi();
+      if (!fapi || typeof fapi.pathForFile !== "function") { pickSingleViaBridge(); return; }
+      try { ui.files.click(); } catch (_) { pickSingleViaBridge(); }
+    }
+    function addUrls() {
+      var raw = ui.urls.value || "";
+      var lines = String(raw).split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+      var added = 0, bad = 0;
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        if (!/^https?:\/\/\S+$/i.test(line)) { bad++; continue; }
+        var dupe = false;
+        for (var j = 0; j < items.length; j++) if (items[j].url === line) { dupe = true; break; }
+        if (dupe) continue;
+        items.push(makeItem(youtubeName(line), "url", line));
+        added++;
+      }
+      if (added) ui.urls.value = "";
+      scheduleRender();
+      if (added) toast(added + " link" + (added === 1 ? "" : "s") + " added", "success");
+      if (bad) toast(bad + " line" + (bad === 1 ? " was" : "s were") + " skipped — paste one http(s) link per line", "warn");
+    }
+
+    function buildOpts(item, defaults) {
+      var base = {};
+      if (NB_OPTS.useDefaults && defaults) Object.keys(defaults).forEach(function (k) { base[k] = defaults[k]; });
+      NB_OPTS.stripFromDefaults.forEach(function (k) { delete base[k]; });
+      if (item.kind === "file") base[NB_OPTS.inputPathKey] = item.path;
+      if (item.kind === "url") base[NB_OPTS.sourceUrlKey] = item.url;
+      base[NB_OPTS.projectNameKey] = item.name;
+      Object.keys(base).forEach(function (k) { if (base[k] === undefined) delete base[k]; });
+      return base;
+    }
+    function findItem(ev) {
+      if (!ev) return null;
+      var pid = ev.projectId == null ? "" : String(ev.projectId);
+      if (pid) {
+        for (var i = 0; i < items.length; i++) if (String(items[i].projectId) === pid) return items[i];
+      }
+      var name = ev.project && ev.project.name;
+      if (name) {
+        for (var j = 0; j < items.length; j++) {
+          var it = items[j];
+          if (!it.done && it.status === "running" && !it.projectId && it.name === name) {
+            if (pid) it.projectId = pid;
+            else if (ev.project.id) it.projectId = String(ev.project.id);
+            return it;
+          }
+        }
+      }
+      return null;
+    }
+    function cancelRemaining() {
+      items.forEach(function (it) {
+        if (it.done) return;
+        var was = it.status;
+        it.done = true;
+        it.status = "cancelled";
+        it.error = was === "queued" ? "Skipped" : "Cancelled";
+      });
+    }
+    function finishBatch() {
+      if (!state.running) return;
+      state.running = false;
+      state.finished = true;
+      state.finalCancelled = !!state.cancelRequested;
+      state.cancelRequested = false;
+      state.currentUid = null;
+      clearTimeout(state.cancelTimer);
+      state.cancelTimer = null;
+      try { if (batchBtn) batchBtn.classList.remove("nzb-batch-btn--busy"); } catch (_) {}
+      var done = count("done"), failed = count("failed"), skipped = count("cancelled");
+      if (state.finalCancelled) toast("Batch stopped · " + done + " done, " + skipped + " stopped", "warn");
+      else if (failed) toast("Batch finished · " + done + " done, " + failed + " failed", "warn");
+      else toast("Batch complete · " + done + " video" + (done === 1 ? "" : "s") + " done", "success");
+      scheduleRender();
+    }
+    function terminal(item, status, info) {
+      if (!item || item.done) return;
+      item.done = true;
+      item.status = status;
+      item.percent = status === "done" ? 100 : item.percent;
+      if (info && info.error) item.error = info.error;
+      if (info && info.outputDir) item.outputDir = info.outputDir;
+      if (status === "done" && item.outputDir) state.lastOutputDir = item.outputDir;
+      if (state.currentUid === item.uid) {
+        state.currentUid = null;
+        if (state.cancelRequested) { cancelRemaining(); finishBatch(); }
+        else queueNext();
+      }
+      scheduleRender();
+    }
+    function handleEngineEvent(ev) {
+      try {
+        if (!ev || !ev.type) return;
+        var item = findItem(ev);
+        if (!item || item.done) return;
+        if (ev.type === "progress") {
+          if (item.status !== "running") return;
+          var pct = Number(ev.overall);
+          if (!isFinite(pct)) pct = Number(ev.percent);
+          if (isFinite(pct)) item.percent = Math.max(0, Math.min(100, pct));
+          item.stage = ev.message || ev.stage || item.stage;
+          scheduleRender();
+        } else if (ev.type === "done") {
+          terminal(item, "done", { outputDir: ev.project && ev.project.outputDir });
+        } else if (ev.type === "failed") {
+          var stopped = ev.error === "Cancelled" || (ev.project && ev.project.status === "cancelled");
+          terminal(item, stopped ? "cancelled" : "failed", { error: ev.error || (ev.project && ev.project.error) || "Job failed" });
+        }
+      } catch (_) {}
+    }
+    function ensureEventSub() {
+      if (window.__nzbEventOff) return;
+      try {
+        var api = jobsApi();
+        if (!api || typeof api.onEvent !== "function") return;
+        var off = api.onEvent(handleEngineEvent);
+        window.__nzbEventOff = typeof off === "function" ? off : true;
+      } catch (_) {}
+    }
+    function startItem(item) {
+      item.status = "running";
+      item.stage = "Starting…";
+      item.percent = 0;
+      state.currentUid = item.uid;
+      scheduleRender();
+      var api = jobsApi();
+      if (!api || typeof api.start !== "function") { terminal(item, "failed", { error: "Job bridge is unavailable" }); return; }
+      Promise.resolve(state.defaultsPromise).then(function (defs) {
+        return api.start(buildOpts(item, defs));
+      }).then(function (project) {
+        if (project && project.id) {
+          item.projectId = String(project.id);
+          if (state.cancelRequested && !item.done) { try { api.cancel(project.id); } catch (_) {} }
+        }
+        if (!item.done) { item.stage = "Working"; scheduleRender(); }
+      }).catch(function (err) { terminal(item, "failed", { error: cleanError(err) }); });
+    }
+    function queueNext() {
+      if (state.cancelRequested) return finishBatch();
+      var next = null;
+      for (var i = 0; i < items.length; i++) {
+        if (!items[i].done && items[i].status === "queued") { next = items[i]; break; }
+      }
+      if (!next) return finishBatch();
+      startItem(next);
+    }
+    function startBatch() {
+      if (state.running) return;
+      var queueable = 0;
+      for (var i = 0; i < items.length; i++) if (!items[i].done && items[i].status === "queued") queueable++;
+      if (!queueable) { toast("Add videos or links to the queue first", "warn"); return; }
+      state.running = true;
+      state.finished = false;
+      state.finalCancelled = false;
+      state.cancelRequested = false;
+      state.lastOutputDir = "";
+      clearTimeout(state.cancelTimer);
+      state.cancelTimer = null;
+      ui.summary.hidden = true;
+      try { if (batchBtn) batchBtn.classList.add("nzb-batch-btn--busy"); } catch (_) {}
+      ensureEventSub();
+      if (!state.defaults || !Object.keys(state.defaults).length) loadDefaults();
+      scheduleRender();
+      queueNext();
+    }
+    function cancelBatch() {
+      if (!state.running) {
+        if (!items.length) return;
+        items = [];
+        state.finished = false;
+        state.finalCancelled = false;
+        state.lastOutputDir = "";
+        scheduleRender();
+        toast("Queue cleared", "info");
+        return;
+      }
+      state.cancelRequested = true;
+      var api = jobsApi();
+      var current = null;
+      for (var i = 0; i < items.length; i++) if (items[i].uid === state.currentUid) { current = items[i]; break; }
+      if (current && current.projectId && api && typeof api.cancel === "function") {
+        try { api.cancel(current.projectId); } catch (_) {}
+      }
+      items.forEach(function (it) {
+        if (!it.done && it.status === "queued") {
+          it.done = true;
+          it.status = "cancelled";
+          it.error = "Skipped";
+        }
+      });
+      scheduleRender();
+      var timer = setTimeout(function () {
+        if (!state.running) return;
+        if (current && !current.done) terminal(current, "cancelled", { error: "Cancelled" });
+        cancelRemaining();
+        finishBatch();
+      }, 2200);
+      state.cancelTimer = timer;
+    }
+    function openFolder() {
+      var p = state.lastOutputDir || state.outputDir;
+      var fapi = filesApi();
+      if (!p || !fapi) { toast("No output folder is available yet", "warn"); return; }
+      var call = null;
+      try { call = typeof fapi.showInFolder === "function" ? fapi.showInFolder(p) : fapi.openPath(p); } catch (_) {}
+      Promise.resolve(call).catch(function () { toast("Could not open the output folder", "error"); });
+    }
+    function resetQueue() {
+      if (state.running) { toast("Cancel the running batch first", "warn"); return; }
+      items = [];
+      state.finished = false;
+      state.finalCancelled = false;
+      state.lastOutputDir = "";
+      scheduleRender();
+    }
+
+    function boot() {
+      var body = document.body || document.documentElement;
+      if (!body) { document.addEventListener("DOMContentLoaded", boot, { once: true }); return; }
+
+      panel = document.createElement("div");
+      panel.id = "nzb-panel";
+      panel.className = "nzb-panel no-drag";
+      panel.hidden = true;
+      panel.setAttribute("role", "dialog");
+      panel.setAttribute("aria-modal", "true");
+      panel.setAttribute("aria-labelledby", "nzb-title");
+      panel.innerHTML = markup();
+      body.appendChild(panel);
+
+      ui = {
+        close: panel.querySelector("#nzb-close"),
+        drop: panel.querySelector("#nzb-drop"),
+        pick: panel.querySelector("#nzb-pick"),
+        files: panel.querySelector("#nzb-files"),
+        urls: panel.querySelector("#nzb-urls"),
+        addUrls: panel.querySelector("#nzb-add-urls"),
+        list: panel.querySelector("#nzb-list"),
+        count: panel.querySelector("#nzb-count"),
+        status: panel.querySelector("#nzb-status"),
+        start: panel.querySelector("#nzb-start"),
+        cancel: panel.querySelector("#nzb-cancel"),
+        summary: panel.querySelector("#nzb-summary"),
+        summaryTitle: panel.querySelector("#nzb-summary-title"),
+        summaryLine: panel.querySelector("#nzb-summary-line"),
+        open: panel.querySelector("#nzb-open"),
+        reset: panel.querySelector("#nzb-reset"),
+        sAspect: panel.querySelector("#nzb-s-aspect"),
+        sCaption: panel.querySelector("#nzb-s-caption"),
+        sLang: panel.querySelector("#nzb-s-lang"),
+        sClips: panel.querySelector("#nzb-s-clips"),
+        settingsNote: panel.querySelector("#nzb-settings-note")
+      };
+
+      panel.addEventListener("click", function (ev) {
+        try { if (ev.target === panel || (ev.target.closest && ev.target.closest("#nzb-close"))) setOpen(false); }
+        catch (_) { setOpen(false); }
+      });
+      ui.pick.addEventListener("click", function (ev) { try { ev.stopPropagation(); } catch (_) {} pickFiles(); });
+      ui.drop.addEventListener("click", function (ev) {
+        try { if (ev.target.closest && ev.target.closest("#nzb-pick")) return; } catch (_) {}
+        pickFiles();
+      });
+      ui.drop.addEventListener("keydown", function (ev) {
+        if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); pickFiles(); }
+      });
+      ["dragenter", "dragover"].forEach(function (type) {
+        ui.drop.addEventListener(type, function (ev) {
+          try { ev.preventDefault(); } catch (_) {}
+          ui.drop.classList.add("nzb-drop--over");
+        });
+      });
+      ["dragleave", "dragend"].forEach(function (type) {
+        ui.drop.addEventListener(type, function (ev) {
+          ui.drop.classList.remove("nzb-drop--over");
+          try { ev.preventDefault(); } catch (_) {}
+        });
+      });
+      ui.drop.addEventListener("drop", function (ev) {
+        try { ev.preventDefault(); } catch (_) {}
+        ui.drop.classList.remove("nzb-drop--over");
+        try { addFiles(ev.dataTransfer && ev.dataTransfer.files); } catch (_) {}
+      });
+      ui.files.addEventListener("change", function (ev) {
+        addFiles(ev.target.files);
+        try { ev.target.value = ""; } catch (_) {}
+      });
+      ui.addUrls.addEventListener("click", addUrls);
+      ui.urls.addEventListener("keydown", function (ev) {
+        if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); addUrls(); }
+      });
+      ui.list.addEventListener("click", function (ev) {
+        var btn = ev.target && ev.target.closest ? ev.target.closest("[data-remove]") : null;
+        if (!btn) return;
+        var id = btn.getAttribute("data-remove");
+        for (var i = 0; i < items.length; i++) {
+          if (items[i].uid === id && items[i].status !== "running") { items.splice(i, 1); break; }
+        }
+        scheduleRender();
+      });
+      ui.start.addEventListener("click", startBatch);
+      ui.cancel.addEventListener("click", cancelBatch);
+      ui.open.addEventListener("click", openFolder);
+      ui.reset.addEventListener("click", resetQueue);
+      document.addEventListener("keydown", onKey, false);
+
+      batchBtn = makeBatchButton();
+      syncBatchButton();
+      watchChrome();
+      ensureEventSub();
+      loadDefaults();
+      render();
+    }
+
+    boot();
+  } catch (_) { /* Batch UI must never break app boot. */ }
+})();
