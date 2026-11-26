@@ -25617,3 +25617,516 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     boot();
   } catch (_) { /* Batch UI must never break app boot. */ }
 })();
+
+/* ==========================================================================
+   SNU CLIPPER — BACKUP & TRANSFER  ·  nzx- prefixed. Pure ES2020+, no imports.
+   ========================================================================== */
+(function () {
+  "use strict";
+  try {
+    if (window.__nzxTransferBooted) return;
+    window.__nzxTransferBooted = true;
+
+    var HEX =
+      '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M12 2 21 7v10l-9 5-9-5V7z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>' +
+        '<path d="M12 7.5 16.5 10v4L12 16.5 7.5 14v-4z" fill="currentColor" opacity=".28"/>' +
+      '</svg>';
+    var ICON = {
+      search: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>',
+      down: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4-4m4 4 4-4"/><path d="M4 17v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1"/></svg>',
+      up: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V9m0 0-4 4m4-4 4 4"/><path d="M4 7V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1"/></svg>',
+      check: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7"/></svg>',
+      alert: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 8v5m0 3h.01"/><path d="M10.3 4.3 2.8 17.2A2 2 0 0 0 4.5 20h15a2 2 0 0 0 1.7-2.8L13.7 4.3a2 2 0 0 0-3.4 0Z"/></svg>',
+      copy: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>'
+    };
+    var STATUS = { done: "Done", processing: "Processing", queued: "Queued", failed: "Failed", cancelled: "Cancelled", draft: "Draft", idle: "Draft" };
+
+    var panel = null, trigger = null, ui = {}, syncing = false, previousFocus = null;
+    var state = {
+      projects: [], selectedId: "", query: "", loading: false, loadError: "",
+      busy: "", result: null, status: "Choose a project to back up.", tone: ""
+    };
+
+    function bridge() { try { return window.clipie || null; } catch (_) { return null; } }
+    function projectsApi() { var b = bridge(); return b && b.projects ? b.projects : null; }
+    function filesApi() { var b = bridge(); return b && b.files ? b.files : null; }
+    function micro(fn) { try { queueMicrotask(fn); } catch (_) { Promise.resolve().then(fn); } }
+
+    function esc(s) {
+      return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+      });
+    }
+    function cleanError(err) {
+      var m = err && err.message ? String(err.message) : String(err == null ? "" : err);
+      m = m.replace(/^Error:\s*/i, "").trim();
+      if (!m || m === "[object Object]") return "";
+      return m.slice(0, 180);
+    }
+    function basename(p) {
+      var m = String(p || "").match(/[^\\/]+$/);
+      return m ? m[0] : String(p || "");
+    }
+    function statusOf(p) {
+      var s = String((p && p.status) || "draft").toLowerCase();
+      return STATUS[s] ? s : "draft";
+    }
+    function clipCount(p) {
+      if (!p) return 0;
+      if (Array.isArray(p.clips)) return p.clips.length;
+      var n = Number(p.clipCount != null ? p.clipCount : (p.options && p.options.clipCount));
+      return isFinite(n) && n > 0 ? n : 0;
+    }
+    function dateOf(ts) {
+      var n = Number(ts);
+      if (!isFinite(n) || n <= 0) return "date unknown";
+      var d = new Date(n);
+      if (isNaN(d.getTime())) return "date unknown";
+      var today = new Date();
+      var a = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      var b = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      var days = Math.round((b - a) / 86400000);
+      if (days === 0) return "Today";
+      if (days === 1) return "Yesterday";
+      try { return d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" }); }
+      catch (_) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+    }
+
+    function setStatus(text, tone) {
+      state.status = String(text || "");
+      state.tone = tone || "";
+      if (!ui.status) return;
+      try {
+        ui.status.textContent = state.status;
+        if (state.tone) ui.status.setAttribute("data-tone", state.tone);
+        else ui.status.removeAttribute("data-tone");
+      } catch (_) {}
+    }
+    function toast(msg, tone) {
+      try {
+        var fn = window.nizamToast || window.snuToast || window.snuClipperToast;
+        if (typeof fn === "function") { fn(msg, tone || "info"); return; }
+      } catch (_) {}
+      setStatus(msg, tone);
+    }
+
+    function markup() {
+      return '' +
+        '<div class="nzx-card">' +
+          '<div class="nzx-head">' +
+            '<span class="nzx-head__brand">' + HEX + '</span>' +
+            '<span class="nzx-head__txt">' +
+              '<span class="nzx-head__title" id="nzx-title">Backup &amp; transfer</span>' +
+              '<span class="nzx-head__sub">Move a project to another computer</span>' +
+            '</span>' +
+            '<button type="button" class="nzx-close" data-act="close" aria-label="Close backup panel">&times;</button>' +
+          '</div>' +
+          '<div class="nzx-body">' +
+            '<div class="nzx-note">' +
+              '<span class="nzx-note__mark">' + HEX + '</span>' +
+              '<p class="nzx-note__text">A .snuproject file contains your clips, captions, script and settings. Move it to another computer and import it there.</p>' +
+            '</div>' +
+            '<div class="nzx-label">Project <span id="nzx-count">&mdash;</span>' +
+              '<button type="button" class="nzx-link" data-act="refresh">Refresh</button>' +
+            '</div>' +
+            '<div class="nzx-search-wrap">' +
+              '<span class="nzx-search__ico">' + ICON.search + '</span>' +
+              '<input id="nzx-search" class="nzx-search" type="search" autocomplete="off" spellcheck="false" placeholder="Search projects" aria-label="Search projects">' +
+            '</div>' +
+            '<div id="nzx-list" class="nzx-list" role="listbox" aria-label="Your projects"></div>' +
+            '<div class="nzx-action">' +
+              '<button type="button" class="nzx-btn nzx-btn--primary" id="nzx-export" data-act="export">' + ICON.down + 'Export .snuproject</button>' +
+              '<span class="nzx-action__hint" id="nzx-export-hint">Saves the backup beside your project files</span>' +
+            '</div>' +
+            '<div class="nzx-divider"></div>' +
+            '<div class="nzx-label">Restore <span>From this or another computer</span></div>' +
+            '<div class="nzx-action">' +
+              '<button type="button" class="nzx-btn nzx-btn--ghost" id="nzx-import" data-act="import">' + ICON.up + 'Import .snuproject</button>' +
+              '<span class="nzx-action__hint" id="nzx-import-hint">Your current projects stay untouched</span>' +
+            '</div>' +
+            '<div id="nzx-result" class="nzx-result" role="status" aria-live="polite" hidden></div>' +
+            '<div id="nzx-progress" class="nzx-progress" hidden><i></i></div>' +
+          '</div>' +
+          '<div class="nzx-foot">' +
+            '<span id="nzx-status" class="nzx-status" role="status" aria-live="polite">Choose a project to back up.</span>' +
+            '<span class="nzx-tag">' + HEX + 'SNU Clipper</span>' +
+          '</div>' +
+        '</div>';
+    }
+
+    function rowHtml(p) {
+      var id = String((p && p.id != null) ? p.id : "");
+      var name = String((p && p.name) || "Untitled project");
+      var st = statusOf(p);
+      var n = clipCount(p);
+      var meta = st + " · " + n + (n === 1 ? " clip" : " clips") + " · " + dateOf(p && p.updatedAt);
+      var selected = id && id === state.selectedId;
+      return '<button type="button" class="nzx-row" role="option" data-act="select" data-id="' + esc(id) + '" aria-selected="' + (selected ? "true" : "false") + '">' +
+        '<span class="nzx-dot nzx-dot--' + esc(st) + '"></span>' +
+        '<span class="nzx-row__body">' +
+          '<span class="nzx-row__name" title="' + esc(name) + '">' + esc(name) + '</span>' +
+          '<span class="nzx-row__meta">' + esc(meta) + '</span>' +
+        '</span>' +
+        '<span class="nzx-pill nzx-pill--' + esc(st) + '">' + esc(STATUS[st]) + '</span>' +
+        '<span class="nzx-row__check" aria-hidden="true"></span>' +
+      '</button>';
+    }
+
+    function visibleProjects() {
+      var q = state.query.trim().toLowerCase();
+      if (!q) return state.projects.slice();
+      return state.projects.filter(function (p) {
+        return String((p && p.name) || "").toLowerCase().indexOf(q) >= 0 ||
+          String((p && p.id) || "").toLowerCase().indexOf(q) >= 0;
+      });
+    }
+    function renderList() {
+      if (!ui.list) return;
+      var rows = visibleProjects();
+      if (state.loading) {
+        ui.list.innerHTML = '<div class="nzx-empty"><span class="nzx-empty__spin"></span><span class="nzx-empty__title">Loading your projects&hellip;</span></div>';
+        return;
+      }
+      if (state.loadError) {
+        ui.list.innerHTML = '<div class="nzx-empty"><span class="nzx-empty__title">Couldn&rsquo;t load projects</span><span class="nzx-empty__sub">' + esc(state.loadError) + '</span><button type="button" class="nzx-btn nzx-btn--ghost nzx-btn--sm" data-act="refresh">Try again</button></div>';
+        return;
+      }
+      if (!state.projects.length) {
+        ui.list.innerHTML = '<div class="nzx-empty"><span class="nzx-empty__title">No projects yet</span><span class="nzx-empty__sub">Make a clip first, then come back to back it up.</span><button type="button" class="nzx-btn nzx-btn--ghost nzx-btn--sm" data-act="refresh">Refresh list</button></div>';
+        return;
+      }
+      if (!rows.length) {
+        ui.list.innerHTML = '<div class="nzx-empty"><span class="nzx-empty__title">No matching projects</span><span class="nzx-empty__sub">Try a different name.</span><button type="button" class="nzx-btn nzx-btn--ghost nzx-btn--sm" data-act="clear-search">Clear search</button></div>';
+        return;
+      }
+      ui.list.innerHTML = rows.map(rowHtml).join("");
+    }
+
+    function renderResult() {
+      if (!ui.result) return;
+      var r = state.result;
+      if (!r) { ui.result.hidden = true; ui.result.innerHTML = ""; return; }
+      var ok = r.kind === "success";
+      var acts = '<div class="nzx-result__acts">' +
+        '<button type="button" class="nzx-btn nzx-btn--primary nzx-btn--sm" data-act="open-result">' + esc(r.action || (ok ? "Open" : "Dismiss")) + '</button>' +
+        '<button type="button" class="nzx-btn nzx-btn--ghost nzx-btn--sm" data-act="dismiss-result">' + (ok ? "Done" : "Close") + '</button>' +
+        '</div>';
+      var pathRow = r.path
+        ? '<div class="nzx-result__path"><code title="' + esc(r.path) + '">' + esc(r.path) + '</code><button type="button" class="nzx-copy" data-act="copy" aria-label="Copy backup path" title="Copy path">' + ICON.copy + '</button></div>'
+        : "";
+      ui.result.className = "nzx-result nzx-result--" + (ok ? "success" : "error");
+      ui.result.innerHTML =
+        '<div class="nzx-result__top">' +
+          '<span class="nzx-result__mark">' + (ok ? ICON.check : ICON.alert) + '</span>' +
+          '<span class="nzx-result__body">' +
+            '<strong class="nzx-result__title">' + esc(r.title || "") + '</strong>' +
+            '<span class="nzx-result__line">' + esc(r.line || "") + '</span>' +
+            (r.hint ? '<span class="nzx-result__hint">' + esc(r.hint) + '</span>' : "") +
+          '</span>' +
+        '</div>' + pathRow + acts;
+      ui.result.hidden = false;
+    }
+
+    function render() {
+      if (!ui.list) return;
+      var api = projectsApi();
+      var canExport = !!(api && typeof api.exportZip === "function");
+      var canImport = !!(api && typeof api.importZip === "function");
+      var total = state.projects.length;
+      try { ui.count.textContent = total ? total + (total === 1 ? " project" : " projects") : "No projects"; } catch (_) {}
+      try {
+        ui.exportBtn.disabled = !!state.busy || !canExport || !state.selectedId;
+        ui.exportBtn.title = !canExport ? "Export needs a newer app build" : (!state.selectedId ? "Choose a project first" : "Export this project as a .snuproject file");
+        ui.exportBtn.innerHTML = ICON.down + (state.busy === "export" ? "Exporting&hellip;" : "Export .snuproject");
+        ui.importBtn.disabled = !!state.busy || !canImport;
+        ui.importBtn.title = !canImport ? "Import needs a newer app build" : "Choose a .snuproject file to restore";
+        ui.importBtn.innerHTML = ICON.up + (state.busy === "import" ? "Importing&hellip;" : "Import .snuproject");
+        ui.exportHint.textContent = !canExport ? "Export isn&rsquo;t available in this build" : "Saves the backup beside your project files";
+        ui.importHint.textContent = !canImport ? "Import isn&rsquo;t available in this build" : "Your current projects stay untouched";
+      } catch (_) {}
+      try { if (ui.search && document.activeElement !== ui.search && ui.search.value !== state.query) ui.search.value = state.query; } catch (_) {}
+      renderList();
+      renderResult();
+      try { ui.progress.hidden = !state.busy; } catch (_) {}
+      setStatus(state.status, state.tone);
+      try { if (trigger) trigger.classList.toggle("nzx-trigger--busy", !!state.busy); } catch (_) {}
+    }
+
+    function loadProjects() {
+      var api = projectsApi();
+      if (!api || typeof api.list !== "function") {
+        state.projects = []; state.selectedId = ""; state.loading = false;
+        state.loadError = "Project list isn&rsquo;t available in this build.";
+        render(); return Promise.resolve([]);
+      }
+      state.loading = true; state.loadError = ""; render();
+      var req;
+      try { req = api.list(); }
+      catch (err) { state.loading = false; state.loadError = cleanError(err); render(); return Promise.resolve([]); }
+      return Promise.resolve(req).then(function (rows) {
+        state.projects = Array.isArray(rows) ? rows.filter(Boolean) : [];
+        var still = state.projects.some(function (p) { return String(p && p.id) === state.selectedId; });
+        if (!still) state.selectedId = state.projects.length ? String(state.projects[0].id || "") : "";
+        state.loading = false; render(); return state.projects;
+      }).catch(function (err) {
+        state.loading = false; state.loadError = cleanError(err) || "Please try again."; render(); return [];
+      });
+    }
+
+    function exportFailure(err) {
+      var msg = cleanError(err);
+      state.busy = "";
+      state.result = { kind: "error", title: "Export failed", line: msg || "The backup could not be created.", hint: "Nothing was changed. Check that your output folder is writable, then try again." };
+      setStatus("Export failed", "error"); render();
+      toast("Export failed" + (msg ? " — " + msg : " — please try again"), "error");
+    }
+    function doExport() {
+      if (state.busy) return;
+      var api = projectsApi();
+      if (!api || typeof api.exportZip !== "function") { toast("Export isn&rsquo;t available in this build yet", "error"); return; }
+      if (!state.selectedId) { toast("Choose a project to back up first", "warn"); return; }
+      state.busy = "export"; state.result = null;
+      setStatus("Preparing your backup&hellip;", ""); render();
+      var req;
+      try { req = api.exportZip(state.selectedId); }
+      catch (err) { exportFailure(err); return; }
+      Promise.resolve(req).then(function (res) {
+        if (!res || res.ok === false) throw new Error((res && (res.message || res.error)) || "The backup could not be created");
+        if (res.canceled || res.cancelled) { state.busy = ""; state.result = null; setStatus("Export cancelled", ""); render(); return; }
+        var p = String((res && (res.path || res.filePath)) || "");
+        state.result = { kind: "success", title: "Backup ready", line: p ? basename(p) : "Your backup is ready.", path: p, action: "Open folder" };
+        state.busy = "";
+        setStatus(p ? "Saved " + basename(p) : "Backup created", "success"); render();
+        toast("Backup created" + (p ? " · " + basename(p) : ""), "success");
+      }).catch(function (err) { exportFailure(err); });
+    }
+
+    function importFailure(err) {
+      var msg = cleanError(err);
+      state.busy = "";
+      state.result = { kind: "error", title: "Import failed", line: msg || "The file could not be read.", hint: "No project was added. Use a .snuproject file created by SNU Clipper, then try again." };
+      setStatus("Import failed", "error"); render();
+      toast("Import failed" + (msg ? " — " + msg : " — please try again"), "error");
+    }
+    function doImport() {
+      if (state.busy) return;
+      var api = projectsApi();
+      if (!api || typeof api.importZip !== "function") { toast("Import isn&rsquo;t available in this build yet", "error"); return; }
+      state.busy = "import"; state.result = null;
+      setStatus("Waiting for a .snuproject file&hellip;", ""); render();
+      var req;
+      try { req = api.importZip(); }
+      catch (err) { importFailure(err); return; }
+      Promise.resolve(req).then(function (res) {
+        if (res && (res.canceled === true || res.cancelled === true)) {
+          state.busy = ""; state.result = null; setStatus("Import cancelled", ""); render(); return;
+        }
+        if (!res || res.ok === false) throw new Error((res && (res.message || res.error)) || "No project was imported");
+        var p = (res && res.project) || null;
+        state.result = { kind: "success", title: "Project imported", line: (p && p.name) ? String(p.name) : "Your project is ready.", project: p, action: "Open project" };
+        state.busy = ""; setStatus("Project imported", "success"); render();
+        toast("Project imported" + (p && p.name ? " · " + String(p.name) : ""), "success");
+        loadProjects();
+      }).catch(function (err) { importFailure(err); });
+    }
+
+    function copyText(text) {
+      if (!text) return;
+      var p = null, usedBridge = false;
+      try {
+        var b = bridge();
+        if (b && b.clipboard && typeof b.clipboard.write === "function") { p = b.clipboard.write(text); usedBridge = true; }
+      } catch (_) {}
+      if (!p && navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+        try { p = navigator.clipboard.writeText(text); } catch (_) {}
+      }
+      if (!p) { toast("Copy isn&rsquo;t available here", "warn"); return; }
+      Promise.resolve(p).then(function () { if (!usedBridge) toast("Path copied", "success"); }).catch(function () { toast("Couldn&rsquo;t copy the path", "error"); });
+    }
+
+    function clickNavProjects() {
+      var nodes = document.querySelectorAll("button.nav-btn, .sidebar button, button");
+      for (var i = 0; i < nodes.length; i++) {
+        var txt = String(nodes[i].textContent || "").replace(/\s+/g, " ").trim();
+        if (txt === "Projects" || /^Projects\b/.test(txt)) { try { nodes[i].click(); return true; } catch (_) {} }
+      }
+      return false;
+    }
+    function openProjectViaDom(name) {
+      clickNavProjects();
+      var tries = 0;
+      var timer = setInterval(function () {
+        var cards = document.querySelectorAll('[data-testid="project-card"]');
+        for (var i = 0; i < cards.length; i++) {
+          if (name && String(cards[i].textContent || "").indexOf(name) >= 0) {
+            try { clearInterval(timer); } catch (_) {}
+            try { cards[i].click(); } catch (_) {}
+            return;
+          }
+        }
+        if (++tries >= 15) {
+          try { clearInterval(timer); } catch (_) {}
+          toast("Imported. Open " + (name || "your project") + " from Projects.", "info");
+        }
+      }, 120);
+    }
+    function openResult() {
+      var r = state.result;
+      if (!r) return;
+      if (r.action === "Open folder") {
+        var p = r.path, f = filesApi();
+        if (!p || !f) { toast("No folder is available for this backup", "warn"); return; }
+        var call = null;
+        try { call = typeof f.showInFolder === "function" ? f.showInFolder(p) : f.openPath(p); } catch (_) {}
+        Promise.resolve(call).catch(function () { toast("Couldn&rsquo;t open the folder", "error"); });
+        return;
+      }
+      var project = r.project || {};
+      openProjectViaDom(project.name);
+    }
+
+    function makeTrigger() {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.id = "nzx-backup-btn";
+      b.className = "nzx-trigger no-drag";
+      b.title = "Backup & transfer";
+      b.setAttribute("aria-label", "Open backup and transfer panel");
+      b.setAttribute("aria-expanded", "false");
+      b.innerHTML = HEX + '<span class="nzx-trigger__label">Backup</span>';
+      b.addEventListener("click", function (ev) { try { ev.stopPropagation(); } catch (_) {} setOpen(); });
+      return b;
+    }
+    function syncTrigger() {
+      if (!trigger || !trigger.isConnected) trigger = makeTrigger();
+      var host = null;
+      try { host = document.querySelector("header.drag, .drag"); } catch (_) {}
+      if (host && host.isConnected) {
+        trigger.classList.remove("nzx-trigger--floating");
+        var ref = null;
+        try { ref = host.querySelector("#nzb-batch-btn") || host.querySelector("#nzq-shortcuts-btn"); } catch (_) {}
+        var needsMove = trigger.parentNode !== host || (ref ? trigger.previousSibling !== ref : host.firstChild !== trigger);
+        if (needsMove) {
+          try { host.insertBefore(trigger, ref ? ref.nextSibling : host.firstChild); }
+          catch (_) { try { host.appendChild(trigger); } catch (_2) {} }
+        }
+        return;
+      }
+      trigger.classList.add("nzx-trigger--floating");
+      if (trigger.parentNode !== document.body) { try { document.body.appendChild(trigger); } catch (_) {} }
+    }
+    function watchChrome() {
+      try {
+        var obs = new MutationObserver(function () {
+          if (syncing) return;
+          syncing = true;
+          micro(function () { syncing = false; try { syncTrigger(); } catch (_) {} });
+        });
+        obs.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      } catch (_) {
+        var tries = 0;
+        var id = setInterval(function () {
+          try { syncTrigger(); } catch (_) {}
+          if (++tries > 20) { try { clearInterval(id); } catch (_2) {} }
+        }, 250);
+      }
+    }
+
+    function setOpen(force) {
+      if (!panel) return;
+      var open = typeof force === "boolean" ? force : panel.hidden;
+      if (open) { previousFocus = document.activeElement; loadProjects(); }
+      else {
+        try { if (panel.contains(document.activeElement) && previousFocus && previousFocus.focus) previousFocus.focus({ preventScroll: true }); } catch (_) {}
+      }
+      panel.hidden = !open;
+      try { if (trigger) trigger.setAttribute("aria-expanded", String(open)); } catch (_) {}
+      if (open) { try { ui.close.focus({ preventScroll: true }); } catch (_) {} }
+    }
+
+    function onClick(ev) {
+      if (ev.target === panel) { setOpen(false); return; }
+      var el = ev.target && ev.target.closest ? ev.target.closest("[data-act]") : null;
+      if (!el) return;
+      try { ev.stopPropagation(); } catch (_) {}
+      var act = el.getAttribute("data-act");
+      if (act === "close") setOpen(false);
+      else if (act === "refresh") loadProjects();
+      else if (act === "select") { state.selectedId = el.getAttribute("data-id") || ""; render(); }
+      else if (act === "export") doExport();
+      else if (act === "import") doImport();
+      else if (act === "copy") copyText(state.result && state.result.path);
+      else if (act === "open-result") openResult();
+      else if (act === "dismiss-result") { state.result = null; renderResult(); }
+      else if (act === "clear-search") { state.query = ""; render(); try { ui.search.focus(); } catch (_) {} }
+    }
+    function onListKey(ev) {
+      if (ev.key !== "ArrowDown" && ev.key !== "ArrowUp") return;
+      var rows = ui.list.querySelectorAll(".nzx-row");
+      if (!rows.length) return;
+      var i = -1;
+      for (var j = 0; j < rows.length; j++) if (rows[j] === document.activeElement) { i = j; break; }
+      var next = ev.key === "ArrowDown" ? (i + 1) % rows.length : (i <= 0 ? rows.length - 1 : i - 1);
+      try { ev.preventDefault(); rows[next].focus(); } catch (_) {}
+    }
+    function onKey(ev) {
+      var key = String((ev && ev.key) || "");
+      if (key === "Escape") {
+        if (panel && !panel.hidden) { try { ev.preventDefault(); } catch (_) {} setOpen(false); }
+        return;
+      }
+      if (key !== "Tab" || !panel || panel.hidden) return;
+      var nodes = [];
+      try {
+        nodes = Array.prototype.slice.call(panel.querySelectorAll("button:not([disabled]), input, [tabindex]:not([tabindex='-1'])"))
+          .filter(function (el) { return el.getClientRects().length > 0; });
+      } catch (_) { return; }
+      if (!nodes.length) return;
+      var first = nodes[0], last = nodes[nodes.length - 1];
+      if (ev.shiftKey && document.activeElement === first) { try { ev.preventDefault(); } catch (_) {} last.focus(); }
+      else if (!ev.shiftKey && document.activeElement === last) { try { ev.preventDefault(); } catch (_) {} first.focus(); }
+    }
+
+    function boot() {
+      var body = document.body || document.documentElement;
+      if (!body) { document.addEventListener("DOMContentLoaded", boot, { once: true }); return; }
+
+      panel = document.createElement("div");
+      panel.id = "nzx-panel";
+      panel.className = "nzx-panel no-drag";
+      panel.hidden = true;
+      panel.setAttribute("role", "dialog");
+      panel.setAttribute("aria-modal", "true");
+      panel.setAttribute("aria-labelledby", "nzx-title");
+      panel.innerHTML = markup();
+      body.appendChild(panel);
+
+      ui = {
+        close: panel.querySelector(".nzx-close"),
+        count: panel.querySelector("#nzx-count"),
+        search: panel.querySelector("#nzx-search"),
+        list: panel.querySelector("#nzx-list"),
+        exportBtn: panel.querySelector("#nzx-export"),
+        importBtn: panel.querySelector("#nzx-import"),
+        exportHint: panel.querySelector("#nzx-export-hint"),
+        importHint: panel.querySelector("#nzx-import-hint"),
+        result: panel.querySelector("#nzx-result"),
+        progress: panel.querySelector("#nzx-progress"),
+        status: panel.querySelector("#nzx-status")
+      };
+
+      panel.addEventListener("click", onClick);
+      ui.search.addEventListener("input", function () { state.query = ui.search.value || ""; renderList(); });
+      ui.list.addEventListener("keydown", onListKey);
+      document.addEventListener("keydown", onKey, false);
+
+      trigger = makeTrigger();
+      syncTrigger();
+      watchChrome();
+      render();
+    }
+
+    boot();
+  } catch (_) { /* Backup UI must never break app boot. */ }
+})();

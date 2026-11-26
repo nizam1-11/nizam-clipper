@@ -118,7 +118,9 @@ const api = {
     transcript: (id) => electron.ipcRenderer.invoke("projects:transcript", id),
     delete: (id) => electron.ipcRenderer.invoke("projects:delete", id),
     deleteClip: (id, highlightId) => electron.ipcRenderer.invoke("projects:deleteClip", id, highlightId),
-    releaseSource: (id) => electron.ipcRenderer.invoke("projects:releaseSource", id)
+    releaseSource: (id) => electron.ipcRenderer.invoke("projects:releaseSource", id),
+    exportZip: (id) => electron.ipcRenderer.invoke("projects:exportZip", id),
+    importZip: () => electron.ipcRenderer.invoke("projects:importZip")
   },
   folders: {
     get: () => electron.ipcRenderer.invoke("folders:get"),

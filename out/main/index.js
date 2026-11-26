@@ -23,6 +23,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 const electron = require("electron");
+const AdmZip = require("adm-zip");
 const path = require("node:path");
 const node_url = require("node:url");
 const node_fs = require("node:fs");
@@ -3447,6 +3448,106 @@ async function installMac(info) {
   setTimeout(() => electron.app.exit(0), 15e3).unref();
 }
 const VIDEO_EXT = ["mp4", "mov", "mkv", "webm", "m4v", "avi", "mts", "m2ts", "wmv", "flv", "3gp"];
+function rewriteImportedProject(pj, id, outputDir) {
+  const copy = JSON.parse(JSON.stringify(pj));
+  copy.id = id;
+  copy.outputDir = outputDir;
+  copy.updatedAt = Date.now();
+  delete copy.error;
+  delete copy.liveStopped;
+  if (copy.options) {
+    copy.options.projectName = copy.name;
+    delete copy.options.inputPath;
+    delete copy.options.logo;
+    delete copy.options.music;
+    if (Array.isArray(copy.options.texts)) {
+      copy.options.texts = copy.options.texts.map((x) => { const n = { ...x }; delete n.card; return n; });
+    }
+    if (copy.options.transcript && copy.options.transcript.file) delete copy.options.transcript.file;
+  }
+  if (Array.isArray(copy.clips)) {
+    copy.clips = copy.clips.map((c, i) => {
+      const n = { ...c };
+      const base = `clip-${String((c.index ?? i) + 1).padStart(2, "0")}`;
+      n.filePath = path.join(outputDir, base + ".mp4");
+      n.thumbnailPath = path.join(outputDir, base + ".jpg");
+      if (n.srtPath) n.srtPath = path.join(outputDir, base + ".srt");
+      if (n.settings) {
+        delete n.settings.logo;
+        delete n.settings.music;
+        if (Array.isArray(n.settings.texts)) n.settings.texts = n.settings.texts.map((x) => { const y = { ...x }; delete y.card; return y; });
+      }
+      return n;
+    });
+  }
+  copy.sourceRemoved = true;
+  return copy;
+}
+
+async function exportProjectBackup(projectId) {
+  const settings = await getSettings();
+  const p = await findProject(settings.outputDir, String(projectId));
+  if (!p) throw new Error("Project not found.");
+  const zip = new AdmZip();
+  const entries = await node_fs.promises.readdir(p.outputDir, { withFileTypes: true });
+  for (const e of entries) {
+    if (!e.isFile()) continue;
+    if (e.name.endsWith(".key.json") || e.name === ".DS_Store") continue;
+    zip.addLocalFile(path.join(p.outputDir, e.name), "", e.name);
+  }
+  // Clips saved in a separate clipsDir live outside the project folder.
+  if (Array.isArray(p.clips)) {
+    for (const c of p.clips) {
+      const base = `clip-${String((c.index ?? 0) + 1).padStart(2, "0")}`;
+      if (c.filePath && !isInsideDir(p.outputDir, c.filePath, true)) {
+        try { zip.addLocalFile(c.filePath, "", base + ".mp4"); } catch (_) {}
+      }
+      if (c.srtPath && !isInsideDir(p.outputDir, c.srtPath, true)) {
+        try { zip.addLocalFile(c.srtPath, "", base + ".srt"); } catch (_) {}
+      }
+    }
+  }
+  zip.addFile("manifest.json", Buffer.from(JSON.stringify({ app: "SNU Clipper", format: 1, exportedAt: Date.now(), name: p.name }, null, 2), "utf8"));
+  const win = electron.BrowserWindow.getFocusedWindow();
+  const res = await electron.dialog.showSaveDialog(win, {
+    title: "Export project backup",
+    defaultPath: path.join(electron.app.getPath("documents"), `${slugify(p.name) || "project"}.snuproject`),
+    filters: [{ name: "SNU Clipper project", extensions: ["snuproject"] }]
+  });
+  if (res.canceled || !res.filePath) return { canceled: true };
+  await zip.writeZip(res.filePath);
+  return { ok: true, path: res.filePath };
+}
+
+async function importProjectBackup() {
+  const win = electron.BrowserWindow.getFocusedWindow();
+  const res = await electron.dialog.showOpenDialog(win, {
+    title: "Import project backup",
+    properties: ["openFile"],
+    filters: [{ name: "SNU Clipper project", extensions: ["snuproject"] }]
+  });
+  if (res.canceled || !res.filePaths[0]) return { canceled: true };
+  const zip = new AdmZip(res.filePaths[0]);
+  for (const e of zip.getEntries()) {
+    const name = String(e.entryName || "");
+    if (name.startsWith("/") || /^[A-Za-z]:/.test(name) || name.split(/[\\/]/).includes("..")) {
+      throw new Error("This backup contains unsafe paths.");
+    }
+  }
+  let pj = null;
+  try { pj = JSON.parse(zip.readAsText("project.json")); } catch (_) {}
+  if (!pj || !pj.id || !pj.name) throw new Error("That file isn't a SNU Clipper project backup.");
+  const settings = await getSettings();
+  const id = `${Date.now().toString(36)}-${shortId()}`;
+  const name = String(pj.name);
+  const outputDir = path.join(settings.outputDir, `${slugify(name)}-${id.slice(-6)}`);
+  await node_fs.promises.mkdir(outputDir, { recursive: true });
+  zip.extractAllTo(outputDir, true);
+  const imported = rewriteImportedProject(pj, id, outputDir);
+  await writeProject(imported);
+  return { ok: true, project: imported };
+}
+
 function registerIpc() {
   electron.ipcMain.handle("settings:get", () => getSettings());
   electron.ipcMain.handle("settings:update", async (_e, u) => {
@@ -3580,6 +3681,8 @@ function registerIpc() {
     })
   ));
   electron.ipcMain.handle("projects:transcript", async (_e, id) => (await findProject((await getSettings()).outputDir, String(id)))?.transcript ?? null);
+  electron.ipcMain.handle("projects:exportZip", async (_e, id) => exportProjectBackup(id));
+  electron.ipcMain.handle("projects:importZip", async () => importProjectBackup());
   electron.ipcMain.handle("projects:releaseSource", async (_e, id) => {
     const p = await findProject((await getSettings()).outputDir, id);
     if (!p) throw new Error("Project not found.");
