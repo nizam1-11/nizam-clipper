@@ -6094,7 +6094,7 @@ function heuristicAnalysis(transcript, options) {
       hook: firstSentence(text).split(/\s+/).slice(0, 9).join(" ").replace(/[,.;:!?]+$/, ""),
       description: truncate(text, 180),
       hashtags: defaultHashtags(options.audience),
-      reason: "Picked for hook words, how much is said and whether it starts and ends on a whole thought (no API key set).",
+      reason: "Picked for a scroll-stopping first line, a resolved payoff and a clean whole-thought cut (no API key set).",
       score: Math.round(Math.min(100, c.score * 10))
     });
   }
@@ -6119,6 +6119,56 @@ function heuristicAnalysis(transcript, options) {
 function scoreWindow$1(segs, len2, options) {
   return scoreSpan(segs.map((x) => x.text), len2, options);
 }
+const VIRAL_OPENER = [
+  "biggest", "worst", "nobody", "no one", "everyone", "everybody", "stop", "avoid",
+  "wrong", "secret", "hidden", "real reason", "here's why", "here's how", "watch this",
+  "the truth", "the problem", "what nobody", "you need", "listen", "look",
+  "sabse bada", "asli", "sach", "kabhi mat", "dekho", "suno",
+  "the biggest", "biggest mistake", "worst mistake", "what nobody", "i tested", "you make"
+].map((h) => normWords(h).join(" "));
+const FILLER_OPENER = /^(so|basically|okay|ok|alright|welcome|guys|today|um|uh|like|yeah|aur|toh|phir|matlab|well)\b/i;
+const GENERIC_SETUP = /^(there are|there is|some people|many people|a lot of people|today we|in this video|let us talk)\b/i;
+function hookPower(text) {
+  const raw = String(text ?? "").trim();
+  const w = normWords(raw);
+  if (!w.length) return 0;
+  const first8 = ` ${w.slice(0, 8).join(" ")} `;
+  let p = 0;
+  for (const word of w.slice(0, 8)) if (HOOK_SINGLE.has(word)) p += 1.3;
+  for (const phrase of HOOK_PHRASES) if (first8.includes(` ${phrase} `)) p += 2.5;
+  for (const phrase of VIRAL_OPENER) if (first8.includes(` ${phrase} `)) p += 2.5;
+  if (/\b(you|your|tum|aap)\b/i.test(first8)) p += 1.2;
+  if (GENERIC_SETUP.test(raw)) p -= 2;
+  if (/[?؟]/.test(raw)) p += 2;
+  if (/\p{N}/u.test(first8)) p += 1.5;
+  if (w.length >= 5 && w.length <= 20) p += 1.2;
+  else if (w.length > 28) p -= 1;
+  if (FILLER_OPENER.test(raw)) p -= 3;
+  if (/^(and|but|so|because|then|yeah|aur|lekin|magar|toh|phir|kyunki)\b/i.test(raw)) p -= 4;
+  return p;
+}
+function payoffPower(text) {
+  const raw = String(text ?? "").trim();
+  if (!raw) return 0;
+  let p = 0;
+  if (/[.!?…۔؟।]["'”’)]*$/.test(raw)) p += 1.5;
+  if (/[?؟]["'”’)]*$/.test(raw)) p -= 2;
+  if (/[,;:—–-]["'”’)]*$/.test(raw)) p -= 2;
+  // An ellipsis or a trailing filler is not a payoff even though it ends in a dot.
+  if (/\.\.\.|\u2026\s*$/.test(raw)) p -= 1.5;
+  if (/\b(uh|um|you know|basically|like|yeah|and|so|aur|toh)\s*[.,;:…]*$/i.test(raw)) p -= 3;
+  const tail = ` ${normWords(raw).slice(-12).join(" ")} `;
+  for (const phrase of HOOK_PHRASES) if (tail.includes(` ${phrase} `)) p += 0.8;
+  if (/\p{N}/u.test(raw.slice(-40))) p += 1;
+  return p;
+}
+function loopBonus(firstText, lastText) {
+  const a = new Set(normWords(String(firstText ?? "")).filter((w) => w.length > 3));
+  if (!a.size) return 0;
+  let n = 0;
+  for (const w of normWords(String(lastText ?? ""))) if (w.length > 3 && a.has(w)) n++;
+  return Math.min(2, n);
+}
 function scoreSpan(texts, len2, options) {
   const joined = texts.join(" ");
   const words2 = normWords(joined);
@@ -6141,7 +6191,15 @@ function scoreSpan(texts, len2, options) {
   const ending = endFlaw(lastText);
   const endsClean = !ending && /[.!?…۔؟।]["'”’)]*$/.test(lastText.trim()) ? 0.5 : 0;
   const endCost = ending === "question" ? 1.5 : ending === "trailing" ? 2 : 0;
-  return density * 1.2 + hooks * 0.8 + questions * 0.6 + Math.min(numbers, 5) * 0.3 + lengthFit * 1.5 + startsClean + endsClean - openCost - endCost;
+  // Viral shape: a scroll-stopping opener and a resolved payoff matter far more
+  // than hook words somewhere in the middle of the clip.
+  const firstText = texts[0] ?? "";
+  const viralOpen = hookPower(firstText);
+  const viralPayoff = payoffPower(lastText);
+  const viralLoop = loopBonus(firstText, lastText);
+  return density * 0.8 + hooks * 0.35 + questions * 0.5 + Math.min(numbers, 5) * 0.25 + lengthFit * 1.2
+    + startsClean + endsClean - openCost - endCost
+    + viralOpen * 2.4 + viralPayoff * 1.1 + viralLoop * 0.6;
 }
 function overlap(s1, e1, s2, e2) {
   return Math.max(0, Math.min(e1, e2) - Math.max(s1, s2));
@@ -6322,7 +6380,10 @@ async function requestAnalysis(o, model) {
     reel ? "- Ignore length limits: the reel is as long as the recording." : `- Each highlight must be between ${options.minClipSeconds} and ${options.maxClipSeconds} seconds long.`,
     "- start/end MUST be exact segment boundaries copied from the transcript timestamps so cuts land on sentence edges. Never cut mid-sentence: a clip begins where a thought begins and ends where it lands.",
     ...reel ? [] : ["- Highlights must not overlap."],
-    "- A great clip opens with a hook (a claim, question, mistake, number, or 'here's how'), delivers one complete idea, and ends on a resolved sentence.",
+    "- Viral structure is required. Open on the single strongest line so the hook lands in the FIRST 2 SECONDS: a specific claim, question, number, mistake or surprising result. If the first sentence is a greeting, setup, filler or continues the previous thought, start on the later line that actually grabs attention.",
+    "- Build a curiosity gap in the hook and pay it off inside the clip: one complete idea, no rambling, no repeated lines.",
+    "- End on the payoff — the answer, result, punchline, reaction or proof — on a resolved sentence. Never stop on a setup, an unanswered question or trailing chatter.",
+    "- Prefer a tight clip a stranger watches to the end and shares over a longer but calm, context-dependent one.",
     `- Audience: ${options.audience}. Prefer moments with concrete takeaways, demos, opinions, or stories over generic intros and outros.`,
     "- Titles and hooks must be in the transcript's language. Do not invent facts that are not in the transcript.",
     "",
@@ -6746,7 +6807,7 @@ For each beat give:
   "intensity": 1-5, how funny it is to a general audience (5 = people will share it)
   "why": a few words
 
-Be selective. Only list beats a viewer would actually laugh at or share; ordinary banter, agreement ("yeah, yeah") and people merely retelling a story are not beats. A good 3-minute stretch of a funny podcast has maybe 2-4 real beats; an ordinary stretch has none. Use intensity 5 only for the few moments that would make a clip on their own.
+Open on the funniest or most surprising line so the laugh lands in the first 2 seconds; cut the setup short. Be selective. Only list beats a viewer would actually laugh at or share; ordinary banter, agreement ("yeah, yeah") and people merely retelling a story are not beats. A good 3-minute stretch of a funny podcast has maybe 2-4 real beats; an ordinary stretch has none. Use intensity 5 only for the few moments that would make a clip on their own.
 
 Transcripts may be Hindi, Urdu or Hinglish; answer in English but copy "lands_on" exactly as written in the line. Answer with JSON only: {"beats":[...]}`;
 let modelCache = null;
@@ -7393,7 +7454,10 @@ function rulesProposals(s, sig, options, n, within = [0, s.length - 1]) {
       if (seconds2 < options.minClipSeconds) continue;
       const texts = s.slice(i, j + 1).map((x) => x.text);
       const words2 = scoreSpan(texts, seconds2, options);
-      scored.push({ first: i, last: j, score: words2 * 6 + signalBonus(sig, i, j) - openCost[i] - endCost[j] });
+      // The first line must earn the stop; the last line must close the loop.
+      const viralOpen = hookPower(s[i].text);
+      const viralEnd = payoffPower(s[j].text);
+      scored.push({ first: i, last: j, score: words2 * 5 + viralOpen * 1.5 + viralEnd + signalBonus(sig, i, j) - openCost[i] - endCost[j] });
     }
   }
   if (!scored.length && hi >= lo) scored.push({ first: lo, last: hi, score: 30 });
@@ -7403,7 +7467,7 @@ function rulesProposals(s, sig, options, n, within = [0, s.length - 1]) {
     if (out.length >= n) break;
     const span = { start: s[c.first].start, end: s[c.last].end };
     if (out.some((o) => overlapSeconds({ start: s[o.first].start, end: s[o.last].end }, span) > 0.3)) continue;
-    out.push({ first: c.first, last: c.last, score: Math.max(0, Math.min(100, Math.round(c.score))), why: "Picked by SNU Clipper's own search: hook words, pace, audio and clean edges.", origin: "rules" });
+    out.push({ first: c.first, last: c.last, score: Math.max(0, Math.min(100, Math.round(c.score))), why: "Picked by SNU Clipper's own search: hook-first opener, payoff ending, pace, audio and clean edges.", origin: "rules" });
   }
   return out;
 }
@@ -7590,7 +7654,7 @@ function chunkSentences(s, chunkSeconds = 540, overlapSeconds2 = 45, maxChunks =
 }
 function proposeSystem(o, k) {
   if (o.mode === "gaming") return gamingProposeSystem(o, k);
-  return `You are the editor of a channel that cuts short vertical clips (TikTok, Reels, YouTube Shorts) out of long videos. You read part of a transcript and pick the moments that would make a stranger stop scrolling, watch to the end and share.
+  return `You are the editor of a channel that cuts short vertical clips (TikTok, Reels, YouTube Shorts) out of long videos. You read part of a transcript and pick the moments that would make a stranger stop scrolling in the FIRST 2 SECONDS, watch to the end and share.
 
 Each line is one sentence: S12 [3:41] text (a line ending in "…" is a long sentence that carries on in the next line). A line may end with marks from the audio:
   [laugh 0.7] people laughed right after it (0-1)   [loud] said with more energy than usual
@@ -7602,6 +7666,9 @@ A clip is a run of whole sentences from "first" to "last" (ids, inclusive). Rule
 - It stands alone: someone who saw nothing before must understand it. "first" starts a thought: a claim, a question, a story opening, a strong statement. Never start on a sentence that continues the previous one (and, but, so, because, which, then, yeah, exactly, aur, lekin, magar, toh, phir, kyunki, اور، لیکن، مگر، تو، پھر، کیونکہ، और, लेकिन, तो, फिर, क्योंकि), and never on a pronoun pointing back (he, she, they, that, it, wo, وہ، اس، वो, उस) when who or what it means was said before "first" — start earlier instead.
 - It ends on the payoff: the answer, the punchline, the conclusion, the reaction. Never stop on a setup, an unanswered question or half a list; if the payoff comes one or two lines later, include them.
 - One idea per clip. Skip intros, outros, sponsor reads, greetings and small talk.
+- Viral shape: "first" must be the strongest line of the moment — the claim, question, number, mistake or surprising result — so the hook lands in the first 2 seconds. If the natural first line is a setup, greeting or filler, move "first" forward to the line that grabs attention (stay within the length limits).
+- The hook must promise something specific and the clip must deliver it: build a small curiosity gap, then land the answer, result, punchline or reaction at "last". Never stop on a setup or an unanswered question.
+- Cut repeated and slow lines even if the clip becomes shorter. Score higher when a stranger would stop immediately, stay to the payoff and want to rewatch or share.
 - The transcript may be English, Urdu, Hindi, Hinglish or Roman Urdu and may contain transcription mistakes; judge the meaning.
 - Audience: ${o.audience || "a general audience"}.
 Give up to ${k} clips from this part, best first; fewer if the part has nothing good. Clips must not overlap.
@@ -7709,7 +7776,7 @@ async function swissRank(n, prior, judge, o) {
   return { order, wins, games, rounds, calls };
 }
 const mmss = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
-const COMPARE_SYSTEM = `You compare short vertical clips cut from the same long video. For each pair, decide which clip a viewer is more likely to watch to the end and share. What matters: a hook in the first seconds, one complete idea, a payoff at the end (the answer, the punchline, the conclusion), and making sense without having seen the rest of the video. Ignore transcription mistakes and do not prefer a clip just because it is longer or listed first. The transcript may be English, Urdu, Hindi or a mix.
+const COMPARE_SYSTEM = `You compare short vertical clips cut from the same long video. For each pair, decide which clip a viewer is more likely to watch to the end and share. What matters most: the hook lands in the FIRST 2 SECONDS because the clip starts on its strongest line (not a greeting, setup or filler), one complete idea, a payoff at the end (the answer, the punchline, the conclusion), and making sense without having seen the rest of the video. If two clips are otherwise equal, prefer the one whose first line creates a specific promise and whose last line resolves it. Ignore transcription mistakes and do not prefer a clip just because it is longer or listed first. The transcript may be English, Urdu, Hindi or a mix.
 Answer with JSON only: {"results":[{"pair":1,"winner":"A","reason":"a few words"}]}`;
 function clipText(c, s, maxChars = 1400) {
   const text = s.slice(c.first, c.last + 1).map((x) => x.text).join(" ").replace(/\s+/g, " ").trim();
@@ -7750,7 +7817,7 @@ const CONTEXT = 3;
 const COLDREAD_SYSTEM = `You check short clips before they are posted. Each clip is shown with a few sentences of context: lines marked ">" are inside the clip, lines marked " " are just before or after it and are NOT in the clip. Read the ">" lines as a viewer who has seen nothing else.
 For each clip answer:
 - "point": one short sentence saying what the clip says or shows (in English).
-- "stands_alone": true if a stranger understands it and it feels finished; false if it needs what came before, starts mid-thought (on "and", "but", "so", "aur", "lekin", "toh", a reply, or a pronoun whose meaning was said earlier) or stops before its payoff.
+- "stands_alone": true only if a stranger understands it, is hooked by the FIRST 2 SECONDS, and feels finished; false if it needs what came before, starts mid-thought (on "and", "but", "so", "aur", "lekin", "toh", a reply, or a pronoun whose meaning was said earlier), opens on a greeting/setup/filler instead of the strongest line, or stops before its payoff.
 - "first" and "last": the sentence ids the clip should start and end on. Keep them unless moving them fixes a real problem: start earlier to include a missing setup, start later to skip a line that continues something else, end later to include the answer or punchline, end earlier to drop trailing chatter. Only use ids shown for that clip.
 - "note": a few words on what you changed, or "".
 Answer with JSON only: {"clips":[{"clip":1,"point":"...","stands_alone":true,"first":"S12","last":"S20","note":""}]}`;
@@ -8021,7 +8088,7 @@ For each beat give:
   "intensity": 1-5, how funny it is to a general audience (5 = people will share it)
   "why": a few words
 
-Be selective. Only list beats a viewer would actually laugh at or share; ordinary banter, agreement ("yeah, yeah") and people merely retelling a story are not beats. Nine minutes of a funny podcast have maybe 3-8 real beats; an ordinary stretch has none. Use intensity 5 only for the few moments that would make a clip on their own. Give at most ${k} beats from this part.
+Open on the funniest or most surprising line so the laugh lands in the first 2 seconds; cut the setup short. Be selective. Only list beats a viewer would actually laugh at or share; ordinary banter, agreement ("yeah, yeah") and people merely retelling a story are not beats. Nine minutes of a funny podcast have maybe 3-8 real beats; an ordinary stretch has none. Use intensity 5 only for the few moments that would make a clip on their own. Give at most ${k} beats from this part.
 The transcript may be English, Urdu, Hindi, Hinglish or Roman Urdu and may contain transcription mistakes; answer in English but copy "lands_on" exactly as written in the line.
 Answer with JSON only: {"beats":[{"setup":"S10","punch":"S12","end":"S13","lands_on":"...","type":"roast","situation":"...","intensity":4,"why":"..."}]}`;
 }
@@ -8722,7 +8789,7 @@ function copySystem(o, language) {
   return `You write the social copy for short vertical clips cut from one video. Audience: ${o.audience || "a general audience"}.${o.mode === "gaming" ? "\nThe video is a gaming live stream: say what happens (the play, the win, the fail, the reaction), and use gaming hashtags (the game's name when it is said)." : ""}
 For each clip write:
 - "title": max 60 characters, specific to what is said, no clickbait lies.
-- "hook": max 8 words, shown on screen in the first seconds; it must make someone want to hear the rest.
+- "hook": max 8 words, shown on screen in the first seconds. Make it a concrete promise, tension, number or reversal taken from the clip — never a generic "this is amazing". It must make someone want to hear the rest.
 - "description": 1-2 sentences.
 - "hashtags": 5-8 tags without #.
 Write in the language the clip is spoken in (transcript language: ${language || "unknown"}); for Urdu or Hindi use the same script as the transcript. Do not invent anything that is not said.
@@ -9194,6 +9261,14 @@ function gamingWords(o) {
 function traceCandidates(trace, label, cands) {
   trace.push(`${label}: ${cands.map((c) => `${sid(c.first)}-${sid(c.last)} ${Math.round(c.end - c.start)}s v${Math.round(value(c))}${c.flaws.length ? ` [${c.flaws.join(",")}]` : ""}${c.moves.length ? ` {${c.moves.join("; ")}}` : ""}`).join(" | ")}`);
 }
+function bestHookLine(cands, s, fallback) {
+  let best = { p: -Infinity, t: fallback };
+  for (let i = cands.first; i <= cands.last && i < s.length; i++) {
+    const p = hookPower(s[i].text);
+    if (p > best.p) best = { p, t: s[i].text };
+  }
+  return best.t;
+}
 function toHighlights(cands, s, options, copy, compared) {
   const sorted = [...cands].sort((a, b) => a.start - b.start);
   return sorted.map((c, i) => {
@@ -9208,7 +9283,7 @@ function toHighlights(cands, s, options, copy, compared) {
       start: round$4(c.start),
       end: round$4(c.end),
       title: cp?.title || makeTitle(text) || "Clip",
-      hook: cp?.hook || firstSentence(text).split(/\s+/).slice(0, 9).join(" ").replace(/[,.;:!?۔؟।]+$/, ""),
+      hook: cp?.hook || firstSentence(bestHookLine(c, s, text)).split(/\s+/).slice(0, 9).join(" ").replace(/[,.;:!?۔؟।]+$/, ""),
       description: cp?.description || truncate(text, 180),
       hashtags: cp?.hashtags.length ? cp.hashtags : defaultHashtags(options.audience),
       reason: reason || "Chosen for a clean start, a finished thought and what is said.",
