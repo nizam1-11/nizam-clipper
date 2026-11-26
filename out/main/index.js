@@ -3079,6 +3079,183 @@ function fail(err) {
   if (smoke) console.log(`[update] raw error: ${String(err?.stack ?? err)}`);
   set({ status: "error", waiting: false, error: hardware.updateErrorMessage(err) });
 }
+
+// ---------------------------------------------------------------------------
+// SNU Clipper — custom Windows updater.
+// Our releases are portable ZIP/SFX builds, not NSIS installers, so electron-updater's
+// quitAndInstall() cannot be used here. On Windows we read latest.yml ourselves,
+// stream the ZIP with resume + sha512 verification, then hand off to a detached
+// Node helper (running from a COPY of the exe so the app itself is unlocked).
+// ---------------------------------------------------------------------------
+const WIN_UPDATE_DIR = path.join(electron.app.getPath("userData"), "snu-updates");
+const WIN_HELPER_SOURCE = `
+"use strict";
+const fs = require("node:fs");
+const path = require("node:path");
+const cp = require("node:child_process");
+const args = process.argv.slice(2);
+const pid = args[0], archive = args[1], installDir = args[2], version = args[3], log = args[4];
+function w(s) { try { fs.appendFileSync(log, "[" + new Date().toISOString() + "] " + s + "\\n"); } catch (e) {} }
+function alive(p) { try { process.kill(Number(p), 0); return true; } catch (e) { return false; } }
+function waitExit(p, ms) {
+  const end = Date.now() + ms;
+  return new Promise(function (r) {
+    const t = setInterval(function () { if (!alive(p) || Date.now() > end) { clearInterval(t); r(); } }, 150);
+  });
+}
+function run(cmd, cmdArgs) {
+  return new Promise(function (res, rej) {
+    const c = cp.spawn(cmd, cmdArgs, { windowsHide: true, stdio: "ignore" });
+    c.once("error", rej);
+    c.once("close", function (code) { code === 0 ? res() : rej(new Error(cmd + " exited " + code)); });
+  });
+}
+function copyDir(src, dst) {
+  for (const e of fs.readdirSync(src, { withFileTypes: true })) {
+    const s = path.join(src, e.name), d = path.join(dst, e.name);
+    if (e.isDirectory()) { fs.mkdirSync(d, { recursive: true }); copyDir(s, d); }
+    else { fs.mkdirSync(path.dirname(d), { recursive: true }); fs.copyFileSync(s, d); }
+  }
+}
+function relaunch() {
+  try { cp.spawn(path.join(installDir, "SNU-Clipper.exe"), [], { cwd: installDir, detached: true, stdio: "ignore", windowsHide: true }).unref(); }
+  catch (e) { w("relaunch failed " + e.message); }
+}
+(async function () {
+  try {
+    w("helper start pid=" + pid + " archive=" + archive);
+    await waitExit(pid, 45000);
+    w("app exited");
+    const staging = path.join(path.dirname(installDir), ".snu-update-" + version);
+    try { fs.rmSync(staging, { recursive: true, force: true }); } catch (e) {}
+    fs.mkdirSync(staging, { recursive: true });
+    const tar = path.join(process.env.SystemRoot || "C:/Windows", "System32", "tar.exe");
+    await run(tar, ["-xf", archive, "-C", staging]);
+    w("extracted");
+    if (!fs.existsSync(path.join(staging, "SNU-Clipper.exe"))) throw new Error("The update archive does not contain SNU Clipper.");
+    if (!fs.existsSync(path.join(staging, "resources", "app.asar"))) throw new Error("The update archive does not contain the app data.");
+    copyDir(staging, installDir);
+    w("files replaced");
+    try { fs.rmSync(staging, { recursive: true, force: true }); } catch (e) {}
+    try { fs.rmSync(archive, { force: true }); } catch (e) {}
+    relaunch();
+    w("done");
+  } catch (e) {
+    w("ERROR " + (e && e.stack ? e.stack : e));
+    relaunch();
+  }
+})();
+`;
+
+function parseLatestYml(text) {
+  const info = { files: [] };
+  let cur = null;
+  for (const line of String(text).split(/\r?\n/)) {
+    const m = /^(\s*)(-\s+)?([A-Za-z0-9_]+):\s*(.*)$/.exec(line);
+    if (!m) continue;
+    const indent = m[1].length, dash = !!m[2], key = m[3];
+    const val = m[4].trim().replace(/^['"]|['"]$/g, "");
+    if (dash && key === "url") { cur = { url: val }; info.files.push(cur); }
+    else if (key === "version" && indent === 0) info.version = val;
+    else if (key === "releaseDate" && indent === 0) info.releaseDate = val;
+    else if (key === "path" && indent === 0) info.path = val;
+    else if (cur && key === "sha512") { if (indent === 0) info.sha512 = val; else cur.sha512 = val; }
+    else if (cur && key === "size") cur.size = Number(val) || 0;
+  }
+  return info;
+}
+function winFeedUrl() {
+  if (smoke && process.env.CLIPIE_SMOKE_UPDATE_URL) return process.env.CLIPIE_SMOKE_UPDATE_URL;
+  const { owner, repo } = feedRepo();
+  return `https://github.com/${owner}/${repo}/releases/latest/download/latest.yml`;
+}
+function winAsset(info) {
+  const files = Array.isArray(info?.files) ? info.files : [];
+  return files.find((f) => /\.zip$/i.test(f.url || "")) || files.find((f) => /\.exe$/i.test(f.url || "")) || files[0] || null;
+}
+function winAssetUrl(file, version) {
+  if (smoke && process.env.CLIPIE_SMOKE_UPDATE_ASSET_URL) return process.env.CLIPIE_SMOKE_UPDATE_ASSET_URL;
+  const { owner, repo } = feedRepo();
+  return `https://github.com/${owner}/${repo}/releases/download/v${version}/${encodeURIComponent(file.url)}`;
+}
+async function winCheck(quiet = false) {
+  if (!electron.app.isPackaged) {
+    set({ status: "up-to-date", error: quiet ? void 0 : "Updates only work in an installed build." });
+    return state;
+  }
+  if (state.status === "downloading" || state.status === "installing") return state;
+  quietCheck = quiet;
+  if (!quiet) set({ status: "checking", error: void 0 });
+  try {
+    const res = await untilOnline(() => electron.net.fetch(winFeedUrl(), { cache: "no-store" }));
+    if (!res.ok) throw new Error(`The update feed could not be reached (HTTP ${res.status}).`);
+    const info = parseLatestYml(await res.text());
+    if (!info.version) throw new Error("The update feed is invalid.");
+    latest = info;
+    if (hardware.isNewerVersion(info.version, electron.app.getVersion())) {
+      set({ status: "available", newVersion: info.version, error: void 0, downloadUrl: void 0 });
+    } else {
+      set({ status: "up-to-date", newVersion: void 0, error: void 0, downloadUrl: void 0 });
+    }
+  } catch (err) {
+    if (!quiet) fail(err);
+  } finally {
+    quietCheck = false;
+  }
+  return state;
+}
+async function winFetchAsset(file) {
+  const url = winAssetUrl(file, latest.version);
+  await node_fs.promises.mkdir(WIN_UPDATE_DIR, { recursive: true });
+  const dest = path.join(WIN_UPDATE_DIR, path.basename(file.url));
+  await untilOnline(() => fetchInto(url, dest, file.size || 0));
+  if (file.sha512 && await sha512File(dest) !== file.sha512) {
+    await node_fs.promises.rm(dest, { force: true });
+    throw new Error("The download was damaged (checksum mismatch).");
+  }
+  return dest;
+}
+function winLaunchInstaller(archive, version) {
+  const installDir = path.dirname(electron.app.getPath("exe"));
+  const runner = path.join(WIN_UPDATE_DIR, "runner.exe");
+  const helper = path.join(WIN_UPDATE_DIR, "install-helper.cjs");
+  const log = path.join(WIN_UPDATE_DIR, "install.log");
+  node_fs.writeFileSync(helper, WIN_HELPER_SOURCE, "utf8");
+  // The helper must not run from the installed exe: Windows locks a running exe,
+  // and the helper has to copy a new one over it.
+  node_fs.copyFileSync(electron.app.getPath("exe"), runner);
+  node_child_process.spawn(runner, [helper, String(process.pid), archive, installDir, version, log], {
+    env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
+    detached: true,
+    stdio: "ignore",
+    windowsHide: true
+  }).unref();
+  setTimeout(() => electron.app.quit(), 800);
+  setTimeout(() => electron.app.exit(0), 20e3).unref();
+}
+async function winDownloadFlow(install = true) {
+  if (state.status === "downloading" || state.status === "installing") return state;
+  const file = winAsset(latest);
+  if (!file || !file.url) {
+    set({ status: "error", error: `Version ${latest?.version || ""} has no Windows download yet.` });
+    return state;
+  }
+  set({ status: "downloading", percent: 0, error: void 0, waiting: false, downloadUrl: void 0 });
+  try {
+    const archive = await winFetchAsset(file);
+    if (!install) {
+      set({ status: "ready", newVersion: latest.version, percent: 100, waiting: false });
+      return state;
+    }
+    set({ status: "installing", newVersion: latest.version, percent: 100, waiting: false });
+    winLaunchInstaller(archive, latest.version);
+    return state;
+  } catch (err) {
+    fail(err);
+    return state;
+  }
+}
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function macBundlePath() {
   return path.resolve(electron.app.getPath("exe"), "../../..");
@@ -3203,6 +3380,7 @@ function getUpdateState() {
   return state;
 }
 async function check(quiet = false) {
+  if (process.platform === "win32") return winCheck(quiet);
   if (!electron.app.isPackaged) {
     set({ status: "up-to-date", error: quiet ? void 0 : "Updates only work in an installed build." });
     return state;
@@ -3251,6 +3429,7 @@ async function untilOnline(attempt) {
 }
 async function download() {
   if (process.platform === "darwin") return downloadAndInstall();
+  if (process.platform === "win32") return winDownloadFlow(false);
   return downloadWithUpdater(false);
 }
 async function downloadWithUpdater(install) {
@@ -3267,6 +3446,7 @@ async function downloadWithUpdater(install) {
   return state;
 }
 function installNow() {
+  if (process.platform === "win32") { void downloadAndInstall(); return; }
   setImmediate(() => autoUpdater.quitAndInstall(true, true));
 }
 async function downloadAndInstall(skipPrompt = false) {
@@ -3302,6 +3482,7 @@ async function downloadAndInstall(skipPrompt = false) {
     const { response } = win ? await electron.dialog.showMessageBox(win, opts) : await electron.dialog.showMessageBox(opts);
     if (response !== 0) return state;
   }
+  if (process.platform === "win32") return winDownloadFlow(true);
   if (process.platform !== "darwin") {
     if (state.status === "ready") {
       installWhenDownloaded = true;

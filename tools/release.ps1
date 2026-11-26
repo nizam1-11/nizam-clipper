@@ -197,6 +197,28 @@ Pop-Location
 if ($LASTEXITCODE -ne 0) { throw 'ZIP creation failed' }
 Write-Host ("[6/8] zip ready: {0} MB" -f [math]::Round((Get-Item $zip).Length / 1MB, 1))
 
+# --- 6b. update feed (latest.yml) ------------------------------------------
+# The in-app updater reads this file. It points at the portable ZIP so the
+# update can be applied silently without an NSIS installer / UAC prompt.
+$zipHex = (Get-FileHash -LiteralPath $zip -Algorithm SHA512).Hash
+$shaBytes = [byte[]]::new($zipHex.Length / 2)
+for ($i = 0; $i -lt $shaBytes.Length; $i++) { $shaBytes[$i] = [Convert]::ToByte($zipHex.Substring($i * 2, 2), 16) }
+$shaB64 = [Convert]::ToBase64String($shaBytes)
+$zipSize = (Get-Item $zip).Length
+$latestYml = Join-Path $temp 'snu-latest.yml'
+$yml = @"
+version: $Version
+files:
+  - url: $zipName
+    sha512: $shaB64
+    size: $zipSize
+path: $zipName
+sha512: $shaB64
+releaseDate: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'))
+"@
+[IO.File]::WriteAllText($latestYml, $yml, (New-Object Text.UTF8Encoding($false)))
+Write-Host '[6b/8] latest.yml ready (sha512 + size)'
+
 # --- 7. commit + push ------------------------------------------------------
 Push-Location $root
 $prevEap = $ErrorActionPreference
@@ -231,6 +253,7 @@ $ErrorActionPreference = 'Continue'
 gh release create "v$Version" `
   "$setup#SNU Clipper Setup v$Version (click to download)" `
   "$zip#Portable ZIP (fallback)" `
+  "$latestYml#Update feed for in-app updates" `
   --title "SNU Clipper v$Version" --notes-file $notes --repo $repo 2>&1 | Select-Object -Last 3
 $releaseCode = $LASTEXITCODE
 $ErrorActionPreference = $prevEap
@@ -244,4 +267,5 @@ Write-Host "ZIP     : https://github.com/$repo/releases/latest/download/$zipName
 # clean up large temp artifacts
 Remove-Item $payload -Force -ErrorAction SilentlyContinue
 Remove-Item $config -Force -ErrorAction SilentlyContinue
+Remove-Item $latestYml -Force -ErrorAction SilentlyContinue
 Remove-Item $stage -Recurse -Force -ErrorAction SilentlyContinue
