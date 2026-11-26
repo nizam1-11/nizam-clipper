@@ -3122,7 +3122,7 @@ function relaunch() {
   try {
     const env = Object.assign({}, process.env);
     delete env.ELECTRON_RUN_AS_NODE;
-    cp.spawn(path.join(installDir, "SNU-Clipper.exe"), [], { cwd: installDir, detached: true, stdio: "ignore", windowsHide: true, env: env }).unref();
+    cp.spawn(path.join(installDir, "SNU-Clipper.exe"), [], { cwd: installDir, detached: true, stdio: "ignore", env: env }).unref();
   } catch (e) { w("relaunch failed " + e.message); }
 }
 (async function () {
