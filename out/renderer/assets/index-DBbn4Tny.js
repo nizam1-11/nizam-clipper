@@ -15963,6 +15963,27 @@ const useStore = create((set, get) => ({
     delete next[clipKey(projectId, highlightId)];
     return { clipDraft: next };
   }),
+  updateCaptions: async (projectId, highlightId, words) => {
+    const key = clipKey(projectId, highlightId);
+    const res = await window.clipie.projects.saveTranscript(projectId, highlightId, words);
+    set((s) => ({
+      projects: s.projects.map((p) => {
+        if (p.id !== projectId) return p;
+        const h = (p.analysis?.highlights || []).find((x) => String(x.id) === String(highlightId));
+        const full = Array.isArray(p.transcript?.words) ? p.transcript.words : [];
+        const keyOf = (w) => `${Math.round(w.start * 1e3)}|${Math.round(w.end * 1e3)}`;
+        const edits = new Map(words.map((w) => [keyOf(w), w.text]));
+        const merged = h ? full.map((w) => {
+          if (!(w.end > h.start && w.start < h.end)) return w;
+          const k = keyOf(w);
+          return edits.has(k) ? { ...w, text: edits.get(k) } : w;
+        }) : full;
+        return { ...p, transcript: { ...(p.transcript || {}), words: merged } };
+      }),
+      clipDraft: { ...s.clipDraft, [key]: { ...(s.clipDraft[key] || {}), words } }
+    }));
+    return res;
+  },
   renderClip: async (projectId, highlightId) => {
     const key = clipKey(projectId, highlightId);
     const settings = get().clipDraft[key];
@@ -22529,7 +22550,7 @@ function ClipsTab({ project }) {
   reactExports.useEffect(() => setView("watch"), [clip?.renderedAt, clip?.highlightId]);
   const words2 = reactExports.useMemo(() => {
     if (!highlight || !project.transcript) return void 0;
-    return project.transcript.words.filter((w) => w.start >= highlight.start && w.end <= highlight.end).slice(0, 8).map((w) => w.text.replace(/[.,!?]$/, ""));
+    return project.transcript.words.filter((w) => w.end > highlight.start && w.start < highlight.end).slice(0, 8).map((w) => w.text.replace(/[.,!?]$/, ""));
   }, [project.transcript, highlight]);
   if (!clip) {
     return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "px-8 py-6 text-sm", style: { color: "var(--color-muted)" }, children: "No clips were rendered." });
@@ -22735,6 +22756,90 @@ function ClipsTab({ project }) {
             }
           ) })
         ] }),
+        lookTab === "captions" && (() => {
+          const stamp = (t) => {
+            const s = Math.max(0, Number(t) || 0);
+            const m = Math.floor(s / 60);
+            const sec = Math.floor(s % 60);
+            const tenth = Math.floor((s - Math.floor(s)) * 10 + 1e-6);
+            return `${m}:${String(sec).padStart(2, "0")}.${tenth}`;
+          };
+          const source = highlight ? (project.transcript?.words ?? []).filter((w) => w.end > highlight.start && w.start < highlight.end) : [];
+          const words = Array.isArray(current.words) && current.words.length ? current.words : source;
+          const tagged = words.map((w, i) => ({ ...w, i }));
+          const lines = [];
+          let cur = [];
+          const flush = () => { if (cur.length) { lines.push(cur); cur = []; } };
+          for (const w of tagged) {
+            if (cur.length && w.start - cur[cur.length - 1].end > .9) flush();
+            cur.push(w);
+            const dur = w.end - cur[0].start;
+            const ends = /[.!?]$/.test(w.text);
+            if (cur.length >= 4 || dur >= 2.4 || ends && cur.length >= 2) flush();
+          }
+          flush();
+          const edits = source.reduce((n, w, i) => n + (words[i] && words[i].text !== w.text ? 1 : 0), Math.abs(words.length - source.length));
+          const busy = Boolean(clipProgress[key]);
+          const status = progress ? `${progress.message}${progress.percent ? ` · ${Math.round(progress.percent)}%` : ""}` : error ? cleanError(error) : edits ? `${edits} change${edits === 1 ? "" : "s"} ready to burn in` : "Words match the transcript.";
+          const save = () => {
+            if (useStore.getState().clipProgress[key]) return;
+            useStore.setState((s) => ({
+              clipProgress: { ...s.clipProgress, [key]: { percent: 0, message: "Saving caption words…" } },
+              clipError: { ...s.clipError, [key]: "" }
+            }));
+            void (async () => {
+              await useStore.getState().updateCaptions(project.id, clip.highlightId, words.map(({ text, start, end }) => ({ text, start, end })));
+              renderClip(project.id, clip.highlightId);
+            })().catch((err) => useStore.setState((s) => {
+              const clipProgress = { ...s.clipProgress };
+              delete clipProgress[key];
+              return { clipProgress, clipError: { ...s.clipError, [key]: cleanError(err) } };
+            }));
+          };
+          return /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "nzc-words", "aria-labelledby": "nzc-words-title", "aria-busy": busy, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "nzc-words__head", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "nzc-words__intro", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { id: "nzc-words-title", className: "nzc-words__title", children: "Caption words" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "nzc-words__sub", children: "Fix what was heard. Timings stay exactly where they are." })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: edits ? "nzc-words__count" : "nzc-words__count nzc-words__count--quiet", children: edits ? `${edits} edit${edits === 1 ? "" : "s"}` : "No edits" })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "nzc-words__note", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "nzc-words__dot", "aria-hidden": "true" }),
+              " Only the words change. The clip is re-rendered so corrected captions are burned in — nothing is moved in time."
+            ] }),
+            tagged.length ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "nzc-words__lines", role: "group", "aria-label": "Caption words grouped into lines", children: lines.map((line, li) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "nzc-line", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "nzc-line__no", "aria-hidden": "true", children: String(li + 1).padStart(2, "0") }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "nzc-line__words", children: line.map((w) => /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: w.i < source.length && w.text !== source[w.i].text ? "nzc-word nzc-word--edited" : "nzc-word", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "nzc-word__t", "aria-hidden": "true", children: stamp(w.start) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("input", {
+                  type: "text",
+                  className: "nzc-word__input",
+                  value: w.text,
+                  spellCheck: false,
+                  autoComplete: "off",
+                  "aria-label": `Word ${w.i + 1} at ${stamp(w.start)}`,
+                  style: { width: `${Math.min(18, Math.max(3.5, w.text.length + .75))}ch` },
+                  onChange: (e) => {
+                    const val = e.target.value;
+                    setClipDraft(project.id, clip.highlightId, { words: words.map((x, j) => ({ ...x, text: j === w.i ? val : x.text })) });
+                  }
+                })
+              ] }, w.i)) })
+            ] }, li)) }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "nzc-words__empty", children: "No transcript words for this clip." }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "nzc-words__actions", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { type: "button", className: "btn btn-ghost", disabled: !edits || busy, onClick: () => setClipDraft(project.id, clip.highlightId, { words: void 0 }), children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCcw, { size: 14 }),
+                " Reset"
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { type: "button", className: "btn btn-primary", disabled: !edits || busy, onClick: save, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Captions, { size: 15 }),
+                " Apply captions"
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "nzc-words__status", role: "status", "aria-live": "polite", children: status })
+            ] })
+          ] });
+        })(),
         lookTab === "line" && /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
           TopLine,
           {

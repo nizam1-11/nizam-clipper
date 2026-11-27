@@ -117,6 +117,7 @@ const api = {
   projects: {
     list: () => electron.ipcRenderer.invoke("projects:list"),
     transcript: (id) => electron.ipcRenderer.invoke("projects:transcript", id),
+    saveTranscript: (id, highlightId, words) => electron.ipcRenderer.invoke("projects:saveTranscript", id, highlightId, words),
     delete: (id) => electron.ipcRenderer.invoke("projects:delete", id),
     deleteClip: (id, highlightId) => electron.ipcRenderer.invoke("projects:deleteClip", id, highlightId),
     releaseSource: (id) => electron.ipcRenderer.invoke("projects:releaseSource", id),

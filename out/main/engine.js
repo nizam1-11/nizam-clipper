@@ -12664,8 +12664,8 @@ function nzlSettings(raw) {
       enabled: c.enabled === true,
       preset: typeof c.preset === "string" ? c.preset : "natural",
       brightness: nzlNum(c.brightness, -1, 1, 0),
-      contrast: nzlNum(c.contrast, 0, 3, 1),
-      saturation: nzlNum(c.saturation, 0, 3, 1),
+      contrast: nzlNum(c.contrast, 0, 2, 1),
+      saturation: nzlNum(c.saturation, 0, 2, 1),
       hue: nzlNum(c.hue, -180, 180, 0),
       temperature: nzlNum(c.temperature, -1, 1, 0)
     },
@@ -12707,13 +12707,14 @@ function buildVideoFilter(aspect, layout, assPath, srcW, srcH, fontsDir, crop, f
     const cw = srcAspect > dstAspect ? Math.min(effW, even2(effH * dstAspect)) : effW;
     const ch = srcAspect > dstAspect ? effH : Math.min(effH, even2(effW / dstAspect));
     const at = (share, size, total) => Math.max(0, Math.min(total - size, Math.round(share * total - size / 2)));
+    const followTotalW = effW, followTotalH = effH;
     const piecewise = (values) => {
       let expr = String(values[values.length - 1]);
       for (let i = values.length - 2; i >= 0; i--) expr = `if(lt(t,${follow[i + 1].start.toFixed(3)}),${values[i]},${expr})`;
       return expr;
     };
-    const xs = follow.map((s) => at(s.cx, cw, srcW));
-    const ys = follow.map((s) => at(s.cy, ch, srcH));
+    const xs = follow.map((s) => at(s.cx, cw, followTotalW));
+    const ys = follow.map((s) => at(s.cy, ch, followTotalH));
     chain = `crop=${cw}:${ch}:x='${piecewise(xs)}':y='${piecewise(ys)}',scale=${w}:${h}`;
   } else if (layout === "manual" && effW > 0 && effH > 0) {
     const rect = cropRect(crop, srcAspect, dstAspect);
@@ -12734,12 +12735,13 @@ function buildVideoFilter(aspect, layout, assPath, srcW, srcH, fontsDir, crop, f
   }
   if (fx.color.enabled) {
     const c = fx.color;
-    let grade = `eq=brightness=${c.brightness.toFixed(4)}:contrast=${c.contrast.toFixed(4)}:saturation=${c.saturation.toFixed(4)}:hue=${Math.round(c.hue)}`;
+    // This FFmpeg build's eq filter has no 'hue' option; hue lives in its own filter.
+    const grade = [`eq=brightness=${c.brightness.toFixed(4)}:contrast=${c.contrast.toFixed(4)}:saturation=${c.saturation.toFixed(4)}`];
+    if (Math.abs(c.hue) > 0.001) grade.push(`hue=h=${Math.round(c.hue)}`);
     if (Math.abs(c.temperature) > 0.001) {
-      const t = (c.temperature * 0.15).toFixed(4);
-      grade += `,colorbalance=rs=${t}:bs=${(-c.temperature * 0.15).toFixed(4)}`;
+      grade.push(`colorbalance=rs=${(c.temperature * 0.15).toFixed(4)}:bs=${(-c.temperature * 0.15).toFixed(4)}`);
     }
-    chain += `,${grade}`;
+    chain += `,${grade.join(",")}`;
   }
   chain += `,setsar=1,format=yuv420p`;
   // Mirror the picture BEFORE captions, text cards and logo are composited.
@@ -12865,7 +12867,9 @@ async function renderClip(o) {
     if (!inKeep) continue;
     const s = remapTime(Math.max(wd.start, inKeep.start), keep) / speed;
     const e = remapTime(Math.min(wd.end, inKeep.end), keep) / speed;
-    if (e > s) clipWords.push({ text: hinglishWord(wd.text), start: s, end: e });
+    const key = `${Math.round(wd.start * 1e3)}|${Math.round(wd.end * 1e3)}`;
+    const text = (o.editedKeys || []).includes(key) ? wd.text : hinglishWord(wd.text);
+    if (e > s) clipWords.push({ text, start: s, end: e });
   }
   const preset = local.findPreset(settings.captionStyle);
   const lines = groupWords(clipWords, preset?.maxWords ?? 4);
@@ -12885,7 +12889,7 @@ async function renderClip(o) {
   }
   await node_fs.promises.writeFile(srtPath, buildSrt(groupWords(clipWords, 4)), "utf8");
   const parts = cutFilters(keep, seekMs, o.hasAudio);
-  const follow = settings.layout === "follow" ? await followShots(o, keep, path.join(o.outDir, `${base}.faces.json`)) : void 0;
+  const follow = settings.layout === "follow" ? (await followShots(o, keep, path.join(o.outDir, `${base}.faces.json`))).map((s) => ({ ...s, start: s.start / speed })) : void 0;
   const texts = resolveTextOverlays(settings.texts, outDuration).filter((t) => t.card);
   const missing = (settings.texts?.length ?? 0) - texts.length;
   if (missing > 0) o.log(`${missing} added text(s) had no drawn card or no time on screen in this clip, so they are left out.`);
@@ -12979,7 +12983,7 @@ async function renderClip(o) {
       file: outPath,
       width: vf.w,
       height: vf.h,
-      duration: editedDuration,
+      duration: outDuration,
       memesDir: o.memesDir,
       memes: h.memes.map((m) => ({ ...m, rel: remapTime(m.at, keep) / speed })),
       encoderArgs: local.sizedEncoderArgs(encoderArgs, vf.w, vf.h, settings.aspect),
@@ -13866,8 +13870,15 @@ async function runClipRender(job, emit, signal) {
   const bins = { ffmpeg: job.ffmpegPath, ffprobe: job.ffprobePath };
   const { project, highlightId } = job;
   const highlight = project.analysis?.highlights.find((h) => h.id === highlightId);
-  const words2 = project.transcript?.words;
+  const words2 = Array.isArray(job.settings?.words) && job.settings.words.length ? job.settings.words : project.transcript?.words;
   if (!highlight || !words2) throw new Error("This project has no stored transcript, so its clips cannot be re-rendered.");
+  const editedWords = Array.isArray(job.settings?.words) && job.settings.words.length ? job.settings.words : [];
+  const storedWords = Array.isArray(project.transcript?.words) ? project.transcript.words : [];
+  const keyOf = (w) => `${Math.round(w.start * 1e3)}|${Math.round(w.end * 1e3)}`;
+  const editedKeys = editedWords.filter((w) => {
+    const old = storedWords.find((x) => keyOf(x) === keyOf(w));
+    return !old || old.text !== w.text;
+  }).map(keyOf);
   const existing = project.clips.find((c) => c.highlightId === highlightId);
   const index = existing?.index ?? project.analysis.highlights.findIndex((h) => h.id === highlightId);
   const media = project.media ?? await local.probe(bins, project.options.inputPath);
@@ -13880,6 +13891,7 @@ async function runClipRender(job, emit, signal) {
     highlight,
     index: Math.max(0, index),
     words: words2,
+    editedKeys,
     settings: job.settings,
     outDir: project.outputDir,
     encoderArgs: enc.videoArgs,

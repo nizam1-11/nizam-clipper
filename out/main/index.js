@@ -3887,6 +3887,32 @@ function registerIpc() {
     })
   ));
   electron.ipcMain.handle("projects:transcript", async (_e, id) => (await findProject((await getSettings()).outputDir, String(id)))?.transcript ?? null);
+  electron.ipcMain.handle("projects:saveTranscript", async (_e, id, highlightId, words) => {
+    if (!Array.isArray(words)) throw new Error("Invalid transcript words.");
+    const next = mergeQueue.then(async () => {
+      const p = await findProject((await getSettings()).outputDir, String(id));
+      if (!p) throw new Error("Project not found.");
+      if (!(p.analysis?.highlights || []).some((x) => String(x.id) === String(highlightId))) throw new Error("Clip not found.");
+      const cleaned = words
+        .filter((w) => w && typeof w.text === "string" && Number.isFinite(w.start) && Number.isFinite(w.end))
+        .map((w) => ({ text: w.text, start: w.start, end: w.end }));
+      const h = (p.analysis?.highlights || []).find((x) => String(x.id) === String(highlightId));
+      const full = Array.isArray(p.transcript?.words) ? p.transcript.words : [];
+      const keyOf = (w) => `${Math.round(w.start * 1e3)}|${Math.round(w.end * 1e3)}`;
+      const edits = new Map(cleaned.map((w) => [keyOf(w), w.text]));
+      const merged = h ? full.map((w) => {
+        if (!(w.end > h.start && w.start < h.end)) return w;
+        const k = keyOf(w);
+        return edits.has(k) ? { ...w, text: edits.get(k) } : w;
+      }) : full;
+      const updated = { ...p, transcript: { ...(p.transcript || {}), words: merged }, updatedAt: Date.now() };
+      await writeProject(updated);
+      try { await node_fs.promises.writeFile(path.join(p.outputDir, "transcript.json"), JSON.stringify(updated.transcript, null, 2), "utf8"); } catch (_) {}
+      return { ok: true, count: merged.length };
+    });
+    mergeQueue = next.catch(() => void 0);
+    return next;
+  });
   electron.ipcMain.handle("projects:exportZip", async (_e, id) => exportProjectBackup(id));
   electron.ipcMain.handle("projects:importZip", async () => importProjectBackup());
   electron.ipcMain.handle("projects:releaseSource", async (_e, id) => {
